@@ -80,6 +80,7 @@ public class sgd_saga_adapt_efficient {
 		int nSamplesPerPass = conf.nSamplesPerPass; 
 	    int MaxItr = conf.nPasses; 
 	    int d = conf.featureDim; 
+	    System.out.println("dim:"+d);
 	    int n = data.length;
 	    double L = 2; 
 //		for(int i=0;i<n;i++){ 
