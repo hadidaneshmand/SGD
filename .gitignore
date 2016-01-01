@@ -16,3 +16,4 @@
 *.out
 *.aux
 */outs/*
+*/data/*
