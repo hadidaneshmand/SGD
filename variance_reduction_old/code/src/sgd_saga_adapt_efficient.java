@@ -2,7 +2,6 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.StringTokenizer;
 
 import opt.Adapt_Strategy;
@@ -13,13 +12,9 @@ import opt.firstorder.SAGA_Adapt;
 import opt.firstorder.SGD;
 import opt.firstorder.SVRG_Streaming;
 import opt.loss.LeastSquares_efficient;
-import opt.loss.Logistic_Loss;
 import opt.loss.Logistic_Loss_efficient;
-import opt.loss.Loss_static;
-import opt.loss.LeastSquares;
 import opt.loss.Loss_static_efficient;
 import data.DataPoint;
-import data.IOTools;
 import data.Result;
 import data.SparsePoint;
 
@@ -28,6 +23,8 @@ public class sgd_saga_adapt_efficient {
 	public static DataPoint[] data; 
 	public static void readDataPointsFromFile(String filename, int startIndex, int data_size) {
 		data = new DataPoint[data_size]; 
+		int pos = 0; 
+		int neg = 0; 
 		try {
 			BufferedReader fp = new BufferedReader(new FileReader(filename));
 			String line;
@@ -37,6 +34,12 @@ public class sgd_saga_adapt_efficient {
 					DataPoint point = new SparsePoint();
 					StringTokenizer st = new StringTokenizer(line, " +\t\n\r\f:");
 					double label = Double.valueOf(st.nextToken());					// label has to be at the first position of the text row
+					if(label == 1){ 
+						pos++;
+					}
+					else if(label == -1){ 
+						neg++; 
+					}
 					point.setLabel(label);
 
 					while (st.hasMoreTokens()) {
@@ -53,6 +56,7 @@ public class sgd_saga_adapt_efficient {
 				}
 			}
 			fp.close();
+			System.out.println("pos:"+pos+",neg:"+neg);
 		} catch (IOException e) {
 			System.out.println("Could not read from file " + filename + " due to " + e.getMessage());
 		}
