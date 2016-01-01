@@ -32,7 +32,7 @@ public class sgd_saga_adapt_efficient {
 			BufferedReader fp = new BufferedReader(new FileReader(filename));
 			String line;
 			int c = 0; 
-			while ((line = fp.readLine()) != null) {
+			while ((line = fp.readLine()) != null && c <data_size) {
 				try {
 					DataPoint point = new SparsePoint();
 					StringTokenizer st = new StringTokenizer(line, " +\t\n\r\f:");
