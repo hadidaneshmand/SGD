@@ -8,8 +8,9 @@ import opt.firstorder.SAGA;
 import opt.firstorder.SAGA_Adapt;
 import opt.firstorder.SGD;
 import opt.firstorder.SVRG_Streaming;
-import opt.loss.LogisticRegression;
+import opt.loss.Logistic_Loss;
 import opt.loss.Loss_static;
+import opt.loss.LeastSquares;
 import data.DataPoint;
 import data.IOTools;
 import data.Result;
@@ -38,7 +39,6 @@ public class sgd_saga_adapt {
 		int nSamplesPerPass = conf.nSamplesPerPass; 
 	    int MaxItr = conf.nPasses; 
 	    int d = conf.featureDim; 
-	    
 	    int n = data.size();
 	    double L = 2; 
 //		for(int i=0;i<n;i++){ 
@@ -50,12 +50,20 @@ public class sgd_saga_adapt {
 			}
 		}
 		System.out.println("L:"+L);
+		if(L>10.0){ 
+			for(int i=0;i<data.size();i++){ 
+				data.set(i,(DataPoint)data.get(i).normalize()); 
+			}
+		}
 		double lambda_n = 1.0/Math.sqrt(n);
 		double eta_n = 0.3/(L+lambda_n*n); 
 		if(conf.agressive_step){ 
 			eta_n = 1.0/(3*L);
 		}
-		Loss_static loss = new LogisticRegression(data, d);
+		Loss_static loss = new Logistic_Loss(data, d);
+		if(conf.lossType ==  opt.config.Config.LossType.REGRESSION){
+			loss = new LeastSquares(data,d); 
+		}
 		loss.setLambda(lambda_n);
 		SGD sgd = new SGD(loss);
 		sgd.setLearning_rate(lambda_n);
