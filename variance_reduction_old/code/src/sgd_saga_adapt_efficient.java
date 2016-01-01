@@ -68,6 +68,16 @@ public class sgd_saga_adapt_efficient {
 		}
 		opt.config.Config conf = new opt.config.Config();
 		conf.parseFile(configFilename);
+
+//		conf.doubling = false; 
+//		conf.agressive_step = false; 
+//		conf.nPasses = 100; 
+//		conf.nSamplesPerPass = 100; 
+//		conf.c0 = 1000; 
+//		conf.dataPath = "data/covtype"; 
+//		conf.featureDim = 54; 
+//		conf.logDir = "outs/test"; 
+
 		System.out.println("agressive step size for saga: " + conf.agressive_step);
 		System.out.println("doubling: " + conf.doubling);
 		System.out.println("nTrials: " + conf.nTrials);
@@ -75,6 +85,7 @@ public class sgd_saga_adapt_efficient {
 		System.out.println("nSamplesPerPass: " + conf.nSamplesPerPass);
 		System.out.println("file: "+conf.dataPath);
 		System.out.println("data size:"+conf.c0);
+		System.out.println("out dir:"+conf.logDir);
 		readDataPointsFromFile( conf.dataPath, 1,conf.c0);
 		int numrep = conf.nTrials;
 		int nSamplesPerPass = conf.nSamplesPerPass; 

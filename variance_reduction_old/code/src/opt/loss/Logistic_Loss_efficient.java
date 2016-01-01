@@ -13,7 +13,7 @@ public class Logistic_Loss_efficient extends Loss_static_efficient {
 	public Loss clone_loss() {
 		Logistic_Loss_efficient out = new Logistic_Loss_efficient(data, getDimension());
 		out.setLambda(lambda);
-		return null;
+		return out;
 	}
 
 	@Override
