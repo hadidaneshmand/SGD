@@ -22,7 +22,6 @@ import data.SparsePoint;
 public class sgd_saga_adapt_efficient {
 	public static DataPoint[] data; 
 	public static void readDataPointsFromFile(String filename, int startIndex, int data_size) {
-		data = new DataPoint[data_size]; 
 		int pos = 0; 
 		int neg = 0; 
 		try {
@@ -47,12 +46,13 @@ public class sgd_saga_adapt_efficient {
 						double value = Double.valueOf(st.nextToken());
 						point.set(feature, value);
 					}
-					
 					data[c] = point; 
 					c++; 
 					
 				} catch (NumberFormatException e) {
 					System.out.println("Could not read datapoint number "+c + " since Line "+line+" seems to be not properly formatted: "+e.getMessage());
+				} catch (Exception e){ 
+					System.out.println("Exception at c="+c +","+e.getMessage());
 				}
 			}
 			fp.close();
@@ -90,6 +90,7 @@ public class sgd_saga_adapt_efficient {
 		System.out.println("file: "+conf.dataPath);
 		System.out.println("data size:"+conf.c0);
 		System.out.println("out dir:"+conf.logDir);
+		data = new DataPoint[conf.c0]; 
 		readDataPointsFromFile( conf.dataPath, 1,conf.c0);
 		int numrep = conf.nTrials;
 		int nSamplesPerPass = conf.nSamplesPerPass; 
