@@ -1,0 +1,1492 @@
+\documentclass{article}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amsthm}
+\newtheorem{lemma}{Lemma}
+
+\newcommand{\E}{{\bf E}}
+\newcommand{\w}{w}
+\renewcommand{\v}{v}
+\newcommand{\V}{{\bf V}}
+\newcommand{\wt}[1]{\w({#1})}
+\renewcommand{\Re}{{\mathbb R}}
+\newcommand{\rnd}[1]{{\underline{#1}}}
+\newcommand{\dd}[1]{\delta \hspace*{-0.5pt}#1}
+
+\title{Neighborhood Watch Analysis}
+\author{Thomas Hofmann\\ ETH Zurich}
+
+
+\begin{document}
+\maketitle
+
+\section{Algorithm}
+
+\subsection{Variance Reduced SGD}
+
+Given a strongly convex optimization problem with objective $f(w) = \frac 1n \sum_i f_i(w)$, we want to investigate a class of stochastic gradient descent (SGD) algorithms with updates taking the  form:
+\begin{align}
+w^+ = w - \gamma g_i(w),  \quad g_i(w)=  f'_i(w) - \bar \alpha_i 
+\end{align}
+Here  $i$ is a randomly selected index and $\bar\alpha_i$ is an unbiased variance correction term, i.e. $\E \bar\alpha_i = 0$. We are aiming for updates of asymptotically vanishing variance, meaning that $g_i(w) \to 0$ as $w \to w^*$, which obviously requires that $\bar\alpha_i \to f'_i(w^*)$.
+
+\subsection{SAGA-style Corrections}
+
+The SAGA algorithm  updates (non-bias adjusted) variance corrections $\alpha_i$ after selecting data point $i$ as 
+\begin{align}
+\alpha^+_j  = 
+\begin{cases}
+f'_i(w) & \text{if $i=j$} \\
+\alpha_j & \text{otherwise}
+\end{cases}
+\end{align} 
+where we further define the bias adjusted versions via $\bar\alpha_i := \alpha_i - \bar \alpha$ and $\bar \alpha := \frac 1n \sum_{i=1}^n  \alpha_i$. 
+
+We also want to investigate a version of SAGA, where we artifically reduce the lag time of the $\alpha_i$ by updating $q$ distinct $\alpha_i$ in every step. This is meant to serve as a way of understanding how the overal conversion speed depends on the freshness of the "old" stochastic gradients stored in the $\alpha_i$.   
+
+
+\paragraph{SAGA with Clusters}  [commented out] 
+%
+%Let us assume that we have a clustering of data points, i.e.~a mapping $\pi: \{ 1,\dots,n\} \to \{1,\dots,m\}$ and known cluster sizes $p_k = \#\{ i: \pi(i)=k\}$ such that $\| f'_i(w) - f'_{j}(w) \|^2 < \epsilon$ $(\forall w)$ whenever $\pi(i)=\pi(j)$. We suggest to  modify the SAGA update rule by 
+%\begin{align}
+%\alpha^+_j  = 
+%\begin{cases}
+%f'_i(w) & \text{if $\pi(i)=\pi(j)$} \\
+%\alpha_j & \text{otherwise}
+%\end{cases}
+%\end{align} 
+%In fact, we can maintain a more compact representation by just having one $\alpha$-parameter per cluster, since the corrections for data points in the same cluster evolve in synch.
+
+\section{Analysis}
+
+\subsection{Primal Recurrence and Basic Bounds} 
+
+\paragraph{Evolution equation.} The evolution equation for $w$ implies the recurrence 
+\begin{align}
+\| w^+ - w^* \|^2 & = \| (w-w^*) - \gamma g_i(w) \|^2 \nonumber
+\\ & = \| w - w^* \|^2 - 2 \gamma \langle g_i(w), w-w^*\rangle + \gamma^2 \| g_i(w) \|^2
+\label{eq:recurrence}
+\end{align}
+In expectation, we can exploit strong convexity of $f$ to bound the linear term 
+\begin{align}
+\E \langle g_i(w), w-w^* \rangle  = \langle f'(w), w-w^* \rangle \ge  f(w) - f(w^*)+ \frac \mu 2  \| w-w^*\|^2
+\label{eq:naive-strong-convexity}
+\end{align}
+
+\paragraph{Refined strong convexity bound.}
+[SAGA, Lemma 1] provides a more refined bound for the case that all $f_i$ are individually strongly convex. We then get the following more complex, but improved bound 
+\begin{align}
+\langle f'(w), w-w^* \rangle 
+\ge &  \frac{L-\mu}{L} (f(w) - f(w^*)) + \frac \mu 2  \| w-w^*\|^2    \label{eq:saga-lemma1}\\
+& + \frac{1}{2Ln} \sum_{i=1}^n \| f'_i(w) - f_i'(w^*) \|^2 \ . \nonumber
+\end{align}
+The additional term is interesting, because it allows us directly balance it out with a similar term that appears with opposite sign in a bound on the variance term (see below). 
+
+\paragraph{Gradient smoothness.} Note that $L$-smoothness of the gradients, i.e.~ 
+\begin{align}
+\| f'_i(w) - f_i'(w^*) \| \le L\| w - w^*\| \,.
+\end{align}
+implies the following bound with regard to suboptimaility (see Shalev-Schwarz, SAGA) 
+\begin{align}
+& \| f'_i(w) - f_i'(w^*) \|^2 \le 2L h_i(w)
+\end{align}
+where we have defined
+\begin{align}
+& h_i(w)  := f_i(w) - f_i(w^*)+  \langle w-w^*, f_i'(w^*) \rangle, 
+\end{align}
+so that in  expectation
+\begin{align}
+\E \| f_i'(w) - f_i'(w^*)\|^2 \le 2L (f(w) - f(w^*))\,.
+\label{eq:smoothness-suboptimaility-bound}
+\end{align}
+As a side note: combining this with \eqref{eq:saga-lemma1} gives us 
+\begin{align}
+\langle f'(w), w-w^* \rangle  \ge &  
+\left[ 1 + \frac{L-\mu}{L} \right] (f(w) - f(w^*))+ \frac \mu 2  \| w-w^*\|^2 
+\end{align}
+which is an improvement on the naive bound \eqref{eq:naive-strong-convexity} as $0 \leq \frac{L-\mu}{L} \leq 1$. 
+
+\paragraph{Biased Update Directions} 
+
+[commented out] 
+
+%We are interested in bias-variance tradeoffs in the (cheap) computation of stochastic update directions. For this reason, we would like to go beyond the unbiased case. We will investigate a setting, where instead of having perfect unbiasedness, we make a weaker assumption of $\epsilon$-approximate unbiasedness, $\E \| g_i (w)- f'(w) \| < \epsilon$. Note that in terms of the recurrence we get from the Cauchy-Schwarz inequality 
+%\begin{align}
+%\langle \E g_i, w- w^* \rangle 
+%& =  \langle f'(w), w-w^* \rangle + \langle \E g_i  - f'(w), w-w^* \rangle \\
+%& \le \langle f'(w), w-w^* \rangle + \epsilon \|w-w^* \|
+%\end{align} 
+%Note that If we restrict ourselves to solutions $w$ outside of an $\delta$-ball around $w^*$, $\| w- w^*\| \ge \delta $, we can further bound $\epsilon \| w- w^*\| \le \frac \epsilon \delta \|w -w^*\|^2$.  The significance of this setting is that we may be satisfied, once we have reached a $\delta$-ball around the optimum. In the strongly convex case, we would need to chose $\frac \epsilon \delta < \frac \mu 2$ in order to still be guaranteed progress from the above bound. 
+
+\subsection{Variance Bounds} 
+
+As for expected squared norm term, we follow the general strategy developed in [SAGA].
+% 
+
+\paragraph{Determinstic Part.} First, as $\E g_i(w) = f'(w)$ by design, we seperate out the determinsitic gradient contribution and get 
+\begin{align}
+\E \|g_i(w)\|^2 = \E \| f'_i(w) - f'(w) - \bar \alpha_i  \|^2 + \| f'(w)\|^2 \,.
+\end{align}
+The deterministic part is unavoidable and serves as a sort of gold standard for SGD.
+
+\paragraph{Norm Splitting around Reference Point.} In the next step, we obtain a $\beta$-parameterized bound on the variance by splitting on the reference function $f'_i(w^*)$, i.e.  
+\begin{align}
+ \E \| f'_i(w) - f'(w) - \bar \alpha_i  \|^2  \leq & \; (1+\beta) \E \| f'_i(w) - f'_i(w^*) - f'(w) \|^2 \\
+& + \left(1+ \beta^{-1} \right) \E \| \bar \alpha_i - f_i'(w^*) )\|^2
+\nonumber
+\end{align} 
+Now we apply an inverse variance decomposition on the the first of these to get 
+\begin{align}
+&  \E \| f'_i(w) - f'_i(w^*) - f'(w) \|^2  =   \E \| f'_i(w) - f'_i(w^*)  \|^2 -  \| f'(w)\|^2
+\end{align}
+Absorbing the gardient norm with the previous one, we arrive at 
+\begin{align}
+\E \|g_i(w)\|^2 \leq & (1+\beta) \E \| f'_i(w) - f'_i(w^*) \|^2  - \beta \| f'(w) \|^2 \nonumber \\
+& + \left(1+ \beta^{-1} \right) \E \| \bar \alpha_i - f_i'(w^*) )\|^2
+\label{eq:variance-recurrence}
+\end{align}
+%
+
+\paragraph{Further Bounds.} The first term in \eqref{eq:variance-recurrence} can either be bound by \eqref{eq:smoothness-suboptimaility-bound} or it can be balanced out with the corresponding term that shows up in \eqref{eq:saga-lemma1}. 
+%
+The gradient norm can be lower bounded by $\| f'(w) \|^2 \ge 2 \mu \left( f(w) - f(w^*) \right)$. 
+%
+As for the remaining term, we can first use variance decomposition to pull out the mean and get  
+\begin{align}
+ \| \bar\alpha_i - f_i'(w^*) \|^2 = \| \alpha_i - f_i'(w^*) \|^2 - \| \bar \alpha \|^2 
+\end{align}
+Working with the non-bias corrected quantities $\alpha_i$ will make things easier. The negative norm term can (in the simplest case) be dropped. 
+
+\paragraph{Challenges.}
+How can we further bound  $\E \| \alpha_i - f_i'(w^*) \|^2$? Note that in the case of SAGA, the $\alpha_i$ corrections are just stochastic gradients evaluated at previous iterates 
+\begin{align}
+\alpha_i = f_i'(w^{\tau_i}), \quad \tau_i < t
+\end{align}
+which allows to apply the same smoothness bound  as above 
+\begin{align}
+\| \alpha_i-f'_i(w^*)\|^2 \le 2L  h_i(w^{\tau_i}) \,.
+\label{eq:alpha-bound}
+\end{align}
+The main (non-trivial) remaining challenge arises from the fact, that these bounds are not evaluated at a common $\w$ for each index $i$. 
+
+\subsection{Lyapunov Function Ansatz} 
+
+\paragraph{Motivation}
+In the SAGA update as well as in related updates, we would like to show that the $\alpha$-updates bring us closer to their optimal values, i.e.~$\alpha_i^* = f_i'(w^*)$. However, it is difficult to obtain such bounds directly, say on $\E \| \alpha_i - \alpha_i^*\|^2$ under updates of $\alpha$. A more general and flexible proof strategy is to define an upper bound $H_i \geq \| \alpha_i - \alpha_i^*\|^2$ such that $H_i \to 0$ as $w \to w^*$ and then to derive suitable contractions that involve the quantities $H_i$. While $\| \alpha_i - \alpha_i^*\|^2$ may not decrease at a monotonic rate (or at all), the upper bound may be much better behaved.
+
+\paragraph{Updates on Bounds}
+In terms of notation, we will think of quantities $H_i$ as being updated in synch with $\alpha_i$, e.g.~in the case of plain SAGA through
+\begin{align}
+H_j^+ = 
+\begin{cases}
+h_j(w) & \text{if $i=j$} \\
+H_j & \text{otherwise}
+\end{cases} 
+\label{eq:recurrence-h}
+\end{align} 
+so that we always maintain valid bounds $\| \alpha_i - f_i'(w^*) \|^2 \le H_i$. Of course, we may also decide to update multiple $H_i$ at a time.
+
+\paragraph{Lyapunov Function} 
+As suggested in [SAGA] one can then define a Lyapunov function as follows: 
+\renewcommand{\L}{{\mathcal L}}
+\begin{align}
+\L(w,H) = \| w- w^*\|^2 + \gamma n \sigma   \bar H 
+\end{align}
+where $\bar H := \frac 1n \sum_{i=1}^n H_i$.  In expectation under a random update, the Lyapunov function $\L$ changes as
+\begin{align}
+\E \L(w^+,H^+) & = \E \| w^+ - w^*\|^2  + \gamma n \sigma  \E \bar H^+
+\nonumber
+\end{align}
+The first part is due to the state update, the second due to an update of a single $\alpha_i$. The latter term can be directly calculated from \eqref{eq:recurrence-h}
+\begin{align}
+n \E \bar H^+ = \bar H + \E \left[ h_i(w) - H_i \right]
+= \frac{(n-1)}{n} \bar H + f(w)-f(w^*)
+\end{align}
+where we have made use of the fact that $\E h_i(w) = f(w)-f(w^*)$.  If we update $q$ random points instead of just one, then we get more generally  
+\begin{align}
+n \E \bar H^+ = \frac{n-q}{n} \sum_{j=1}^n H_j + q (f(w) - f(w^*))
+\end{align}
+
+\paragraph{Clustered Updates}
+
+[Commented out] 
+
+%For the clustered update rule, we can modify \eqref{eq:recurrence-h} as follows:
+%\begin{align}
+%H_j^+ = 
+%\begin{cases}
+%h_j(w) & \text{if $\pi(i)=\pi(j)$} \\
+%H_j & \text{otherwise}
+%\end{cases} 
+%\label{eq:recurrence-h}
+%\end{align} 
+%We now generalize the above argument. In order to keep things simple, we assume that clusters are all of the same size $q = n/m$. Then we have: 
+%\begin{align}
+%n \E \bar H^+ = \frac{n-q}{n} \sum_{j=1}^n H_j + q (f(w) - f(w^*))
+%\end{align}
+
+\subsection{Convergence Proof}
+
+Finalizing the convergence proof requires to do proper book-keeping of all the "currencies involved". 
+
+\subsubsection{Constraints on the Rate}
+
+We are looking for a contraction of the Lyapunov function with some unknown rate $(1-\rho)$.  So we aim to proof a bound  
+\begin{align}
+\L(w,H) - \E\L(w^+,H^+) \ge \rho \L(w,H)
+\end{align}
+From \eqref{eq:naive-strong-convexity} we can see that $\rho \leq \gamma \mu$.  So $\mu$ has a directly proportional influence on the rate guranteed by the above analysis. Yet, equallly important, the step size $\gamma$ also enters the rate. 
+
+\subsubsection{$\bar H$ term} 
+
+The proxmity to the optimum $\| w- w^*\|^2$ is one "currency" in the analysis, a second one is the upper bound $\bar H$.  On the plus side we get from the $\L$-recurrence a shrinkage 
+\begin{align}
+\triangle^+_H := \gamma n \sigma  \bar H - \gamma  (n-q) \sigma  \bar H 
+= \gamma q \sigma \bar H
+\end{align}
+On the minus side from \eqref{eq:alpha-bound}
+\begin{align}
+\triangle^-_H :=   2 \gamma^2 L (1 + \beta^{-1}) \bar H 
+\end{align}
+In total 
+\begin{align}
+\triangle_H := \triangle_H^+ - \triangle_H^- = \gamma \sigma 
+\left[  q- \frac{2\gamma L \left(1 + \beta^{-1} \right)}{\sigma} \right] \bar H 
+\end{align}
+%
+In order to get the same contraction rate $\rho = \gamma \mu$, we require
+\begin{align}
+& q  - \frac{2 \gamma L \left(1 + \beta^{-1} \right)}{\sigma} \ge \rho = \gamma \mu \\
+\iff & \gamma \le \frac {q \sigma} {\mu \sigma +  2L \left(1 + \beta^{-1} \right)} 
+\label{eq:step-bound-from-h}
+\end{align}
+
+Note the interplay between $\sigma$ and $q$. Basically, the constraint on the step size scales with $q$, thus allowing for larger step sizes. However, as there are additional step size constraints, these may not directly result in improved convergence rates. Relative to the standard SAGA case of $q=1$ it seems possible though to lower $\sigma$ such that $q \sigma$  remains constant. We need to investigate what potential that bears. 
+
+\subsubsection{$\| f_i'(w) - f_i'(w^*)\|^2$ Terms}
+
+From \eqref{eq:saga-lemma1} we get a contribution 
+\begin{align}
+\label{eq:dose-variance}
+\triangle_n^+ := \frac{\gamma}{L} \E \| f'_i(w) - f_i'(w^*) \|^2 \ . 
+\end{align}
+whereas from \eqref{eq:variance-recurrence} we need to bound or compensate
+\begin{align}
+\triangle_n^- :=  \gamma^2 (1+\beta) \E \| f'_i(w) - f'_i(w^*) \|^2
+\end{align}
+One possibility is to use the condition $\triangle_n^+ \geq \triangle_n^-$ to determine $\beta$ 
+\begin{align}
+\beta  \le \frac 1{\gamma L} - 1
+\end{align}
+This choice of $\beta$ (made in the SAGA paper) seems intuitively not very reasonable as it scales with $n$, if $\gamma$ scales as $1/n$. One would expect a much more balanced choice, e.g.~a small number close to $1$ and independent of $n$. This "strangeness" comes from the fact that we only get a particular "dose" out of the progress relation in \eqref{eq:dose-variance}. However, we may also be able to compensate parts of the $\triangle_n^- $ term by reductions of suboptimality. Specifically, with the smoothness bound in \eqref{eq:smoothness-suboptimaility-bound} we can get a hybrid bound by quantifing a possible excess need for compensation as follows
+\begin{align}
+\triangle_{n \to f}^{-} := \frac{1}{2L} \max\{0, \triangle_n^- - \triangle_n^+\} 
+\label{eq:carryover}
+\end{align}
+
+\subsubsection{Suboptimality terms}
+
+We next investigate the currency of suboptimaility, i.e.~$f(w)-f^*(w)$.  On the plus side we get from the progress equation 
+\begin{align}
+\triangle_f^+ := 2 \gamma \frac{L-\mu}{L} (f(w) - f(w^*))
+\end{align}
+%
+On the minus side we get a contribution from the $H$-recurrence as well as one from the bound on $\E \| f_i'(w) - f_i'(w^*) \|^2$. 
+\begin{align}
+\triangle_f^- := \gamma \left[ \frac {\sigma q} n  + 2L \gamma (1 + \beta) \right] (f(w) - f(w^*))
+\end{align}
+%
+If we ignore the carry over from \eqref{eq:carryover}, then we arrive at the requirement 
+\begin{align}
+\frac {\sigma q} {2n}  + \frac{L-\mu}{L}  \gamma (1 + \beta) \le 1 \iff \gamma \le \frac{L (2n - \sigma q)} { (L-\mu) 2n (1+\beta)}
+\end{align}
+Things get more complicated (to do), when also taking the carry-over into account. However, we will basically get some optimal $\beta^*(\sigma q)$ that maximizes the bound on $\gamma$. Note that  $L$, $\mu$ and $n$ are given with the data/design and only $\sigma$ and $q$ are constants that we are free to chose ($\sigma$ for the purpose of the analysis, $q$ as a design parameters of the algorithm). 
+
+One constrained way forward is to assume that we adjust $\sigma$ inverse proportionally to $q$. So then the optimal choice of $\beta$ determined from the bounds involving sub-optimality would not change (whatever it ends up being). Looking at \eqref{eq:step-bound-from-h} we see that the second term obeys an inverse $\sigma$ dependence, which will increase with $q$ under the assumption of $\sigma \sim q^{-1}$. This would imply that -- in a best case scenario -- we can increase the step size by $q$ and thus also get a rate $\rho$ that scales with $q$.  
+
+\subsection{First Attempt}
+
+Because of the complexity of optimizing $\beta$ as in SAGA, let us try to work with the simplified bound in \eqref{eq:naive-strong-convexity}
+\begin{align}
+& \triangle_f^+ = \left[ \underbrace{2\gamma}_{\text{progress}} + \underbrace{2 \gamma^2 \mu \beta}_{\text{gradient norm}} \right] 
+(f(w) - f(w^*)) \\
+& \triangle_f^- = \left[ \underbrace{2\gamma^2 L (1+\beta)}_{\text{variance}} 
++  \underbrace{\gamma  q\sigma}_{\text{Lyapunov}} \right]  (f(w)-f(w^*)) 
+\end{align}
+The condition $\triangle_f^+ \geq \triangle_f^-$ leads to 
+\begin{align}
+& 2 + 2 \gamma \mu \beta \ge 2 \gamma L (1+\beta) + q \sigma \\
+\iff & 2 -q \sigma \ge \gamma \left[ 2 L (1+\beta) - 2 \mu \beta \right] \\
+\iff & \gamma \le \frac{1 -q \sigma/2}{L (1+\beta) - \mu \beta}
+\end{align}
+Compare this with the bound derived in \eqref{eq:step-bound-from-h}
+\begin{align}
+\gamma \le  \frac {q \sigma}  {\mu \sigma +  2L \left(1 + \beta^{-1} \right)} 
+\end{align}
+Setting these two equal we get 
+\begin{align}
+\left( 1- \frac {q \sigma}{2} \right) \left( \mu \sigma +  2L \left(1 + \beta^{-1} \right) \right) = 
+q \sigma ( L (1+\beta) - \mu \beta  )
+\end{align}
+Multiplying with $\beta$ 
+\begin{align}
+\left(1 - \frac{q \sigma}{2} \right) \left( \beta \mu \sigma +  2L \left( 1 + \beta  \right) \right) = 
+\beta q \sigma ( L (1+\beta) - \mu \beta  )
+\end{align}
+Hence 
+\begin{align}
+& \left[  L q \sigma  - \mu q \sigma \right] \beta^2 \nonumber 
+\\ + & \left[  L q \sigma - \mu \sigma + \frac{q \sigma^2 \mu}{2} + L q \sigma - 2L \right] \beta   
+\\ + & \left[ L q \sigma - 2 L \right] \stackrel{!}=0 \nonumber 
+\end{align}
+This is "solvable", but without simplication, what can we make out of these results? 
+
+Let us try to get more insights, by fixing $\beta$ to a simple value, e.g.~$\beta =1$ and looking at the bounds again 
+\begin{align}
+& \gamma \le \frac{1 -q \sigma/2}{2L -\mu} \\
+& \gamma \le  \frac {q \sigma}  {4L + \mu \sigma} 
+\end{align}
+Setting them equal 
+\begin{align}
+& (2n -q \sigma)(4nL + n \mu \sigma) = 
+q \sigma (4nL - 2n\mu) \\
+\iff &  8n L - 4n L q \sigma + 2n^2 \mu \sigma - n q \mu \sigma^2 = 
+4n L q\sigma  - 2n \mu q \sigma  \\
+\iff & 
+\left[ q \mu \right] \sigma ^2 + \left[ 8L q - 2 n\mu \right] \sigma + \left[ - 8nL \right]  = 0 
+% \\ \iff & 
+% \sigma ^2 + \left[ \frac{8L q - 2 n\mu}{q\mu} \right] \sigma - \frac{8L}{q\mu}  = 0 
+\end{align}
+Solving for $\sigma$
+\begin{align}
+\sigma 
+% & = \frac{1}{ 2q\mu}  \left [ 2 n\mu - 8L q\pm  \sqrt{ (2 n\mu - 8L q)^2 + 32Lq \mu } \right]  \\
+& = \frac{1}{ q\mu}  \left [ n\mu - 4L q\pm  \sqrt{ (n\mu - 4L q)^2 + 8nLq \mu } \right]  \\
+& = \frac{n}{ q}  \left [ 1 - \frac{4Lq}{n\mu}\pm  \sqrt{ \frac{(n\mu - 4L q)^2}{(n\mu)^2} + \frac{8nLq \mu}{ (n \mu)^2}} \right] 
+\end{align}
+Under the assumption of $n \gg q$, this suggests an approximate choice of $\sigma = 2 n/q$. This can be compared with the SAGA choice (for $q=1$) as follows: $\frac 1c = \gamma \sigma$. They have $c= \frac{1}{2 \gamma (1-\gamma\mu)n}$, so $\sigma = 2 (1-\gamma \mu)n$ and as  $\gamma \in O(1/n)$ this yields $\sigma \approx 2n$. 
+
+The constant $2$ is irritating as it makes the first bound $0$. So let us plug-in the choice $\sigma = n/q$. 
+\begin{align}
+& \gamma \le \frac{2n -n}{4nL - 2n\mu} \\
+& \gamma \le  \frac {n}  {4nL + 2 \mu n^2/q} 
+\end{align}
+
+
+%We should set these two equal, getting a quadratic equation for $\beta$ and then find the optimal $\beta$ that maximizes the minimum of the two upper bounds.
+
+
+\subsection{Path Forward}
+
+First step: Freshness is good 
+\begin{itemize}
+\item Derive constants in a different way, In particular, do not use the naive way to set $\beta = \frac {2 \mu n + L }L$ as in SAGA (see discussion above).
+\item Understand how $q$ and $\sigma$ can be optimally adapted (see above).  Quantify the gains of larger $q$.
+\item This would give an improved rate coming from freshness of corrections. 
+\end{itemize}
+
+\noindent Second step: Quantization error can be controlled 
+\begin{itemize}
+\item Now, assume that we do not refresh $q$ random $\alpha_i$, but that $q$ instead is the size of a cluster for which we perform tying of all $\alpha_i$. 
+\item What happens, when we have clusters of different size? (It may be a good first result to derive something for equipartitions). 
+\item Make some assumption on cluster compactness, e.g.~$\| f_i'(w) - f_j'(w)\|^2 < \epsilon$. 
+\item Make a more formal argument that with an $\epsilon$-bias one is guaranteed to reach an $\eta(\epsilon)$-ball around $w^*$. 
+\end{itemize}
+
+\end{document}
+
+
+%%%% A LOT OF SKETCHES AND OLD STUFF BELOW THIS LINE %%%%
+
+\subsection{Convergence Proof}
+
+\subsubsection{Constraints on the Rate}
+
+\paragraph{Constraint from solution closeness} We are looking for a contraction of the Lyapunov function with some unknown rate $(1-\rho)$.  So we aim for 
+\begin{align}
+\L(w,H) - \E\L(w^+,H^+) \ge \rho \L(w,H)
+\end{align}
+From \eqref{eq:saga-lemma1} we can see that $\rho \leq \gamma \mu$.\footnote{Unless we find better bounds.}  So $\mu$ has a directly proportional influence on the rate guranteed by the above analysis. Yet, equallly important, the step size $\gamma$ also enters the rate. It is thus desirable (not unexpectedly) to be able to chose larger step sizes. 
+
+Let us continue by trying to enforce the same contraction on $\bar H$. 
+% We modify the choice of $\sigma = 2 (1-\gamma \mu) n/q$.
+So we want that 
+
+\begin{align}
+& \frac {q} {n}  - \frac{2L \gamma \left(1 + \beta^{-1} \right)}{\sigma} \ge \rho = \gamma \mu \\
+\iff & \gamma \le \frac qn \left(\mu +  \frac{2L \gamma \left(1 + \beta^{-1} \right)}{\sigma} \right)^{-1}
+\end{align}
+
+\newpage
+
+
+
+The second term in the Lyapunov function leads to the requirement 
+\begin{align}
+\rho   + \frac{2L \gamma \left(1 + \beta^{-1} \right)}{\sigma} \le \frac 1n 
+\end{align}
+
+\end{document}
+
+\section{Differences to SAGA Proof}
+
+\subsection{Lemma 1: Making better use of strong convexity} 
+
+Lemma 1 is fairly non-standard. They subtract $\frac \mu L (f(w)-f(w^*))$ and gain $\frac 1{2L} \E \| f'_i(w) - f'_i(w^*)\|^2$.  Note that bound on the latter is 
+\begin{align}
+\frac 1{2L} \E \| f'_i(w) - f'_i(w^*)\|^2 \leq f(w)-f(w^*)
+\end{align}
+This is an advantage if $\mu < L$. 
+\newpage
+
+\end{document}
+
+\newpage
+
+\subsection{Bound Improvement}
+
+What we need to show next is that the $\alpha$-updates lead to an improvement of the upper bounds. Clearly we have that 
+\begin{align}
+\frac 1n \sum_i h_i - \E h_i^+ = \frac 1n \sum_i  f_i(w^{\tau_i}) - f(w^t)
+\end{align}
+
+\newpage
+
+%\subsection{Contraction with Generic Bound}
+%
+%Assume that we have a bound available such that $\| \alpha_i - f_i'(w^*)\|^2  \le 2L h_i$. Then we get that 
+%\begin{align}
+%\E \| g_i(w) \|^2 \le 2L \left[ (1+\beta)  \delta f + ( 1 + 1/\beta)  \E h_i \right]
+%\end{align} 
+%
+%\newpage
+
+\subsection{Evolution Equations for Majorant}
+
+In the SAGA update as well as in related updates, we would like to show that the $\alpha$-updates bring us closer to their optimal values, i.e.~$\alpha_i^* = f_i'(w^*)$. However, it is difficult to obtain such bounds directly, say on $\E \| \alpha_i - \alpha_i^*\|^2$ under updates of $\alpha$. A more general and flexible proof strategy is to define an upper bound $h_i \geq \| \alpha_i - \alpha_i^*\|^2$ such that $h_i \to 0$ as $w \to w^*$ and then to derive suitable contractions that involve the quantities $h_i$. While $\| \alpha_i - \alpha_i^*\|^2$ may not decrease at a monotonic rate (or at all), the upper bound may be much better behaved. [Add picture. Non-monotonic function with mononotically descreaing upper enveleop.]
+%
+In our case, a natural choice for $h_i$ comes again from $L$--smoothness (as above)
+\begin{align}
+\frac 1{2L} \| f'_i(w)-f'_i(w^*)\|^2 \le 
+\dd f_i(w) - \langle w-w^*, f_i'(w^*) \rangle =:h_i(w) 
+\end{align}
+
+In SAGA, the $\alpha_i$ corrections are just stochastic gradients evaluated at previous iterates 
+\begin{align}
+\alpha_i = f_i'(w^{\tau_i}), \quad \tau_i < t
+\end{align}
+so we have that 
+\begin{align}
+\| f_i'(w^{\tau_i}) - f_i'(w^*) \|^2 \le 2L h_i(w^{\tau_i})
+\end{align}
+
+
+
+%Assume that the $\alpha_i$ corrections can be written as a convex combination 
+%\begin{align}
+%\alpha_i = \sum_{\tau < t} \eta_{\tau} f_i'(w^\tau), \quad \eta \ge 0, \; \sum_{\tau <t} \eta_\tau =1
+%\end{align}
+%where the index set $T_i$ denotes past iterations $\tau$, where the same index $i$ has been selected. Then 
+% \begin{align}
+%\| \alpha_i - f'_i(w^*) \|^2 \leq \left\| \sum_{\tau \in T_i} \eta_i h_i(w^\tau) \right\|^2
+%\end{align}
+ 
+
+
+
+\newpage
+
+
+Note that in general, it is unclear how to guarentee progress with the SAGA update of the variance corrections. The stochastic gradient at a past iterate cannot be guarenteed to be closer to the asymptotic target $f'_i(w^*)$, not even in expectation (counter examples are easily constructed). So we may not be able to get a contraction of the type $\| \dd \alpha^+\|^2 \leq (1- \rho) \| \dd \alpha\|^2$. Instead, the Lyapunov function approach of [SAGA] can be interpreted and motivated in the following way. 
+\begin{enumerate}
+\item Find an upper componentwise bound $h_i(w)$ on $\| f'_i(w) - f'_i(w^*)\|^2$ such that $h_i(w) \to 0$ for $w \to w^*$. 
+\item Combine it into an overall (expected) bound by summing over $i$. 
+\item Show that the upper bound improves jointly (using a combiend Lyapunov function) with $\delta w$ when following the SAGA update rule. 
+\end{enumerate}
+A natural choice for $h_i$ comes again from $L$--smoothness (as above)
+\begin{align}
+\frac 1{2L} \| \dd f'_i(w)\|^2 \le 
+\dd f_i(w) - \langle f_i'(w^*), \delta w \rangle =:h_i(w) 
+\end{align}
+
+So what we need to be able to do is the following. For each update in the $\alpha_i$, we figure out, how this affects the corresponding $h_i$. Note that the basic SAGA update replaces a past stochastic gradient at some $w^{(i)}$ with a stochastic gradient at the current $w$. So we will get 
+\begin{align}
+h_i - h_i^+ =  
+\left( f_i(w^{(i)}) - f_i(w)  \right) -  \langle f_i'(w^*), w^{(i)}-w \rangle
+\end{align}
+
+\subsection{Lyapunov Function Approach}
+
+Motivated by the above, let us define the Lyapunov function [SAGA]
+\begin{align}
+L(w, h) =  \| \delta w\|^2 + \sigma \E h_i 
+\end{align}
+We want to show that 
+\begin{align}
+\E L(w^+,h^+) \le (1-\rho) L(w,h) \iff \E L(w^+,h^+) - L(w,h) \le -\rho L(w,h) 
+\end{align}
+Let us therefore collect all the terms. 
+\paragraph{Progress term}
+\begin{align}
+P_0 := \left[ -2\gamma \right] \dd f(w) + \left[ - \gamma \mu  \right] \| \dd w \|^2 
+\end{align}
+
+\paragraph{Perfect SGD loss}
+\begin{align}
+P_1 := \left[ 2 \gamma^2 (1+\beta) L \right] \dd f(w)
+\end{align}
+
+\paragraph{Imperfect variance reduction}
+\begin{align}
+P_2' := \left [ 2 \gamma^2 (1 + \beta^{-1}) L \right] \E h_i  \le 
+\left [ 2 \gamma^2 (1 + \beta^{-1}) L \right]  =: P_2
+\end{align}
+
+\paragraph{Progress on variance reduction}
+\begin{align}
+Q_0 := \sigma \left( f_i(w^{(i)}) - f_i(w)  \right) -  \langle f_i'(w^*), w^{(i)}-w \rangle
+\end{align}
+
+
+\newpage
+
+
+The remaining challenge is in bounding $\E \| \dd \alpha_i \|^2$. 
+
+\subsection{Variance Corrections}
+
+Denote by $\bar \alpha = \sum_i \alpha_i$. 
+
+\newpage
+
+\paragraph{SAGA proof methodology}
+The original SAGA proof proceeds as follows. One use a general Lipschitz condition on the component functions, which is specialized by chosing one point to be the optimum:
+\begin{align} 
+\| f_i'(w) - f'_i(w^*) \|^2 \leq 2 L \left[ \delta f_i(w) + \langle f_i'(w), w-w^* \rangle \right] 
+\end{align}
+By splitting $\alpha_i = \tilde \alpha_i - \bar \alpha$ and noticing that $\tilde \alpha_i = f_i'(w^{t(i)})$ for some previous iterate. [SAGA] handles the $\bar\alpha_i$ part separately (variance decomposition, check exactly how) and then bounds 
+\begin{align}
+\frac 1n \sum_i \| \tilde \alpha_i - f_i'(w^*) \|^2 \le \frac {2L}n \sum_i \delta f'_i(w^{t(i)})  + \langle f_i'(w^{t(i)}), w^{t(i)} -w^* \rangle
+\end{align}
+So each $\alpha_i$ is interpreted as a stochastic gradient at some previous iteration. As the updates have been done at different points in time, one gets the complication, that component functions and their derivatives are not evaluated at a common point. 
+
+
+\paragraph{Alternative Proof Idea}
+
+One idea is to measure the distance of the of $\alpha_i$ to the optimum (assume here that the bias correction can be handeled separately). The basic smoothness bound that we can use is 
+\begin{align}
+\| f_i'(w) - f'_i(w^*) \|^2 \leq 2 L \left[ \dd f_i(w) + \langle f_i'(w), \dd w \rangle \right] 
+\end{align}
+Then we can look at how we get closer over time to the optimum. This is essentially what SAGA has put into the Lyapunov function. 
+
+\newpage
+\section{Appendix}
+
+\subsection{Bounding Stochastic Gradients}
+
+We would like to bound the norm of $\dd f'_i(w) := f'_i(w) - f'_i(w^*)$. To that extend we define the linear auxiliary function
+\begin{align}
+l_i(w) := f_i(w) - f_i(w^*) - \langle f_i'(w^*), w-w^* \rangle = \delta f_i(w) - \langle f_i'(w^*), \delta w \rangle \geq 0,
+\end{align}
+where the non-negativity follows from the convexity of $f_i$, moreover if $f_i$ is $L$-smooth, then so is $l_i$.  According to the result cited in [Shalev-Schwartz, Lemma 1], this implies that $l_i$ is self bounded
+\begin{align}
+\| l_i(w)\|^2 \le 2L l_i(w) 
+\end{align}
+From this one can obtain 
+\begin{align}
+\|  f'_i(w) - f'_i(w^*) \|^2 = \| l_i(w) \|^2 \leq 2L l_i(w) = 2L \left( \dd f_i(w) - \langle f_i'(w^*), \delta w \rangle \right)
+\end{align} 
+and in expectation 
+\begin{align}
+\E \|  f'_i(w) - f'_i(w^*) \|^2 \le 2L \, \dd f(w)
+\end{align}
+\end{document}
+
+\paragraph{Proof through second recurrence}
+
+
+
+
+
+
+
+Alterantively, we can try to use the recurrence relation in a step-by-step manner. For the selected index $i$ we have 
+\begin{align}
+\alpha_i^+ - \alpha_i = f_i'(w) - f_i'(w^{-i}) = \delta f_i'(w) - \delta f'_i(w^{-i})
+\end{align}
+So we get 
+
+
+
+\end{document}
+
+\begin{align}
+
+\end{align}
+
+\newpage
+
+\begin{align}
+\frac 1n \sum_{i} \|\delta \alpha_i^+ \|^2 - \frac 1n \sum_i \| \delta \alpha_i \|^2 = \frac 1n ( \| f_i'(w) \|^2 - \| \alpha_i\|^2)
+\end{align} 
+
+
+
+\subsection{$\epsilon$-Net Updates}
+
+Fill in later ... 
+
+\section{Analysis}
+
+
+
+
+
+
+The other terms need to be linked to the evolution equation of the $\alpha$'s.
+
+\subsection{Dual Recurrence}
+
+The second recurrence yields (for the selected $i$)
+\begin{align}
+\| \alpha_i - \alpha_i^+\|^2 & =  \rho^2 \| \alpha_i - f_i'(w) \|^2 = \rho^2 \| (\alpha_i - f_i'(w^*)) - (f_i'(w)- f_i'(w^*)) \|^2
+\\ & = \rho^2 \| \delta \alpha_i - \delta f'_i(w) \|^2 
+% & \| \delta\alpha_i \|^2 - \| \delta\alpha_i^+\|^2  \\
+% = &  \rho \| \delta \alpha_i  \|^2  - \rho \| \delta f'_i(w) \|^2  + \rho (1-\rho) \| \alpha_i - f'_i(w)\|^2
+\end{align}
+
+
+\end{document}
+
+
+We bound the second term in expectation by smoothness as above. We can drop the third term (seems smallish). We need to take care of the first one.  
+
+
+
+\newpage
+
+
+\newpage
+
+
+
+
+\section{Convex Functions}
+
+\subsection{Strong Convexity}
+
+Convert local information (gradient) into global information
+\begin{align}
+f(y) \ge f(x) + \langle \nabla f(x), y-x \rangle + \frac \mu 2 \| x - y\|^2, \quad (\forall x,y)
+\end{align}
+
+\noindent 
+Suboptimality from gradient (small gradient implies small sub-optimality) (Boyd, eq.~9.9)
+\begin{align}
+f(x) - f(x^*) \le \frac{1}{2\mu} \| \nabla f(x) \|^2
+\end{align}
+
+\noindent 
+Distance to the optimum bound from gradient (Boyd, eq.~9.11)
+\begin{align}
+\| x - x^* \|^2 \le \frac{2}{\mu} \| \nabla f(x) \|^2
+\end{align}
+Inequalities from upper bounds $\nabla^2 f \preceq MI$
+\begin{align}
+& f(y) \le f(x) + \langle \nabla f(x), y-x \rangle + \frac M 2 \| x - y\|^2, \quad (\forall x,y) 
+\\
+& f(x) - f(x^*) \ge \frac{1}{2M} \| \nabla f(x) \|^2
+\end{align}
+
+\subsection{Smoothness}
+
+\noindent 
+Smoothness
+\begin{align}
+\| \nabla f(x) - \nabla f(y) \| \leq L \| x-y\| \quad (\forall x,y)
+\end{align}
+
+\noindent Lipschitz gradient (assumption) (from Bach, Moulines 2011)
+\begin{align}
+\| \nabla f_i(x) - \nabla f_i(y) \| \leq L \| x-y\| \quad (\forall i, x,y) \quad \text{w.p.~1}
+\end{align}
+
+\noindent Bounded gradient
+
+\newpage
+
+
+
+Stochastic gradient descent (SGD) defines a family of algorithms that evolves a stochastic iterate sequence of states $w$ as follows
+\begin{align}
+\rnd w^+ \leftarrow w  - \gamma \rnd v(w)
+\end{align}
+where $\gamma >0$ is a step size and $\rnd v$ a stochastic update direction such that $\E[\rnd v] = \nabla R$ for a convex function $R$. We are typically interested in the convergence of this iterate sequence in expectation towards the (unique) minimum $w^*$ of $R$. \\
+
+Elementary manipulation shows that 
+\begin{align}
+\| \rnd{w}^+ - w^* \|^2 = \| (w - w^*) - \gamma \rnd{v}  \|^2 = \| w - w^*\|^2 - 2 \gamma \langle w - w^*, \rnd v \rangle + \gamma^2 \|\rnd{v}\|^2
+\end{align}
+and thus in expectation
+\begin{align}
+\triangle := \E \| \rnd{w}^+ - w^* \|^2 - \| w - w^*\|^2 
+= - 2 \gamma \langle w - w^*, \nabla R \rangle + \gamma^2 \E \| \rnd v \|^2
+\end{align}
+Moreover, we can use the variance decomposition formula to get 
+\begin{align}
+\triangle =
+- 2 \gamma \langle w - w^*, \nabla R \rangle 
++ \gamma^2 \|\nabla R\|^2 
++ \gamma^2 \E \| \rnd v - \nabla R\|^2
+\end{align}
+Note that if the variance in the stochastic gradient directions vanishes asymptotically as $w \to w^*$, we can hope to recover the convergence speed of deterministic gradient descent. \\
+
+
+What does it mean to be asymptotically non-stochastic? Assume that the risk is additive $R = \frac 1n \sum_{i=1}^n \phi_i$ and that in every step we primarily want to compute $\nabla \phi_i$. Then we can write the random update direction as
+\begin{align}
+\rnd v = \nabla \phi_{\rnd i} + \alpha_{\rnd i}, \quad \rnd i \sim \text{Uniform}(1:n)
+\end{align}
+where $\alpha_{i}$ is a variance reducing correction for the $i$-th loss term. From this we can see that asymptotically we need $\alpha_i^* = - \nabla \phi_i(w^*)$ ($\forall i$). \\
+
+For the sake of understanding, let us first assume that we know $\alpha_i^*$ and set $v_i(w) = \nabla \phi_i(w) + \alpha_i^*$. Obviously, this results in
+\begin{align}
+\E \| \rnd v\|^2 = \E \| \nabla \phi_{\rnd i}(w) - \nabla \phi_{\rnd i}(w^*) \|^2
+\end{align}
+We would like to bound this quantity, possibly making further assumptions on $R$ (such as Lipschitz regularity, strong convexity etc.). \\
+
+Since there is a number of lemmata and bounds in the literature, we would like to highlight the principle of how these proofs work. First of all, it should be clear that the progress term (what works in favor) is the linear term, which for instance can be bound as follows:
+\begin{align}
+\langle w-w^*, \nabla R(w) \rangle  \ge  R(w) - R(w^*)  \geq 0
+\end{align}
+Here we get a pay-off (plus side) in terms of the solution sub-optimality, which is one possible currency. Another currency can be the squared distance to the optimum $\| w - w^*\|^2$. For instance, if $R$ is strongly $\mu$-convex then we have
+\begin{align}
+\langle w-w', \nabla R(w) - \nabla R(w')  \rangle \ge \mu \|w-w'\|^2
+ \end{align}
+ which specializes for $w'=w^*$ to 
+ \begin{align}
+\langle w-w^*, \nabla R(w) \rangle \ge \mu \|w-w'\|^2 
+ \end{align}
+It is clear that convexity alone will not allow us to obtain a strictly positive bound as $R$ can be arbitraily flat even far away from $w^*$, if $\mu=0$. 
+
+\paragraph*{Impossible Ideal Case}
+
+Assume that we could simply ignore the term $\E\|\rnd v\|^2$ (which is impossible), then we would get a bound 
+\begin{align}
+\| w^+ - w^*\|^2 \leq (1- 2\gamma \mu) \cdot \| w - \w^*\|^2
+\end{align}
+which implies a guaranteed geometric decay with rate $\eta = (1-2\gamma \mu)$. 
+
+\paragraph*{Impractical Ideal Case}
+
+So let us look at the case, where we have a Lipschitz condition on the gradients, which implies 
+\begin{align}
+\| \nabla \phi_i(w) - \nabla \phi_i(w^*) \|\leq L \| w - w^* \|
+\end{align}
+where $L$ is the Lipschitz constant. Now we get a rate 
+\begin{align}
+\eta = (1-2 \gamma \mu + \gamma^2 L^2)
+\end{align}
+which implies the optimal choice 
+\begin{align}
+2 L^2 \gamma - 2\mu \stackrel ! = 0  \iff \gamma^* = \frac{\mu}{L^2} , \quad \eta^* 
+= \left ( 1- \mu^2 \left( \frac{2}{L^2} - 1 \right) \right) 
+\end{align}
+
+\newpage
+
+As we will show later in the context of Lyapunov functions, there may even be more currencies that we have to simultaneously deal with.  On the minus side, we have terms that usually scale with $\gamma^2$ and that we can also bound in the same currencies.  As we control $\gamma$, we can match up the plus and minus in a way that the plus prevails for small enough $\gamma$. We are looking particularly for quickly converging algorithms where $\gamma$ does not have to decay $\to 0$ over time, but can stay constant. 
+
+
+
+
+
+\newpage
+
+
+
+
+
+
+ and there  are not many options on how to do this. Basically the linear term in $\triangle$ provides a guranteed progress, which by alluding to convextity can be bound by 
+\begin{align}
+- \langle w-w^*, \nabla R(w) \rangle  \leq  R(w^*) - R(w) \leq 0\,.
+\end{align}
+
+\newpage
+
+
+Note that the main thing to work with is the guaranteed progress due to the linear term, which in expectation follows a gradient descent direction. Convexity implies 
+\begin{align}
+\langle w^*-w, \nabla R(w) \rangle  \leq  R(w^*) - R(w) \leq 0\,.
+\end{align}
+
+
+\newpage
+
+At this point, we need to assume some regularity on $R$, such as a Lipschitz condition on the gradients of the component functions 
+\begin{align}
+\| \nabla \phi_i(w) - \nabla \phi_i(w') \|\leq L \| w - w' \|
+\end{align} 
+This assumption together with the strong $\mu$-convexity of the risk gives rise to a number of variations on upper bounds. However, in order for these bounds to be useful, we would like to combine them with a complementray bound on the guaranteed progress due to the linear term, which in expectation follows a gradient descent direction.
+
+
+\newpage
+  
+
+
+
+\begin{lemma} 
+\begin{align}
+\frac 1n \sum_{i=1}^n \| \nabla \phi_i(\w) - \nabla \phi_i(\w^*) \|^2 \leq 2L \left( R(w) - R(w^*)  - \frac \lambda 2 \| w - w^* \|^2\right) 
+\nonumber
+\end{align}
+\end{lemma}
+
+The lemma allows us to bound the variance around the optimum by a combination of the squared distance in parameter space (Euclidean norm) and the suboptimality of the solution. $L$ is a constant masuring the Lipschitz regularity of the gradients. 
+
+
+\end{document}
+
+
+\section{Variance-Reduction and Shrinkage}
+
+Recently a new variance-reduced SGD method based on SDCA has been proposed and analyzed \cite{}. We will interpret this algorithm as an adaptive shrinkage approach. We start with an $L_2$ regularized risk function 
+\begin{align}
+R(\w) = \frac 1n \sum_{i=1}^n \phi_i(\w) + \frac \lambda 2 \| \w \|^2_2\,.
+\end{align}
+The gradient is obviously given by 
+\begin{align}
+\nabla R(\w) = \frac 1n \sum_i \nabla \phi_i(\w) + \lambda \w
+\end{align}
+In SGD, we would like to construct stochastic update directions $g_i(w)$ for each $i=1,\dots,n$, such that 
+\begin{align}
+\E_I g_I = \nabla R, \quad I \sim \text{Uniform}[1:n]
+\end{align}
+so that we can evolve the iterates via
+\begin{align}
+\w \leftarrow \w - \gamma g_I(\w) 
+\end{align}
+The canonical (unbiased) choice is
+\begin{align}
+g_i(w) = \nabla \phi_i(w) + \lambda w.
+\end{align}
+ However, note that the shrinkage part is determinstic and hence, we can chose any set of (stochastic) directions $\alpha_i(w)$, such that in expectation they perform the neccesary shrinking, i.e.
+\begin{align}
+\E_I \alpha_I(w) = \frac 1n \sum_{i=1}^n \alpha_i(w) =  \lambda w \; \Longrightarrow \; \E_I[ g_I(w)] = \E_I \left[ \nabla \phi_I(w) + \alpha_I \right] = \nabla R
+\end{align}
+as required. \\
+
+Why should this be useful? The idea in \cite{} is to exploit the additional degrees of freedom in the choice of the $h_i$ to reduce the variance of the stochastic update directions. For asymptotic analysis of convergence rates towards the optimal point $\w^*$, a key desideratum is to obtain a vanishing variance as $\w \to \w^*$, which means (as the expectation, i.e.~the gradient, vanishes at $\w^*$) that all update directions have to vanish individually
+\begin{align}
+\lim_{\w \to \w^*} g_i(\w) = \nabla \phi_i(\w^*) + \lim_{\w \to \w^*} \alpha_i(\w) = 0 
+\end{align}
+So we get the conditions
+\begin{align}
+\lim_{\w \to \w^*} \alpha_i(\w) = - \nabla \phi_i(\w^*) \;\; (\forall i)
+\end{align}
+Obviously, this implies also $\E_I \alpha_I(\w) \to \lambda \w^*$ as
+\begin{align}
+\E_I \alpha_I(w) =  \E_I \left[ -\nabla\phi_I(\w) \right] \to \lambda \w^*
+\end{align}
+i.e.~at an optimal point, the gradient of the non-regularized risk needs to be in balance with the shrinkage force.\\ 
+
+How can this be possibly accomplished? As we do not know $\w^*$, we need to obviously work with whatever gradient information we have available at the (history of the) iterates. As long as we can ensure that $\w \to \w^*$, we will be able to use these stochastic gradients in the estimator functions $\alpha_i$. Let us first derive a necessary condition on the evolution of the $\alpha_i$'s for the case of $\nabla \phi_i(w)=0$. In this case, we just have to perform shrinkage:
+\begin{align}
+% \lambda w = \sum_{i=1}^n h_i \; \wedge \; 
+w \leftarrow (1-\lambda\gamma) w \Longrightarrow \sum_i \alpha_i \; \leftarrow \; (1-\lambda\gamma) \sum_i \alpha_i
+\end{align} 
+There are basically two-and-a-half strategies to accomplish this. The first is to obviously shrink all $\alpha_i$ uniformly by \begin{align}
+\alpha_i \leftarrow (1-\lambda \gamma) \alpha_i \quad (\forall i)
+\end{align}
+ This seems (to me) the most "plausible". Note that computaionally speaking, we do not have to touch all $\alpha_i$ in every update. Rather we can memorize, when we have last selected a particular index $i$ ($\triangle t_i$: iteration difference)  and then shrink by $(1-\lambda \gamma)^{\triangle t_i}$. 
+ 
+ The other choice is to only change one $\alpha_i$, most naturally the one for the $i$ that has been selected. 
+\begin{align}
+\alpha_i  \leftarrow 
+\begin{cases} 
+\alpha_i  - \lambda \gamma \sum_{j} \alpha_j & \text{if $I=i$}\\
+\alpha_i  & \text{otherwise}
+\end{cases}
+\end{align}
+% Note that one can rewrite $\lambda \gamma \sum_{j} \alpha_j = n \lambda^2 \gamma w$.
+
+This can also be modified to get a stochastic version of the update, which is only correct in expectation (i.e.~by introducing additional variance).  Namely one can exploit that $\frac 1n \sum_i \alpha_i =  \E_I \alpha_I$ and reuse the outcome of the random draw $I$ to define
+\begin{align}
+\alpha_i  \leftarrow 
+\begin{cases} 
+\alpha_i  - n \lambda \gamma \alpha_i = (1-n \lambda \gamma) \alpha_i & \text{if $I=i$}\\
+\alpha_i  & \text{otherwise}
+\end{cases}
+\end{align}
+This is exactly the algorithm in \cite{}. The question is, which shrinkage approach is preferrable (theoretically and practically). 
+
+As far as the general case goes, as we will subtract $\gamma \nabla \phi_i(w)$, the additive update part $\w \leftarrow \w - \gamma \nabla \phi_i(w)$ also needs to be reflected in the average of the $\alpha_i$. Obviously, we will assign the new gradient information to the $\alpha_i$ for the selected index $i$, i.e.~
+\begin{align}
+\alpha_i \leftarrow \begin{cases}
+\alpha_i - n \lambda \gamma \nabla \phi_i(\w) & \text{if $I=i$} \\
+\alpha_i & \text{otherwise}
+\end{cases}
+\end{align} 
+so that we maintain the relation $\frac 1n \sum_{i=1}^n \alpha_i = \lambda \w$.
+
+In summary, we end up with two algorithm (new and \cite{}). The new suggestion would be 
+\begin{align}
+\alpha_i \leftarrow \begin{cases}
+(1-\lambda \gamma) \alpha_i - n \lambda \gamma \nabla \phi_i(\w) & \text{if $I=i$} \\
+(1-\lambda \gamma) \alpha_i & \text{otherwise}
+\end{cases}
+\end{align}
+the re-interpreted algorithm in \cite{}
+\begin{align}
+\alpha_i \leftarrow \begin{cases}
+(1-n \lambda \gamma) \alpha_i - n \lambda \gamma \nabla \phi_i(\w) & \text{if $I=i$} \\
+ \alpha_i & \text{otherwise}
+\end{cases}
+\end{align}
+
+\newpage
+
+\section{General Proof Technique}
+
+Let us look at the general problem of analyzing algorithms that are asymptotically non-stochastic. One quantity of interest in measuring progress is 
+\begin{align}
+\triangle_w := \| \w^+ - \w^*\|^2 - \| \w - \w^* \|^2,
+\end{align}
+the other is the difference of the SGD corrections from the asymptotically required correction, i.e.~
+\begin{align}
+\triangle_\alpha := \frac 1n \left( \sum_i \|\alpha_i^+ - \alpha_i^*\|^2 - \| \alpha_i - \alpha_i^*\|^2 \right),
+\end{align}
+where $\alpha_i^* := -\nabla \phi_i(w^*)$. It is convenient to consider an appropriately weighted Lyapunov function that combines the two.\\
+
+For an update $w^{+} = w - \gamma v$ we get  for arbitrary $v$
+\begin{align}
+\triangle_{w}
+& = \| (\w - \w^*) - \gamma v \|^2 - \| \w - \w^* \|^2  \\
+& = - 2\gamma \langle \w - \w^*, v \rangle + \gamma^2 \| v\|^2\,.
+\end{align}
+
+If we update dual variables with some convex combination of the type $\alpha_i^+ = (1-\beta) \alpha_i + \beta u_i$ (for the randomly selected index $i$ and unchanged, otherwise), then:
+\begin{align}
+n \triangle_\alpha 
+= &   \| (1-\beta) (\alpha_i - \alpha_i^*) + \beta (u_i - \alpha_i^*) \|^2 - \| \alpha_i - \alpha_i^* \|^2 \\
+= & (1-\beta) \| \alpha_i - \alpha_i^* \|^2 + \beta \|u_i - \alpha_i^*\|^2 - \beta (1-\beta) \| \alpha_i - u_i \|^2 - \| \alpha_i - \alpha_i^* \|^2 \nonumber,
+\end{align}
+where we have utilized: 
+\begin{lemma}
+Norm of convex vector combinations
+\begin{align}
+& \| (1-\beta) a + \beta b \|^2 \\
+& = (1-\beta)^2 \| a\|^2 + \beta^2 \| b\|^2 + 2 \beta(1-\beta) \langle a, b\rangle 
+\nonumber \\
+& = (1-\beta) \| a\|^2 + \beta \| b\|^2 - \beta (1-\beta) \|a\|^2 - \beta (1-\beta) \|b\|^2 + 2 \beta(1-\beta) \langle a, b\rangle 
+\nonumber\\
+&= (1-\beta) \| a\|^2 + \beta \| b\|^2 - \beta (1-\beta) \left( \| a\|^2 + \| b\|^2 - 2 \langle a, b \rangle \right)
+\nonumber\\
+&= (1-\beta) \| a\|^2 + \beta \| b\|^2 - \beta (1-\beta) \| a - b\|^2 
+\nonumber
+\end{align}
+\end{lemma}
+
+Another result that is useful is how the stochastic gradients vary around the optimum $\w^*$
+\begin{lemma} 
+\begin{align}
+\frac 1n \sum_{i=1}^n \| \nabla \phi_i(\w) - \nabla \phi_i(\w^*) \|^2 \leq 2L \left( R(w) - R(w^*)  - \frac \lambda 2 \| w - w^* \|^2\right) 
+\end{align}
+\end{lemma}
+
+\newpage
+
+Proof in reverse order. What are the terms that we try to recover? In the end, everything needs to be reduced to the (expected) potential functions in the Lyapunov functions, in our case $\E \| \alpha_i - \alpha_i^*\|$ and $\|w - \w^*\|$.\\
+
+There are terms that will be estimated in their sign and dropped. One typical term is 
+\begin{align}
+\langle w - w^*, \nabla R \rangle  \geq 0
+\end{align}
+due to convexity. However, assuming strong convexity, we can squeeze out more, namely: 
+\begin{align}
+\langle w - w^*, \nabla R \rangle  \geq  \mu \| w - w^*\|^2
+\end{align}
+alternatively we can combine Lipschitz gradients and streing convexitry to get a composite bound (SAGA paper)
+\begin{align}
+\langle w - w^*, \nabla R \rangle  \geq  \frac \mu 2 \| w - w^*\|^2 + \frac{L -\mu}{L} \left( R(w) - R(w^*) \right)
+\end{align}
+This means for unbiased stochastic gradient methods, we get a guaranteed positive contribution of $2 \gamma \mu \| w- w^*\|^2$. \\
+
+In some cases, one introduces the risk sub-optimality $R(w) - R(w^*)$, which in the stongly convex case also gives a strictly positive contribution 
+\begin{align}
+R(w) - R(w^*) \geq \frac \mu 2 \| w - w^* \|^2
+\end{align} 
+The opposite bound follows with Lipschitz continuity of $R$,
+\begin{align}
+R(w) - R(w^*) \leq L \|w - w^*\|^2
+\end{align}
+
+One can also use a combined bound (Shalev-Schwarz) which holds without strong convexity: 
+\begin{align}
+ R(w) - R(w^*) \geq \langle w^*-w, \nabla R(w) \rangle 
+\end{align}
+This can be applied with reverse signs. The convexity progress of the linear term can (more than) compensate for the suboptimality difference. \\
+
+Variance term norm needs to be compensated for, so that it has the right sign.
+
+
+
+
+\end{document}
+
+\newpage
+
+
+%\newpage
+%
+%How can this be possibly accomplished? As we do not know $\w^*$, we need to obviously work with whatever gradient information we have available at the (history of the) iterates. As long as we can ensure that $\w \to \w^*$, we will be able to use these stochastic gradients in the estimator functions $h_i$.  What are some candidate choices? Define a partition of the set of historic stochastic gradients as follows
+%\begin{align}
+%S_i^t = \{ (s,\nabla\phi_i(w^s)): s \leq t \wedge i=I(s) \}  \,.
+%\end{align}
+%Then we can independently define a family of corrections at iteration $t$
+%\begin{align}
+%v_i^t = \sum_{(s,u) \in S_i} p_i(s) \cdot u, \quad p_i \geq 0, \quad \sum_{(s,\cdot) \in S_I} p_i(s)=1
+%\end{align}
+%These would basically be all corrections that can be obtained by convex combinations from previously seen stochastic gradients for the same point. Note that as long as we would give enough weight to the more recent gradients, we will be tracking (with some delay) the current stochastic gradients (see condition above). But are they all valid? No. We need to ensure that the net shrinkage condition  is met, not just as $\w \to \w^*$, but also at any $\w$, as we can otherwise not guarentee to be able to move towards the optimum at all. This is just recasting the unbiasdness condition in the context of the more specific setting of $L_2$-regularization. \\
+
+So which convex estimator of previous gradients may fullfill this requirement, if any? The key observation is that any iterate $\w^t$ itself can also be written as a sum of the update steps, i.e.~it will be a linear combination (with known) weights of the same directions that appear in the sets $\{S^t_i: i=1,\dots,n\}$. It is critical here that the $v^t_i$ do not introduce any new directions. Here is one attempt
+\begin{align}
+h_i  \leftarrow 
+\begin{cases} 
+(1-\lambda \gamma) h_i  - n \lambda \gamma \nabla \phi_i(w) & \text{for $I=i$}\\
+(1-\lambda \gamma) h_i  & \text{otherwise}
+\end{cases}
+\end{align}
+Why is this plausible (try to derive it in a more principled manner!)? The decay reflects the fact that we are applying shrinkage in every step. So, say the new stochastic gradient is zero, then if we want to maintain some (peudo-dual) representation $\lambda w = \sum_{i} h_i$, then we get directly 
+\begin{align}
+w \leftarrow (1-\lambda \gamma) w 
+\; \iff \; 
+\sum_i h_i \leftarrow (1-\lambda \gamma) \sum_i h_i
+% \; \Longleftarrow \; h_i \leftarrow (1-\lambda \gamma) h_i
+\end{align}
+One way to fulfill this is by
+\begin{align}
+\label{eq:shrinkuni}
+h_i \leftarrow (1-\lambda \gamma) h_i,
+\end{align}
+which spreads the effect of shrinkage over all $i$. Alternatively, one may favor to only change on $h_i$, e.g.~for the $i$ chosen at the update step. Then we need to change a single $h_i$ by 
+\begin{align}
+h_i \leftarrow h_i - (1-\lambda \gamma) \sum_{j} h_j 
+\end{align}
+Since we only need this to hold in expectation, we can "simplify" this by a stochastic version 
+\begin{align}
+h_i \leftarrow h_i - (1-\lambda \gamma) n h_i 
+\end{align}
+where we approximate $\sum_j h_j$ with the noisy version $n h_i$. This is exactly the algorithm in \cite{}. 
+
+One question to investigate is, why this latter approximation should be preferable. Note that the shrinkage \eqref{eq:shrinkuni} can be implemented practically by keeping track of when data point $i$ was last selected and then shrinking by the right power of $(1-\lambda \gamma)$ in one go. The difference between the two methods then is that the first one would adaprively shrink based on this time interval, whether in \cite{} one does not keep track of the time intervals and updates in a way that is only correct in expectation (as shown above). But this will introduce additional variance that will be counter productive to the goal of variance reduction. 
+
+
+Can we test this experimentally? Can we show this in an analysis? 
+
+\end{document} 
+
+
+
+
+
+\newpage
+
+
+While this shows sufficiency (not necessity) of this choice, it is unclear how else to meet the condition for arbitrary $\w$. One can interpret this in the following way: as the iterates (with weight decay) follow a recursive update: shrink + stochastic direction. The correction needs to match this in order to track $\w$ in the right way (to guarentee unbiasedness). Note again, that this "need" is due to the fact that the corrections represent stochastic versions of the net shrinkage. \\
+
+Conclusion: one can ask how to more adaptively distribute the shrinking effect of a $L_2$-norm regularization over updates based of different data-points. The unbiasdness condition for SGD translates canoncially into an expectation condition in terms of the "net effect" of the stochastic shrinkage. If our primary goal is in asymptotics, then we also need to make sure that we reduce the variance to zero as the iterates approach $\w^*$. These conditions together seem to lead to a single choice (show this more formally) in how to define the corrections for variance reduction. \\
+
+Setting motivation and analysis aside. What is this correction doing? When updating index $i$, it basically performs shrinking not in the net direction of $-\w$, but rather shrinks the update in the opposite direction of an average of previous stochastic gradients for the same point.  
+
+
+
+\newpage
+
+\subsection*{Other stuff from an attempt to derive (rather than just posit) the above choice}
+
+Assming $\w^0=0$ We get from unrolling the evolution equation
+\begin{align}
+\w^t = - \gamma \sum_{s=1}^t (\nabla \phi_{I(s)}(w^s) + v^s_{I(s)}(w^s))
+\end{align}
+We can simplify that by looking at things in expectation, where we can the use the induction hypothesis. Namely, we assume that (leaving $\sigma$-algebra details aside)  
+\begin{align}
+\E \w^t = -\gamma \sum_{s=1}^t \nabla \phi (w^s) + \lambda \w^s, \quad \phi := \E_I \phi_I
+\end{align}
+So we need to make sure that a recursion of the type\footnote{No time to do this properly...}
+\begin{align} 
+\E v_I^t(w^t) = -\lambda \gamma \sum_{s=1}^t \nabla \phi (w^s) + \E v_I^s(w^s) 
+\end{align}
+holds. 
+ 
+\end{document}
+
+while at the same time we want 
+\begin{align}
+\E v^t_I(\w) = \lambda \w^t \quad (\forall t)
+\end{align}
+
+\newpage
+
+
+\begin{align}
+g_i(\w) = -\nabla \phi_i(w^{-i})
+\end{align}
+
+
+\newpage
+
+
+
+
+
+\end{document}
+
+
+In machine learning, one is often intersted in $L_2$-norm regularized risk functions of the form
+\begin{align}
+R(\w) = \frac 1n \sum_{i=1}^n \phi_i(\w) + \frac \lambda 2 \| \w \|^2_2
+\end{align}
+where the loss functions $\phi_i$ are convex, e.g.~$\phi_i(\w) = L(\langle x_i, \w \rangle, y_i)$ with $L$ being the logistic or the Hinge loss. Stochastic gradient descent (SGD) is a family of methods for minimizing such risk functions by defining a stochastic iterate process via update equations
+\begin{align}
+\w_+ = \w  + \gamma  G,  \quad \text{with} \quad G =g_I(\w), \quad  I \sim \text{Uniform}(1:n) \,.
+\end{align}
+Here $\gamma$ is a step size and  $G$ is an update direction, chosen at random from a set of directions $g_i$, one for each example. The main motivation is that a direction $g_i$ can be computed more efficiently than the full gradient. A crucial requirement to guarantee convergence of SGD towards an optimal solution is that these update directions provide an unbiased estimate of the negative gradient, i.e.~$\E G = - \nabla R$. The classical choice is, of course, $g_i= -\partial_i R$, where $\partial_i R(\w) := -\nabla \phi_i(\w) - \lambda \w$ in the above case. \\
+
+There are many other choices for $g_i$ that lead to unbiased gradient estimates and the convergence speed depends crucially on their variance. For instance, the SVRG algorithm \cite{}, the SAGA algorithm \cite{}, or the stochastic dual  coordinate descent variant of \cite{} maintain corrections $\alpha_i$ with vanishing expectation $\sum_{i=1}^n \alpha_i = 0$ and then $g_i = -\partial \phi_i + \alpha_i$.\footnote{Note tha the shrinkage term is captured in the correction terms.} To see why such a correction may yield benefits, one can look at the basic evolution equation for the expected distance between the iterates and the (unique) optimum $\w^*$.
+\begin{align}
+\E \|w^{+}-\w^*\|^2 & = \E \left\| \w + \gamma G - \w^* \right\|^2  \\ 
+& = 
+\| \w -\w^*\|^2  - 2 \gamma \left\langle  \w - \w^*,  \nabla R(\w)  \right\rangle 
++ \gamma^2 \E \left\| G(w)\right\|^2 \nonumber \\ 
+& = 
+\| \w -\w^*\|^2  - 2 \gamma \underbrace{\left\langle  \w - \w^*,  \nabla R  \right\rangle}_{\geq 0\text{ (convexity)}}
++ \gamma^2 \underbrace{\E \| G + \nabla R ] \|^2}_{\text{stochastic}} + \gamma^2 \underbrace{\| \nabla R\|^2}_{\text{determ.}} \nonumber
+\end{align}
+If the variance vanishes as $\w \to \w^*$, then there is a potential to recover the convergence speed of a deterministic gradient descent procedure in each step (not epoch!). Moreover in such a case one can use constant step sizes $\gamma$, whereas in standard  SGD, as the variance does not generally vanish, one has to rely on suitable step size schedules, e.g.~$\gamma \propto 1/t$ to guarantee (slow) convergence.\\
+
+Note that in SGD, while evolving $\w$, we can also do additional book-keeping to memorize, which data point contributed how much to the solution, namely, we can introduce a matrix ${\V} \in \Re^{n\times d}$ such that 
+\begin{align}
+\V^+ = \V + \nabla \phi_I e_I^\top, \quad w = w_0 + \gamma \sum_{i=1}^n \v_i 
+\end{align}
+Note that in the generlaized linear case, where $\phi_i(w) = \phi(\langle x_i, w \rangle)$, we get $\nabla \phi_i = \phi'(\langle x_i, w\rangle) x_i$, so $\V$ will just be equal to the data matrix ${\bf X}$ with appropriately re-scaled columns. If ${\bf X}$ is stored/known, then we only need to keep track of additional $n$  numbers. For simplicity we will assume $w_0=0$. 
+
+We would like to modify these equation in the context of a {\it shrinkage} effect that comes from a $L_2$ regularizer in the risk
+\begin{align}
+\w^+ = \w - \gamma \left(\nabla \phi_i  + \lambda \w\right)  = - \gamma \nabla \phi_i + (1- \gamma \lambda) \w  \,.
+\end{align}
+This is equivalen to first shrinking $\w$ determinstically (!) by $(1-\gamma \lambda)$ and then applying the data-point specific stochastic gradient update. How can we incoporate shrinkange into the above representation? As the effect of previous update is exponentially decaying, we can modify 
+\begin{align}
+\V^+ = (1-\gamma \lambda) \V + \nabla \phi_I e_I^\top,
+\end{align} 
+
+How can we construct an unibiased correction to SGD from this representation? 
+
+
+
+\newpage
+
+
+Motivated by \cite{} who translates the dual perspective into the primal domain, once can chose the correction in a way that it maintains a dual representation of the iterate. Namely, one defines two evolution equations throught the updates 
+\begin{align}
+\w^+ = \w + \gamma \left( \nabla \phi_I(w) + \alpha_I \right), \quad 
+\alpha^+= (1-\beta) \alpha + \beta \nabla \phi_I(w) {\bf e}_I^\top
+\end{align}
+Here $\alpha$ is a matrix with columns $\alpha_i$, which randomly chosen $I$-th column gets updated. As we want to maintain a dual representation 
+\begin{align}
+w = \sum_{i=1}^n \alpha_i
+\end{align}
+
+
+\newpage
+
+We can now center the last term around the mean 
+\begin{align}
+\E \| g_I \|^2 = \E \| g_I - \E g_I \|^2 + \|\E g_I \|^2
+= \E \| g_I + \nabla R ] \|^2 + \| \nabla R\|^2
+\end{align}
+The determinsitic part is simply the squared norm of the gradient at the iterate. The first term is that characterizes the specific qualities of a stochastic algorithm. The smaller the variance, the smaller this contribution. 
+
+
+\end{document} 
+\subsection*{Motivation}
+
+Our starting point is the SAGA algorithm as a way of reducing variance in SGD-style iterative algorithms. The shared advantage with algorithms like SVRG is its exponential convergence rate, which (at least theoretically) is a huge step forward relative to plain SGD. However, there are also two disadvantages of SAGA: First, one needs to store previous gradients for each data point, requiring $O(n)$ extra storage. Second, the lookup by data point does not do any generalization and has to use historic gradient information at an iterate that lags on average $n$ steps behind. This may not be effective in a regime, where the iterate still changes a lot. Instead, we propose to cluster data points into groups (either in a pre-processign step or on the fly) in order to share information about how the $i$-gradient $f'_i(x)$ differs from the true gradient $f'(x)$. The idea is that by grouping data points with similar $f_i'(x)$, we can achive corrections that are favorable with regard to the SAGA correction, yet also require less space, typically $O(\text{\# clusters})$.
+
+
+\subsection*{Analysis}
+
+SAGA belongs to a family of generalized SGD algorithms that optimizes a function $f(x) = \frac 1n \sum_i f_i(x)$ (Lipschitz, strongly convex, etc.) by generating a stochastic iterate sequence\footnote{We work in the prox-function free setting (i.e.~$x^{t+1}=w^{t+1}$)}
+
+\begin{align}
+x^{t+1} = x^t - \gamma v^t, \qquad \text{where} \quad \E v^t = \nabla f(x^t)
+\end{align}
+and $\gamma>0$ is a step size (that may also vary with $t$). 
+
+One avenue of analysis for such algorithms is to bound (and derive a recurrence inequality) for $\E \| x^k - x^*\|^2$, the expected squared distance of the $k$-th iterate from the optimum. 
+\begin{align}
+\E \|x^{t+1}-x^*\|^2 & = \E \left\| x^t - \gamma v- x^* \right\|^2 
+\\ & = 
+\| x^k -x^*\|^2  - 2 \gamma \left\langle  x^t - x^*,  \nabla f(x^t)  \right\rangle 
++ \gamma^2 \E \left\| v^t \right\|^2
+   \nonumber
+\end{align}
+The (negative) middle term is what guarantees progress for any gradient descent procedure, the third term with the norm of the update vectors is the key quantity that needs to be controlled.  
+
+The first step in bounding this term is to center the expectation 
+\begin{align}
+\E \| v^t \|^2 = \E \| v^t - \E[v^t] \|^2 + \E[v^t]^2
+= \E \| v^t - \nabla f(x^t) ] \|^2 + \| \nabla f(x^t)\|^2
+\end{align}
+The determinsitic part is simply the squared norm of the gradient at the iterate. The first term is that characterizes the specific qualities of a stochastic algorithm. The smaller the variance, the smaller this contribution. 
+
+Let us come back to the SAGA algorithm and define $f(\phi^k) := \frac 1n \sum_i f_i(\phi^k_i)$ (we can think of $\phi^k$ being a matrix to make that more formal; this quantitity is important to perform an analysis in a case where we combine values obtained at different iterates in the correction). Then we can write
+\begin{align}
+v^t := f'_i(x^t) - f'_i(\phi^t_i) + f'(\phi^t) \,. 
+\end{align}
+One typical trick to proceed here is to introduce terms $f'_i(x^*)$ and to split up the direction vector 
+\begin{align}
+v^t = v_1^t - v_2^t, \quad v_1^t := f'_i(x^t) - f'_i(x^*), \quad v_2^t := f'_i(\phi_i^t) - f'_i(x^*) - f'(\phi^t) 
+\end{align}
+in preparation for applying the parameterized bound 
+\begin{align}
+\| v\|^2 \leq (1 + \beta) \|v_1\|^2 + (1 + \frac 1 \beta) \| v_2\|^2
+\end{align}
+which yields, more specifically (setting $\beta=1$ for simplicity)
+\begin{align}
+\E \| v^t \|^2 \leq \| f'(x^t) \|^2 + 2 \E \| f'_i(x^t) - f'_i(x^*)\|^2 + 2 \E \|  f'_i(\phi_i^t) - f'_i(x^*) - f'(\phi^t) \|^2
+\end{align}
+On the last term, we can now perform a reverse variance decomposition since $\E f'_i(\phi_i^t)   = f'(\phi^t)$ and $\E  f'_i(x^*) = f'(x^*)=0$, which yields 
+\begin{align}
+\E \| v^t \|^2 \leq 2 \E \| f'_i(x^t) - f'_i(x^*)\|^2 + 2 \E \|  f'_i(\phi_i^t) - f'_i(x^*) \|^2 - \| f'(\phi^t) \|^2
+\end{align}
+ 
+
+Now two of the remaining terms are bound again. First the linear form, measuring the progress we are making towards the optimum (negative sign, decreases the expected distance to the optimum): 
+\begin{align}
+\left\langle x^k - x^*, f'(x^k) \right\rangle \geq \frac{L-\mu}{L} ( f(x) - f(x^*)) + \frac \mu 2 \| x^* - x\|^2 \,.
+\end{align}
+The key novel term that shows up in the SAGA analysis is the one the involves stochastic gradients computed at different points in the past 
+\begin{align}
+\frac 1n \sum_i \|  f'_i(\phi_i^k) - f'_i(x^*) \|^2 
+\leq 2L \left[ \frac1n \sum_i f_i(\phi^k_i) -f(x^*) - \frac 1n \sum_i \langle f'_i(x^*), \phi_i^k, -x^* \rangle \right]
+\end{align}
+This can now be all plugged together (...).
+
+In order to find a suitable Lyapunov function (and a recurrence inequality). Let us look at the type of terms that occur in the final bound. 
+\begin{itemize}
+\item Term (A)
+\begin{align}
+\frac1n \sum_i f_i(\phi^k_i) -f(x^*)
+\end{align}
+Note that the sum is a generalization an $f$-value in the sense that the component functions are all evaluated at different points. Obviously, we expect this to go down over time (and the difference to $f(x^*)$ to be zero), but it is difficult to be bound directly. \\
+What is the ansatz to fold this into a Lyapunov function term? The recurrence we want to get is  
+\begin{align}
+\E \left[T^{k+1} \right] \leq (1 - \eta) T^k + \text{vanishing terms}
+\end{align}
+So we start with adding $\alpha \left( \frac 1n \sum_i f_i(\phi_i^k) - f(x^*) \right)$ to the definition of $T^k$ and we get 
+\begin{align}
+& \underbrace{\alpha \E \left( \frac 1n \sum_i f_i(\phi_i^{k+1}) - f(x^*) \right)}_{\text{added to the definition of T}} + \underbrace{4L \gamma^2 \left( \frac 1n \sum_i f_i(\phi_i^k) - f(x^*) \right)}_{\text{bound on norm term in $T$}}
+\\
+& \leq \alpha (1-\eta) \left( \frac 1n \sum_i f_i(\phi_i^k) - f(x^*) \right) + \text{noise}
+\end{align}
+The above expectation is given by 
+\begin{align}
+\frac 1n f(x^k) + \frac {n-1}{n} \frac 1n \sum_i f_i(\phi_i^k)
+\end{align}
+So with the shorthand $f(\phi^k) := \frac 1n \sum_i f_i(\phi_i^k)$ we can collect all terms as follows
+\begin{align}
+& \frac{\alpha}{n} f(x^k) +  \alpha \frac {n-1}{n}  f(\phi^k) + [\text{terms from $\|x^k - x^*\|^2$}]
+\\
+& \leq \underbrace{4L \gamma^2 f(\phi^k)}_{\text{bound above}} + 
+\underbrace{\alpha (1-\eta) f(\phi^k) + \alpha (1-\eta) f(x^k)}_{\text{ansatz for recurrence}} + 4L\gamma^2 f(x^k)\\
+& + \underbrace{\text{noise}}_{\leq 0}
+\end{align}
+SAGA noise term for $f(x^k)$ is
+\begin{align}
+- \left( \eta + 4 \alpha \gamma^2 L - \frac 1n \right) f(x^k) 
+\end{align}
+Our formula
+\begin{align}
+-\alpha \left ( \frac{1}{n} + (1-\eta) + \frac{4L \gamma^2}{\alpha} \right) 
+\end{align}
+\item 
+\end{itemize} 
+
+
+\newpage
+\newpage
+
+
+\begin{itemize}
+\item 
+Idea: Assume that there are exact duplicates in our data such that there are only $m$ distinct points $m \ll n$. We can think of these as ideal clusters of zero spread. We can now run the SAGA algorithm without knowledge of this identity. Or we can run the SAGA algorithm in a way that we share the most recent update with all the points in the same cluster (i.e.~the duplicates). Can we carry out an analysis that would show a rate that is faster, the smaller $m$ is? 
+\item 
+Scenario $1$: Assume that the multiplity of each point is $r$ so that we have $r m = n$. The rate of the SAGA algorithm is given by
+\begin{align}
+\rho := \left( 1- \frac{1}{\kappa} \right)  = 1 - {\gamma \mu} = 1- \frac{\mu}{2 (\mu n + L)} = 1 - \frac{1}{2 n + 2\frac{L}{\mu}}
+\end{align}
+where the dependence on $n$ comes into play through the choice of the step size $\gamma$.
+
+If we now pre-process the data set and remove duplicates, we get a corresonding rate, where $n$ is replaces by $m=n/r$. This can obviously be a hugely better rate. Assume $n \gg m \gg L/\mu$ then 
+\begin{align}
+\rho = \left( 1- \frac{1}{\kappa} \right) \approx 1 - \frac{1}{2n} = \frac{2n-1}{2n}
+\end{align}
+Example: $n=500,000$ vs. $m=5,000$ we get $\rho = 0.999999$ vs.~$\rho = 0.9999$ note that with $500000$ iterations we get in either case for $\rho^{500,000} \approx 0.6065 $ vs. $1.92\cdot 10^{-22}$. 
+%
+\item
+Scenario 2: Now assume that the mulitiplicity of the data points in not the same. We need to somehow introduce a relative weight of each data point. It may be most appropriate to do this directly at the root, i.e.~in the objective. 
+\begin{align}
+f(x) = \frac 1n \sum_{i} f_i(x) = \frac 1m \sum_{\alpha} \underbrace{\frac{m n_\alpha}{n} f_{i \to \alpha}(x)}_{:=f_\alpha(x)}
+\end{align}
+where $\alpha$ denotes the clusters and each $i$ is mapped to exactly one of $m$ possible $\alpha$. $n_\alpha$ is the size of the clusters. $f_{i \to \alpha}$ is the objective for any of the members of $\alpha$ (note: since data points are assumed to be exactly identical, this alleviates us from discussing how it should be defined for a cluster). Then we can define $f_\alpha$  as a properly rescaled version of $f_{i \to \alpha}$ to arrive back at the orginal form of $f$ as an average. Note that in Scenario $1$ we would get $n_\alpha =n/m$ and thus the re-scaling factor is always $1$. The significance in the need for re-scaling is in the change to the Lipschitz assumption. The Lipschitz constant may have to be scaled up by a factor
+\begin{align}
+L' = \frac{m \cdot \max_\alpha n_\alpha}{n} L
+\end{align}
+which will lead to a deteoriation in $\rho$. 
+\item Scenario 3 = Scenario 1, revisited. The above argument was just applying the final SAGA result to (i) a larger dataset with duplicates and (ii) a de-duplicated much smaller data set. In order to make progress, we need to trace this effect back into the actual argument of the proof, so that we can generalizing to a scenario, where data points are not exactly identical. We assume that we have clusters that are of equal size (in order to avoid complications of Scenario 2 for now) and that are characterized by some scale parameter $\epsilon$ in the sense that all datapoints are $\epsilon$--close in a way that we need to make precise later. For now assume, we run SAGA as follows: whenever we sample a data point $i$ belonging to some cluster $\alpha$, we update $\phi^k_j=x^k$ for all $j \in \alpha$ and re-compute their exact gradient at the current iterate. That is, we do not make any approximations yet, but rather trigger re-computation to occur more often for the whole cluster. Instead of just updating one $\phi^k_i$ and $f'_i(\phi^k_i)$, we update $n_\alpha = n/m$. 
+
+Jumping into the proof of the key theorem, leaving the Lyapunov function unchanged: 
+\begin{itemize}
+\item The first term is modified by replacing every occurrence of $1/n$ by $n_\alpha/n$ = $(n/m)/n=1/m$. The time constant of this recursive averaging is effectively sped up, because we re-compute more often.
+\item Same is true for the second term, the $\phi_i^k$ are drawn faster towards the recent iterate $x^k$  
+\end{itemize}
+The problem seems to be that we do not get the same benefit as before, where we were able to increase the step size $\gamma$. How can we understand how the choice of $\gamma$ came about? 
+\item
+How is $\gamma$ determined? Since there are many constant whos choice is coupled, this is not completly straightforward. The details can be found in Adefazio's thesis in subsection 4.8.1. Somewhat counter inutitively one starts by fixing $\gamma$ in the desrired form and then work out the other constants. So in our case, we could do the same asn start by setting $\gamma = 1/2(\mu m+L)$. This results in $\beta = \frac{2\mu m+ L}{L}$, then $c=\frac{1}{2 \gamma (1-\gamma\mu)m}$ (if really $m$ shows up in $c_1$) and $\kappa = 1/(\mu \gamma)$. Now the key step is checking the non-positivity of $c_2$ (in the notation of the thesis), which is (again assuming that $m$ replaces $n$). 
+That ends up being a complicated term, but everywhere $n$ is replaced by $m$, so the argument goes through. 
+\item There are two challenges in moving towards a more realistic update rule and setting. First, the correction computed on a per cluster basis is only an approximation to the true correction required. Second, the cluster-level correction will not be computed at a fixed point, but probably somehow averaged (or can it always be set to the gradient of the last point seen?). Let us focus on the first part and assume for now, that in the worst case, we would compute a new correction for the cluster (even, if it is prohbitively expensive. This way we can keep track of points $\phi^k_\alpha$ and use the natural definition $f_\alpha(w) := \sum_{i \in \alpha} f_i(w)$. 
+\item Let us try to start fresh from a good guess of a Lyapunov function. 
+\begin{align}
+T^k := & 
+\frac{1}{n} \sum_\alpha \sum_{i \in \alpha} f_i(\phi_\alpha^k)- f(x^*) \\ \nonumber 
+& -\frac 1n \sum_\alpha  \langle \sum_{i \in \alpha} f_i'(x^*), \phi_\alpha^k -x^* \rangle + c\| x_k - x^* \|^2  \\ \nonumber
+= & \frac{1}{n} \sum_\alpha f_\alpha(\phi_\alpha^k)- f(x^*) \\ \nonumber
+& -\frac 1n \sum_\alpha  \langle f_\alpha(x^*), \phi_\alpha^k -x^* \rangle + c\| x_k - x^* \|^2 
+\end{align}
+As by updating $\phi_\alpha^k = x^k$ for some $\alpha$ in every step, we affect on average not just $1$, but rather $n/m$ data points, we would get
+\begin{align}
+\E  \left[ \frac 1n \sum_\alpha  f_\alpha(\phi_\alpha^{k+1}) \right] =  \frac 1m f(x^k)  - \left( 1 - \frac 1m \right) \sum_\alpha f_\alpha(\phi_\alpha^{k}) 
+\end{align}
+similarly for the third term (second term is just a constant)
+\begin{align}
+\E 
+\left[ 
+ \frac 1n \sum_\alpha  \langle f_\alpha(x^*), \phi_\alpha^k -x^* \rangle 
+ \right]  = & \frac 1m \langle f'(x^*), x^k -x^* \rangle  \\ \nonumber
+&  + \left( 1 - \frac 1m \right) \frac 1n \sum_\alpha \langle f_\alpha'(x^*), \phi_i^k - x^* \rangle 
+\end{align}
+See above, this is essential for getting a large step size $\gamma$ and hence a (much) better rate.
+\item Now let us go throught the critical stes of bounding the norm $\| x^k - x^* \|^2$. Everything goes through as in the SAGA paper until 
+\begin{align}
+\E \| x^{k+1} -x^*\|^2 = & \| x^k -x^*\|^2 - 2\gamma \langle f'(x^k)-f'(x^*) , x^k-x^* \rangle \\
+& + \E \| w^{k+1}  -x^k + \gamma f'(x^*) \|^2
+\end{align}
+The last expectation gets bounded in the SAGA analysis with Lemma 3 (or 7), which seems to be key. We need to plug-in the new update equation 
+\begin{align}
+& \E \| w^{k+1}  -x^k  \|^2 \\
+& = \gamma^2 \left\|  
+\underbrace{f'_j(x^k) - f'_{\alpha(j)}(\phi^k_{\alpha(j)}) + \frac 1n \sum_\alpha |\alpha|  f'_{\alpha}(\phi^k_{\alpha})}_{:=X} 
+\right\|^2
+% \| - \tfrac 1n  \sum_i f_i'(\phi_\alpha^k) \|^2
+\end{align}
+What is the expectation of the inner part?
+\begin{align}
+\E[ X ] = f'(x^k)
+\end{align}
+perform variance decompositon 
+\begin{align}
+& \E \| w^{k+1}  -x^k  \|^2 \\
+& = \gamma^2 \left\|  
+\underbrace{f'_j(x^k) - f'_{\alpha(j)}(\phi^k_{\alpha(j)}) + \frac 1n \sum_\alpha |\alpha|  f'_{\alpha}(\phi^k_{\alpha})}_{:=X} 
+\right\|^2
+\end{align}
+
+
+\end{itemize}
+
+\end{document} 
+
+
+
+\item Let us assume that the update works as follows. Each cluster has a $f_\alpha'$ correction stored. This correction is computed recursively from the $f_i'$ computed for data points $i$ belonging to cluster $\alpha$ as the average. These $f_i'$ contributions will be computed at different points $\phi_i$ (so, there is no single $\phi_\alpha$). 
+
+
+
+\begin{align}
+
+\end{align}
+
+\begin{align}
+T^k & := \frac{1}{n} \sum_i f_i(\phi_i^k) - f(x^*) -\frac 1n \sum_i \langle f_i'(x^*), \phi_i^k -x^* \rangle + c\| x_k - x^* \|^2  \\
+& = \frac{1}{n} \sum_\alpha  \sum_{i \in \alpha} f_i(\phi_i^k) - f(x^*) 
+\end{align}
+
+
+\end{document}
+
+Setting the third factor in round brackets to zero simply results in $\kappa = 1/(\gamma\mu)$. Setting the first round bracket factor to zero gives (assuming that we can replace $n$ by $m$) 
+\begin{align}
+\frac1m -  \frac{2c \gamma (L - \mu)}{L} - 2 c \gamma^2 \mu \beta =  0 \\
+\gamma^2 +\frac{(L-\mu)}{\mu \beta L} \gamma - \frac{1}{m 2c \mu \beta} 
+\end{align}
+which has solutions
+\begin{align}
+\gamma & = -\frac12  \frac{(L-\mu)}{\mu \beta L} 
+\sqrt{ \left( \frac{(L - \mu)}{2 \mu \beta L} \right)^2 + \frac{1}{2 m c  \mu \beta}  }
+\end{align} 
+The claimed outcome is $\gamma = \frac{1}{2 (\mu m + L)}$.
+
+TODO:  Check thesis to see how this formula for $\gamma$ comes about. See whether we can get larger step size. Then merge with Brian's full analysis that includes handling of approximation errors. 
+\end{itemize}
+
+
+\end{document}
+\newpage
+
+
+\begin{itemize}
+\item  Start with a modified  Lyapunov function over clusters. 
+	\begin{itemize}
+	\item cluster index $\alpha$. Relative sizes of cluster $\pi_\alpha$. 
+	\item correction avaialble for cluster $\alpha$ at time step $k$: $v_\alpha^k$
+	\item how can we retain the information about the iterate?
+	\end{itemize}
+\newpage
+\begin{align}
+T^k := \sum_{\alpha} \pi_\alpha f_\alpha^k - f(x^*) - \sum_{\alpha} \langle f'(
+\end{align}
+\item Investigate the following mode: update $r$ of the $\phi^k_i$ instead of just one. 
+\item Question: how does that improve the convergence rate 
+\item First term: 
+\begin{align}
+\E[ \frac 1n ...]  = \frac{r}{n} f(x^k) + \frac{}{}
+\end{align}
+\end{itemize}
+
+%%%%%% OLD STUFF
+
+%%%%% MOVED AWAY %%%%%
+\subsection{Basic Bounds} 
+
+By making a smoothness assumption, we can bound the key norm directly as
+\begin{align}
+\| f'_i(w) - f_i'(w^*) \| \le L\| w - w^*\| \,.
+\end{align}
+Yet the more fruitful bound is the following (see Shalev-Schwarz, SAGA) 
+\begin{align}
+& \| f'_i(w) - f_i'(w^*) \|^2 \le 2L h_i(w)
+\end{align}
+where we define 
+\begin{align}
+& h_i(w)  := f_i(w) - f_i(w^*)+  \langle w-w^*, f_i'(w^*) \rangle, 
+\end{align}
+which gives in expectation
+\begin{align}
+\E \| f_i'(w) - f_i'(w^*)\|^2 \le 2L (f(w) - f(w^*))\,.
+\end{align}
+
+%%%%%%%%
+
+
+\end{document}

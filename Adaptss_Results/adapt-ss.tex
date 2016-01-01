@@ -1,0 +1,35 @@
+%%This is a very basic article template.
+%%There is just one section and two subsections.
+\documentclass{article}
+
+% use Times
+\usepackage{times}
+\input{commands}
+\usepackage{amsmath}
+\usepackage{nips15submit_e,times}
+\author{}
+
+\newcommand{\highlight}[1]{\textcolor{red}{#1}}
+
+\begin{document}
+\title{Learning with Adaptive Sample Sizes}
+
+%\author{\\ Author Name\\
+%{\small \href{mailto:author@ethz.ch}{author@ethz.ch}}}
+\date{} 
+
+\maketitle
+
+\input{00_abstract}
+\input{01_intro}
+\input{02_related_work}
+\input{03_formulation}
+\input{04_results}
+\input{05_conclusion}
+\input{06_appendix}
+
+\bibliographystyle{alpha}
+\bibliography{bibliography}
+
+\end{document}
+

@@ -1,0 +1,407 @@
+\section{Formulation}
+
+In this manuscript, we very often need to translate the
+suboptimality on a subsample of the training set to suboptimality on empirical
+risk of the training set. To this end, we will frequently use the following
+Theorem.
+ \begin{theorem} \label{theorem:generalization_bound_on_subset}
+ 		Let $\w_\S$ is $\epsilon$-suboptimal on sample $|\S| = m$, means 
+ 		$\risk_\S(\w_\S) - \risk_\S^* \le \epsilon$. 
+ 		If $\S \subset \T$ is a subset of $|\T| = n$, then suboptimality of $\w_\S$
+ 		on set $\T$ is bounded w.h.p as: 
+ 		\begin{align}
+			\E \left[ \risk_\T(\w_\S) - \risk_\T^*\right] \le \epsilon +
+			\frac{n-m}{n} \bound(m)
+		\end{align}
+		where expectation is over random choice of superset $\T$ with size $n$. 
+ \end{theorem}
+\begin{proof}
+See appendix.
+\end{proof}
+
+\subsection{Motivation}
+As mentioned perviously, we aim at improving the
+convergence of SAGA in the large-scale setting. In this section, We
+will demonstrate the idea of our approach with a simple example. Remember the
+setting of section \ref{sec:callenge_saga}.
+ If we pick all the training set $\T$, then SAGA guarantees the following
+ convergence rate:
+ \begin{equation*}
+ 	\E \left[|\risk_{\T}( \w_{\T}^n) - \risk^*_{\T}|\right] \leq 
+ 	(1-\frac{1}{n})^n L \epsilon_0 \leq \exp(-1) L\epsilon_0
+ \end{equation*}
+However, we can achieve a better suboptimality bound using the same method i.e.
+SAGA. If we randomly sample half of the data $\S \subset \T$, such that $|\S| =
+\frac{n}{2}$, and iterate on it for $n$ times, then we can provide a better
+suboptimal solution on the risk $\risk_{\S}$: 
+\begin{equation*}
+	\E \left[ |\risk_{\S}( \w_{\S}^n) - \risk^*_{\S}|\right] \leq (1-
+	\frac{n}{2}) ^n L \epsilon_0 \leq \exp(-2) L \epsilon_0'
+\end{equation*}
+We assume the initial error is the same for both small and large set i.e.
+$\epsilon_0 = \epsilon_0'$. Theorem
+\ref{theorem:generalization_bound_on_subset} states we can translate the bound
+to the suboptamility of risk on the superset $\T$ by paying additional cost: 
+\begin{equation*}
+	\E \left[|\risk_{\T} (\w_{\S}^n) - \risk^*_{\T}| \right] \leq 
+	\exp(-2) L \epsilon_0 + \frac{1}{2} \bound(\frac{n}{2})
+\end{equation*}
+where the expection is over the random choice of stochastic gradients and and random choice of all training set with size $n$ i.e.
+$\forall |\T| = n$. The additive term $\frac{1}{2} \bound(\frac{n}{2})$ is
+relatively small for considerably large data set, when $\bound(n/2)<2 \exp(-2) L\epsilon_0$ holds.
+	Therefore, SAGA surperisingly yields a better
+	suboptimality using a smaller set, as it is illusterated in Figure
+	\ref{fig:geometric}. 
+	This motivates us to propose an adaptive sample size strategy for SAGA.
+	In other words, we aim at staring the optimization on a smaller subset of
+	the data and iteratively increase the size of the optimization set.
+	Our analysis will show that adaptive sample size SAGA enjoys a better convergenc rate. 
+\begin{figure}
+    \begin{center}
+        \begin{tikzpicture}[thick]
+        \node (O) at (0,0) {\textbullet};%x
+        \node (B) at (5,5) {\textbullet};%xs
+        \coordinate (D) at (0,-3);%rn
+        \node (E) at (-2,2) {\textbullet};%xm
+        \node (G) at (4,4){\textbullet};%wpn
+        \node (H) at (1.5,3.5){\textbullet};%wpm
+        \draw [dashed] (B)--(O);
+        \draw [dashed] (B)--(E);
+        \draw  [dashed] (O) circle (3cm);
+        \draw  [dashed]  (O)--(D);
+        \draw [->] (B)--(G);
+        \draw [->] (B)--(H);
+        \tkzLabelSegment[below=2pt](O,O){\textit{$\risk_{\T}^*$}}
+        \tkzLabelSegment[below=2pt](G,G){\textit{$\w^+_{\T}$}}
+        \tkzLabelSegment[below=2pt](H,H){\textit{$\w^+_{\S}$}}
+        \tkzLabelSegment[below=2pt](E,E){\textit{$\risk_{\S}^*$}}
+        \tkzLabelSegment[below=2pt](O,O){\textit{$\risk_{\T}^*$}}
+        \tkzLabelSegment[above=2pt](B,B){\textit{$\w_0$}}
+        \tkzLabelSegment[left=2pt](O,D){\textit{$\frac{1}{2}\bound(\frac{n}{2})$}}
+        \end{tikzpicture}
+    \end{center}
+    \caption{SAGA enjoys a better convergence rate on a smaller training set
+    $\S \subset \T$; here $|\T| = n$ and $|\S| = \frac{n}{2}$. }
+  \label{fig:geometric}
+\end{figure}
+
+\subsection{Adaptive sample size method}
+The motivational example confirms that SAGA yields a better convergence rate on
+a subset of training set $\S \subset \T$ - compared to convergence rate on the whole
+training set $\T$.
+A subset of training set leads to convergence towards not exactly to the ERM,
+but instead a suboptimal ball around ERM.
+Indeed, convergence to the suboptimal ``ball'' is faster than convergence to the
+ERM ``point'' (as Figure \ref{fig:geometric} illustrates). The radius of the
+ball is dominated by generalization bound $\bound(|\S|)$, which decreases for
+larger subset. Now, we face a tradeoff between optimization convergence rate and
+statistical efficiency on subset $\S$; a samller subset $\S$ results a better
+convergence rate towards the suboptimality ball (i.e. a better
+\textbf{computational} complexity), while the raduis of the ball is larger for a
+samller subset $\S$ (which is equivalent to the worse \textbf{statistical
+efficiency}).
+We propose adaptSAGA method to tackle the statistical-computational tradeoff.
+adaptSAGA method starts optimization with a small subset of a given training
+set.
+Since the optimization is faster on a samll set, adaptSAGA yields a fast
+convergence to a suboptimal ball with a large radius. At some points, the method increases
+the size of subset and thereby it reduces the radius of the suboptimal ball.
+Assume we are limited to $\C$ times computation of the stochastic gradient
+,which equivalent to the number of iterations.
+The main question is how we can split this computational budget on subsets
+with different sizes to obtain the best suboptimal solution.
+ 
+Now, we are ready to formulate the adaptive sample size startegy. We are given
+computational budget $\C$, and a loss function $f_{\x}(\w)$. Assume that
+$\risk_{\S} \in \smoothstrong$ for all $|\S| \geq \frac{L}{\mu}$. In this
+manuscript, we focus on the case where $\frac{\mu}{L} \geq \frac{1}{n}$. We
+define the new notation $\U\left(\C,n\right)$ as the best achievable suboptimaily upper-bound on the empirical risk $\risk_{\T}$ where $|\T| = n$ using the
+limited computational complexity $\C$.
+\begin{equation*}
+	  \min_{\w_{\C}} \E| \risk_{\T}(\w_{\C}) - \risk_{\T}^* |
+	  \leq \U(\C,n)
+\end{equation*} 
+where the expecation is with respect to both random choice of stochastic
+gradients and random choice of set $\T$ with size $n$. Clearely, the
+convergence rate of SAGA obtions an upperbound for $\U(\C,n)$ i.e.':
+\begin{equation*}
+	\U(\C,n) \leq (1-\frac{1}{n})^{\C} L \epsilon_0
+\end{equation*}
+as mentione in Lemma \ref{lemma:saga_convergence}. 
+Nonethless, we want to improve this upper bound using the adaptive sample size strategy. In
+adaptive sample size strategy, there are two options in each step: iterating on
+sample size $|\T|=n$, devoting the budget partially on a smaller sample size
+with better convergence rate in exchange of the excess statistical risk. If we
+iterate on the sample size $n$, then the convergence rate of SAGA provide the
+suboptimality on $\U(\C,n)$:
+\begin{equation*}
+	\U(\C,n) \leq \rho_{n} \U(\C-1,n)
+\end{equation*}
+ When we are iterating on a
+subset $\S \subset \T$ with size $m = |\S|$, we have to state the
+sub-optimality in terms of the risk on the superset $\T$. To this end, we can use
+the Theorem \ref{theorem:generalization_bound_on_subset} to provide a bound
+using sub-optimality on set $\C$, i.e. $\U(\C,m)$, and statistical excess risk
+$\frac{n - m}{n}\bound(m)$. As the following equation indicates,
+we minimize the bound over all subsets of $\T$:
+\begin{equation*}
+	\U(\C,n) \leq \min_{m < n} \bigg[\U(\C,m) + \frac{n - m}{n}
+		\bound(m) \bigg]
+\end{equation*}
+The following
+recursive equation summarizes the obtained bound using above two options.
+\begin{equation} \label{eq:recursion}
+	\U(\C,n) = \min
+\left\{
+	\begin{array}{ll}
+		 \rho_{n} \U(\C-1,n)\\
+		\min_{m < n} \bigg[\U(\C,m) + \frac{n - m}{n}
+		\bound(m) \bigg]
+	\end{array}
+\right.
+\end{equation}
+ Note
+that the initial value of the recursion is as follows: 
+\begin{equation*}
+	\forall m: \U(0,m) = L \epsilon_0 
+\end{equation*}
+where $\epsilon_0$ is the error of initial parameter $\w_0$. 
+ The recursion equation could be solved using dynamic
+ programming. Nonetheless, our focus is on the advantages of the adaptive sample
+ size strategy.
+Therefore, we aim at proposing a convergence rate for the adaptive strategy.
+Our favourite case for the computational limit is the streaming setting where
+the computational limit is equal to the sample size i.e. $\C = n$. We firstly
+provide a greedy sample size schedule that obtains a favourable upper-bound on
+the $\U(n,n)$. Then, we will show that in the large-scale setting the
+$\U(n,n)$ convergences to the proposed upper-bound.
+\begin{lemma} \label{lemma:bound_on_u}
+	Given training set $|\T| = n$. Assume $\risk_{\S} \in
+	\smoothstrong$ for all $\left\{ \S \subset \T \big\vert |\S| \geq \frac{L}{\mu}
+	\right\} $ and $L \epsilon_0 = 1$. Let $\kappa = \frac{L}{\mu}$ denote the
+	condition number. Here, we assume $\kappa<n$.
+	There is a schedule of adaptive sample size SAGA that obtains the
+	following sub-optimality:\\
+	If the learning problem lies in $\learning \in \Fu$:  
+	\begin{equation*}
+		\U(2n,n) \leq \bound(n) + \frac{1}{2}(\frac{\kappa}{ n})^2
+	\end{equation*}
+	If the learning problem lies in $\learning \in \Gu$: 
+	\begin{equation*}
+		\U(2n,n) \leq \bound(n) + \frac{1}{2}(\frac{\kappa}{n})^{1.4}
+	\end{equation*}
+\end{lemma}
+\begin{proof}
+	We propose a greedy sechdule of sample size for SAGA and thereby we prove
+	the Lemma. If $\learning \in \Fu$, our schedule will be as follows;
+	Firstly, we devote $2 \kappa$ iterations on sample size $\kappa$. Then, we
+	add a new sample to our set and iterate on new set twice and we continue the
+	sample size increasing by one and two iterations. We inductively prove this
+	sample size schedule provides the above upper-bound. Let start with the basis
+	of the induction i.e. sample size $\kappa$. The convergence of SAGA confirms
+	the sub-optimality: 
+	\begin{eqnarray*}
+		& \U(2\kappa,\kappa) & \leq (1-\frac{1}{\kappa})^{2\kappa} L \epsilon_0 \\
+		& & \leq \exp(-1) \leq \frac{1}{2}(\frac{\kappa}{\kappa})^2 + \bound(\kappa)
+	\end{eqnarray*}
+	Then we assume the upper-bound holds for sample size $n$ and we prove that it
+	holds for $n+1$. Let $\bound(n) = \frac{c}{n}$, where $c$ is a constant
+	independent of $\kappa$ and $n$. According to our schedule, we iterate on
+	sample size $n+1$ twice and devote the rest on the sample size $n$. 
+	Using the recursive equation \ref{eq:recursion} we proceed as follows:
+	\begin{eqnarray*}
+		& \U(2(n+1),n+1) & \leq (1-\frac{1}{n+1})^2 \bigg[ \U(2n,n) + \frac{1}{n+1}
+		\bound(n) \bigg] \\
+		& & \leq \frac{n^2}{(n+1)^2} \bigg[ \frac{\kappa^2}{2 n^2} + \bound(n)
+		+ \frac{1}{n+1} \bound(n) \bigg]
+		\\
+		& & = \frac{\kappa^2}{2 (n+1)^2} + \frac{c n}{(n+1)^2} + \frac{c n}{(n+1)^3}
+		\\
+		& & = \frac{\kappa^2}{2 (n+1)^2} + \frac{c}{n+1} -\frac{c}{(n+1)^3} \\
+		& & \leq \frac{\kappa^2}{2 (n+1)^2} + \frac{c}{n+1} = \frac{\kappa^2}{2
+		(n+1)^2} + \bound(n+1)
+	\end{eqnarray*}
+	Now, we propose a different schedule of sample size for the general uniform
+	convergence rate i.e. $\bound(n) = \frac{c}{\sqrt{n}}$. Firstly, we iterate on
+	sample size $\kappa$ for $2 \kappa$ steps; consequently, the basis of the induction
+	holds. More precisely,
+	\begin{equation*}
+		\U(2\kappa,\kappa)  \leq \exp(-1) \leq \frac{1}{2} (\frac{\kappa}{\kappa})^2 +
+		\bound(\kappa)
+	\end{equation*}
+	Now, assume $n$ is a power of 2 and the upper-bound holds for every
+	sample size with size $\frac{n}{2}$. Then for sample size $n$ we devote the
+	half of computational budget on the sample size $\frac{n}{2}$ and the rest on
+	sample size $n$. Using the recursion equation \ref{eq:recursion}, we have: 
+	\begin{eqnarray*}
+		& \U(2n,n) & \leq (1-\frac{1}{n})^{n} \bigg[ \U(n,\frac{n}{2}) + \frac{1}{2}
+		\bound(\frac{n}{2}) \bigg] \\
+		& & \leq \exp(-1) \bigg[ \frac{\kappa^{1.4}}{2 (\frac{n}{2})^{1.4}} 
+		+ 1.1 \bound(n) \bigg]
+		\\
+		& & \leq  0.5 (\frac{\kappa}{n})^{1.4} + 0.6 \bound(n)
+	\end{eqnarray*}
+\end{proof}
+We use this Lemma to analyse our favourite case of the computational limit, when
+$\C = n$. The following Corollary uses the Lemma to provide upper-bound on
+$\U(n,n)$. 
+\begin{corollary} \label{cor:onepass_bound}
+	If assumptions of the last lemma hold, then there is a schedule of adaptive
+	sample size for SAGA that obtains the following sub-optimality: \\ 
+	When $\learning \in \Fu$:  
+	\begin{equation*}
+		\U(n,n) \leq 3 \bound(n) + 2 (\frac{\kappa}{ n})^2
+	\end{equation*}
+	When $\learning \in \Gu$: 
+	\begin{equation*}
+		\U(n,n) \leq 1.6 \bound(n) + 2^{0.4} (\frac{\kappa}{n})^{1.4}
+	\end{equation*}
+\end{corollary}	
+\begin{proof}
+	If we skip half of the data and iterate on the other half, then the
+	last lemma easily will provide the above bounds. 
+\end{proof}
+So far, we have provided an upper-bound for the adaptive sample size approach.
+Nonetheless, we will show that for considerably large $n$ the
+$\U(n,n)$ monotonically converges to the proposed upper-bound. Consider the case
+where $\learning \in \Fu$, which means $\bound(n) = \frac{c}{n}$. The notation
+$\G(n) = 3 \bound(n) + 2 \left(\frac{\kappa}{n}\right)^2$ as the proposed upper-bound will be used in our analysis. The following lemma, represent the key
+properties of the upper-bound function $\G(n)$ that will be use in future
+discussions. Note that we use the summarize notation $\U(n)$ instead of
+$\U(n,n)$ throughout our analysis.
+\begin{lemma} \label{lemma:gn_ineq}
+	The following inequalities hold: 
+	\begin{itemize}
+	  \item for all $n$:
+	  \begin{equation*}
+		\left( \frac{n}{n+1}\right) \frac{1}{\G(n+1)}  > 
+	\frac{1}{\G(n)}
+	\end{equation*}
+	\item for $n \geq 3 \kappa^2 \geq 100$ :
+	\begin{equation*}
+		\frac{1}{\G(n+1)}
+	\left[1 - \frac{1	}{4} \left( \G(n) + \bound(n)\right)  \right] - 
+	\frac{1}{\G(n)} > 0
+	\end{equation*}
+	\end{itemize}
+	
+\end{lemma}
+\begin{proof}
+	\textbf{The first inequality:}
+	\begin{eqnarray*}	
+		& \left( \frac{n}{n+1}\right) \frac{1}{\G(n+1)}  & > 
+	\frac{1}{\G(n)} \\ 
+	  &\leftrightharpoons  \left( \frac{n}{n+1}\right)  \G(n) & > \G(n+1) \\
+	   & \leftrightharpoons  \left( \frac{n}{n+1}\right) \left(2\left(
+	   \kappa/n\right)^2 + 3/n \right) & > 2\left( \kappa/(n+1)\right)^2 + 3/(n+1) \\ 
+	   & \leftrightharpoons  \frac{2 \kappa^2}{n\left(n+1\right)} & >  \frac{2
+	   \kappa^2}{\left(n+1\right)^2}
+	\end{eqnarray*}
+	\textbf{The second inequality:}
+	If we replace the $\G(n)$ with its closed form formulation with simple
+	algebra yields us:
+	\begin{equation*}
+		(0.5 k^2-3) n^3 -(k^4 + 5 k^2 +3 ) n^2 -(3.5 k^2 +2 k^4) n -k^4 >0 
+	\end{equation*}
+	as long as $0.5 k^2 - 3 >0$ holds, the above inequality holds for considerably
+	large $n$ because the cubic function grows asymptotically. It is easy to show
+	that the condition $n\geq 3 \kappa^2 \geq 100$ confirms the positivity of the
+	left side of the above inequality.
+\end{proof}
+\begin{lemma}
+	Assume that $\bound(n) = \frac{c}{n}$. Then the
+	following inequality holds for sufficiently large $n$.
+	  \begin{equation*}
+		\frac{\U(n+1)+\bound(n+1)}{\G(n+1)} >
+		\frac{\U(n)+\bound(n)}{\G(n)}
+	\end{equation*}
+	\todo[inline]{I have to
+	analyse the case when $\bound(n) = \frac{c}{\sqrt{n}}$.}
+\end{lemma}
+\begin{proof}
+	According to the the recursion equation \ref{eq:recursion}, there are two
+	possibilities for $U(n,n)$
+	\begin{equation*} 
+	\U(n+1) = 
+\left\{
+	\begin{array}{ll}
+		\min_{m < n+1} \bigg[\U(n+1,m) + \frac{n+1 - m}{n+1}
+		\bound(m) \bigg]\\
+		\rho_{n+1} \U(n,n+1)
+	\end{array}
+\right.
+\end{equation*}
+We have to proof the inequality for the both cases. The latter is easier to
+proof, where we have $\U(n+1) = \rho_{n+1} \U(n,n+1)$: 
+\begin{eqnarray*}
+	& \frac{\U(n+1)+\bound(n+1)}{\G(n+1)} &  = 
+	\frac{\rho_{n+1} \U(n,n+1)+\bound(n+1)}{\G(n+1)}  \\
+	& & \frac{\frac{n}{n+1} \U(n,n+1)+\bound(n+1)}{\G(n+1)} \\ 
+	& & \geq  \frac{\frac{n}{n+1} \U(n)+\bound(n+1)}{\G(n+1)} \\
+	&‌ & = \left( \frac{n}{n+1}\right) \frac{\U(n)+\bound(n)}{\G(n+1)}
+\end{eqnarray*}
+To complete the proof, we have to prove that the
+lower-bound is greater than the left side of the main equality, which leads to
+the inequality:
+\begin{eqnarray*}
+	& \left( \frac{n}{n+1}\right) \frac{\U(n)+\bound(n)}{\G(n+1)} & > 
+	\frac{\U(n)+\bound(n)}{\G(n)} \\
+	& \left( \frac{n}{n+1}\right) \frac{1}{\G(n+1)} & > 
+	\frac{1}{\G(n)}
+\end{eqnarray*}
+The above inequality holds according to Lemma \ref{lemma:gn_ineq}. It remains to
+investigate the case, where $\U(n+1) = \min_{m < n+1} \left[\U(n+1,m) +
+\frac{n+1 - m}{n+1} \bound(m) \right]$. Assume the $m^*$ denote the minimizer of the right side.
+Using this minimizer we will propose a lowerbound on $\U(n,m^*) + \bound(m^*)$.
+\begin{eqnarray*}
+	& \U(n+1) & = \U(n+1,m^*) + \frac{n+1 - m^*}{n+1}
+		\bound(m^*) \\ 
+		&  & = \U(n+1,m^*) + \bound(m^*) - \bound(n+1) \\ 
+		& & = (1-1/m^*) \U(n,m^*) + \bound(m^*) - \bound(n+1) \\ 
+		& & = (1-1/m^*) \left[ \U(n,m^*) + \bound(m^*) \right] +
+		\frac{1}{m^*} \bound(m^*) - \bound(n+1)
+\end{eqnarray*} 
+According to the recursion equation \ref{eq:recursion} we can propose a lower
+bound in the following way: 
+\begin{eqnarray*}
+	 & \U(n,m^*) + \bound(m^*) & \geq \min_{m}
+	 \U(n,m) + \bound(m) \mp \bound(n) \\ 
+	 & & \geq \U(n) + \bound(n)
+\end{eqnarray*}
+Plunging this the expansion of $\U(n+1)$ yields: 
+\begin{eqnarray*}
+	& \U(n+1) + \bound(n+1) & \geq (1-1/m^*)\left[ \U(n) + \bound(n)\right] +
+	\frac{1}{m^*} \bound(m^*) 
+\end{eqnarray*}
+We minimize the function $f(m^*) =  (1-1/m^*)\left[ \U(n) +
+\bound(n)\right] + \frac{1}{m^*} \bound(m^*) $
+with respect to $m^*$. Indeed, we want to remove the dependency to the
+$m^*$.
+\begin{eqnarray*}
+	& \U(n+1) + \bound(n+1) & \geq \left( \U(n) + \bound(n)\right) \left[1 -
+	\frac{1	}{4} \left( \U(n) + \bound(n)\right)  \right]
+\end{eqnarray*}
+In corollary \ref{cor:onepass_bound}, we proved that $\U(n) \leq \G(n)$. We plug in
+this inequlity into the above inequality: 
+\begin{eqnarray*}
+	& \U(n+1) + \bound(n+1) & \geq \left( \U(n) + \bound(n)\right) \left[1 -
+	\frac{1	}{4} \left( \G(n) + \bound(n)\right)  \right]
+\end{eqnarray*}
+Consequently, the following inequality holds; 
+\begin{eqnarray*}
+	& \frac{\U(n+1) + \bound(n+1)}{\G(n+1)} & \geq \frac{ \U(n) +
+	\bound(n)}{\G(n+1)}
+	\left[1 - \frac{1	}{4} \left( \G(n) + \bound(n)\right)  \right]
+\end{eqnarray*}
+We prove the above lower bound is more than the right side of the main
+inequality i.e.
+\begin{eqnarray*}
+	& \frac{ \U(n) +
+	\bound(n)}{\G(n+1)}
+	\left[1 - \frac{1	}{4} \left( \G(n) + \bound(n)\right)  \right] & >
+	\frac{\U(n)+\bound(n)}{\G(n)} \\ 
+	& \leftrightharpoons \frac{1}{\G(n+1)}
+	\left[1 - \frac{1	}{4} \left( \G(n) + \bound(n)\right)  \right] & >
+	\frac{1}{\G(n)}
+\end{eqnarray*}
+\end{proof}

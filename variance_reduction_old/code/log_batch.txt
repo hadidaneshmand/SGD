@@ -1,0 +1,6 @@
+acquire
+release cp config/config_heart.txt /Users/hadi/Documents/Education/SGD/variance_reduction/code/config/config_heart_asaga_s0.01_t-1_l0.0001_p-1_o-1_e200_n500_h-1
+acquire
+release cp config/config_heart.txt /Users/hadi/Documents/Education/SGD/variance_reduction/code/config/config_heart_asaga_s0.001_t-1_l0.0001_p-1_o-1_e200_n500_h-1
+acquire
+acquire

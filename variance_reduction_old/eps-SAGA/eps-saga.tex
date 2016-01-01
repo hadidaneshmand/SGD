@@ -1,0 +1,444 @@
+\documentclass{article}
+\usepackage{amsmath}
+\usepackage{color}
+
+\newcommand{\E}{{\bf E}}
+
+\newcommand{\al}[1]{{\color{blue}{#1}}}
+\newcommand{\highlight}[1]{\textcolor{red}{#1}}
+
+\begin{document}
+
+\section*{SAGA} 
+\subsection*{Motivation}
+
+Our starting point is the SAGA algorithm as a way of reducing variance in SGD-style iterative algorithms. The shared advantage with algorithms like SVRG is its exponential convergence rate, which (at least theoretically) is a huge step forward relative to plain SGD. However, there are also two disadvantages of SAGA: First, one needs to store previous gradients for each data point, requiring $O(n)$ extra storage. Second, the lookup by data point does not do any generalization and has to use historic gradient information at an iterate that lags on average $n$ steps behind. This may not be effective in a regime, where the iterate still changes a lot. Instead, we propose to cluster data points into groups (either in a pre-processign step or on the fly) in order to share information about how the $i$-gradient $f'_i(x)$ differs from the true gradient $f'(x)$. The idea is that by grouping data points with similar $f_i'(x)$, we can achive corrections that are favorable with regard to the SAGA correction, yet also require less space, typically $O(\text{\# clusters})$.
+
+
+\subsection*{Analysis}
+
+\paragraph{Starting point} 
+
+SAGA belongs to a family of generalized SGD algorithms that optimizes a function $f(x) = \frac 1n \sum_i f_i(x)$ (Lipschitz, strongly convex, etc.) by generating a stochastic iterate sequence\footnote{We work in the prox-function free setting (i.e.~$x^{t+1}=w^{t+1}$)}
+
+\begin{align}
+x^{t+1} = x^t - \gamma v^t, \qquad \text{where} \quad \E v^t = f'(x^t)
+\end{align}
+and $\gamma>0$ is a step size (that may also vary with $t$). 
+
+One avenue of analysis for such algorithms is to bound (and derive a recurrence inequality) for $\E \| x^t - x^*\|^2$, the expected squared distance of the $k$-th iterate from the optimum. Plugging in the evolution equation one gets 
+\begin{align}
+\E \|x^{t+1}-x^*\|^2 & = \E \left\| x^t - \gamma v^t - x^* \right\|^2 
+\\ & = 
+\| x^t -x^*\|^2  - 2 \gamma \left\langle  x^t - x^*,  f'(x^t)  \right\rangle 
++ \gamma^2 \E \left\| v^t \right\|^2
+   \nonumber
+\end{align}
+The (negative) middle term is what guarantees progress for any gradient descent procedure on a (strongly) convex objective, the third (positive) term with the norm of the update vectors is the key quantity that needs to be controlled.  
+
+\paragraph{Notation} As many quantities are measured relative to the point of convergence, i.e.~$x^*$, we define shorthand notation and introduce $\delta h(x) := h(x) - h(x^*)$ for a function $h$ (specifically $h=f$, $h=f_i$, $h=f_i'$). Moreover we define a linearization of $f_i$ around the optimum as $l_i(x) :=  \langle f'_i(x^*), x -x^* \rangle$. Furthermore we generalize sume of functions values by writing $h(\phi) := \frac 1n \sum_i h_i(\phi_i)$ for a matrix $\phi=(\phi_i)_{i=1,\dots,n}$, $\phi_i \in \Re^d$. 
+ 
+\paragraph{Progress from gradient descent} Let us look at the middle term first. In the SAGA analysis Lemma 1 provides a (rather complex) bound as follows\footnote{This is a standard term. It would be worthwhile comparing this with other proofs.}: 
+\begin{align}
+\label{eq:complex-convex}
+\left\langle  x^*- x^t,  f'(x^t)  \right\rangle  \leq 
+& - \frac{L-\mu}{L} \delta f(x^t) - \frac \mu 2 \| x^t - x^*\| 
+\\ \nonumber & 
+-\frac{1}{2L} \E \| \delta f_i'(x^t)\|^2 - \frac{\mu}{L} l(x^t) 
+\end{align}
+Note that a simpler (more standard) bound is given by
+\begin{align}
+\label{eq:simple-strong}
+\left\langle  x^*- x^t,  f'(x^t)  \right\rangle  \leq - \delta f(x^t) - \frac \mu 2 \| x^t - x^* \|^2
+\end{align}
+However, this latter bound is not sufficient for the analysis (as performed). The main reason for this is that one would like to avoid having to individually bound $ \E \| \delta f_i'(x^t)\|^2$. Instead one would like to get a bound that includes a term of the form $\tau \E \| \delta f_i'(x^t)\|^2$, where one can chose $\tau \leq 0$, in which case this terms works in the "right direction" and it suffices to exploit the non-negativity of the norm. For this reason, one seeks a contribution in the bound that has a negative sign, which is what the modified bound gives as $-(1/2L)<0$.   
+
+\paragraph*{Deterministic part of squared norm}
+Now let us look at  bounding the squered norm term.  The first step is to center the expectation 
+\begin{align}
+\E \| v^t \|^2 = \E \| v^t - \E[v^t] \|^2 + \E[v^t]^2
+= \E \| \underbrace{v^t - f'(x^t)}_{=:w^t}  ] \|^2 + \| f'(x^t)\|^2
+\label{eq:bound_vt}
+\end{align}
+The deterministic part is simply the squared norm of the gradient at the iterate. It is inevitable and cannot be reduced. The term $w^t$ is what characterizes the specific qualities of a stochastic algorithm. The smaller the variance, the smaller this contribution. This is the term that will be further investigated. 
+
+\paragraph*{Bound for SAGA-style updates} 
+Let us come back to the SAGA algorithm, trying to keep things a bit more general, so that we can investigate further improvements. In general, we will have some correction for $f'_i$ corresponding to an estimation of the stochastic gradient along with some way to compute the expectation of that correction. For now we refer to such a  correction by $g_i(\phi^t)$, so that $g(\phi^t) := \frac 1n \sum_i  g_i(\phi^t)$ denotes its expectation, which we assume to be efficiently computable (without having to perform an explicit sum over $n$ terms). Here the matrix $\phi$ denotes a number of  past iterate values at which corrections have been computed. Then we can write for the stochastic part of the update direction 
+\begin{align}
+w^t := f'_i(x^t) - g_i(\phi^t) + g(\phi^t) - f'(x^t) \,. 
+\end{align}
+One typical trick to proceed here is to introduce terms $f'_i(x^*)$ and to split up the direction vector 
+\begin{align}
+& w^t = w_1^t - w_2^t, \quad \text{where} \quad w_1^t := \delta f'_i(x^t) - f'(x^t), 
+\quad w_2^t := \delta g_i(\phi^t) - g(\phi^t) 
+\end{align}
+with $\delta g_i(\phi) = g_i(\phi)-f'_i(x^*)$. This is in preparation for applying the parameterized bound 
+\begin{align}
+\| w\|^2 \leq (1 + \beta) \|w_1\|^2 + (1 + \frac 1 \beta) \| w_2\|^2, \quad \beta >0 
+\label{eq:beta_bound}
+\end{align}
+which yields, more specifically
+\begin{align}
+\nonumber
+\E \| v^t \|^2 \leq \| f'(x^t) \|^2 + (1+\beta) \E \| \delta f'_i(x^t) - f'(x^t)\|^2 + (1+\beta^{-1}) \E \|  \delta g_i(\phi^t)  - g(\phi^t)\|^2
+\end{align}
+Note that a common practice is to use $\beta=1$.
+
+On these terms, we can now perform a reverse variance decomposition since $\E  \delta f'_i(x^t) = f'(x^t)$ and $\E \delta g_i(\phi^t) = g(\phi^t)$, which yields 
+\begin{align}
+\E \| v^t \|^2 \leq &
++ (1+\beta) \E \| \delta f'_i(x^t) \|^2 + (1+\beta^{-1}) \E \|  \delta g_i(\phi^t) \|^2 -  \beta \| f'(x^t) \|^2 - (1+\beta^{-1}) \| g(\phi^t) \|^2
+\end{align}
+As the last term is difficult to deal with, so one option is to drop
+it as done in SAGA\footnote{My interpretation of the proof of Lemma 3
+  (resp.~7). This feels like a significant weakening, something that
+  can be further investigated.}. In order to recover a stronger bound,
+we instead keep this term.
+
+\paragraph{Bounding the SAGA specific term}
+
+In the next step, a bound on $\E \|  \delta g_i(\phi_i^t) \|^2$ is seeked. The SAGA analysis uses Lemma 2 to that extend, which is based on the basic inequality for Lipschitz gradients
+\begin{align}
+\| f'(x) - f'(y) \|^2 \leq 2L\left[ f(y) - f(x) - \langle f'(x), y-x \rangle \right] \,.
+\end{align}
+resulting directly in the bound 
+\begin{align}
+\E \|  \delta f'_i(\phi_i^t) \|^2 \leq 2L  \left[ \delta f(\phi^t) - l (\phi^t) \right] \,.
+\label{eq:lipschitz}
+\end{align}
+Moreover a bound on $-\| f'(x^t) \|^2$ is needed, which can be obtained via strong convexity 
+\begin{align}
+-\| f'(x^t) \|^2 \leq - 2\mu ( \delta f(x^t) - l(x^t)) 
+\label{eq:strong_convexity_f}
+\end{align}
+The same bound holds for $\| g(\phi^t) \|^2$:
+\begin{align}
+-\| g(\phi^t) \|^2 \leq - 2\mu ( \delta f(\phi^t) - l(\phi^t)) 
+\label{eq:strong_convexity_g}
+\end{align}
+
+The final bound one arrives at is:
+\begin{align}
+\E \| v^t \|^2 \leq & (1+\beta) \E \|  \delta f'_i(x^t) \|^2 % changed from \phi
++ 2(1+\beta^{-1})L  \left[ \delta f(\phi^t) - l (\phi^t) \right] \nonumber \\
+&- 2 \beta \mu ( \delta f(x^t) - l(x^t)) - 2 \mu (1+\beta^{-1}) ( \delta f(\phi^t) - l(\phi^t))
+\end{align}
+
+
+
+\paragraph{Generalizing SAGA updates}
+
+How about generalizing the correction to a weighted (convex) sum of the following type (exploiting some clustering structure in how to chose $\tau$): 
+\begin{align}
+g_i(\phi^t) = \sum_{j} \tau_{ij} f'_j(\phi^t_j), \quad \text{with} \quad \sum_{j} \tau_{ij} =1 \; (\forall i), \;\; \tau_{ij} \geq 0 \; (\forall i,j)\,,
+\end{align}
+where $\tau_{ij} = \delta_{ij}$ is the special case of the original SAGA algorithm. Can we carry over the basic result of Lemma 2 to the general case? Note that the difficulty is in the fact that we now have an averaging and that the indexes do not simply match up. So let us first look at the case, where $\tau_{ij} \in \{0,1\}$, i.e.~selection of one "neighbor" $j$ instead of performing avaraging.  This makes a first step simpler.  
+
+Option 1 would be to not pivot the analysis around $f'_i(x^*)$, but for each $i$ to use the index $j$ that it is mapped to $(\tau_{ij}=1)$. Then instead of getting $\E\| \delta f_i'(x^t)\|^2 = \E \| f'_i(x^t) - f_i'(x^*)\|^2$ one would get $\E \|f'_i(x^t) - f_j'(x^*)\|^2$, where implicitly index $j=j(i)$ will always depend on the primary index $i$ randomly selected at each round.  The problem is that in the SAGA analysis $\E\| \delta f_i'(x^t)\|^2$ will be matched up with the same term coming from the linear part in the recurrence, see Eq.~\eqref{eq:complex-convex}. So, if we want to retain this line of argument, we need to make this term appear somehow, e.g.~through the same trick as above 
+\begin{align}
+\E \|f'_i(x^t) - f_j'(x^*)\|^2 \leq 2 \E\| f'_i(x^t) - f'_i(x^*) \|^2 + 2\E \| f'_i(x^*) - f'_j(x^*)\|^2
+\label{eq:bound_ij}
+\end{align}
+We would get a an additional factor of $2$ (have to see how much that affects the final rate) and a term that now very plausibly measures how different the gradients $f'_i$ and $f'_j$ are at the optimum. Let us assume simply that the way the mapping between $i$ and $j$ works, we can guarantee that 
+\begin{align}
+\E \| f'_i(x^*) - f'_j(x^*)\|^2 < \frac \epsilon 2\,,
+\end{align}
+postposing any discussion of how to cluster data points as to guarantee this property. So we would get the same bound as SAGA with an additional factor (of $2$ ) and an additonal error $\epsilon>0$. 
+
+\al{TODO: See what conditions we need so that $\epsilon_{i,j} \rightarrow 0$.}
+
+\paragraph*{Lyapunov function method: ansatz}
+
+We have two (coupled) update processes in SAGA: First, we evolve the iterate $x^t$, second, we also update the stored points $\phi_i^t$. It is not immediately clear, how to treat this in the analysis. The proof idea of SAGA is to combine both aspects in a single Lyapunov function with a relative weight $\alpha$ that is determined later. So the proposed ansatz is 
+\begin{align}
+T^{t} := & \| x^{t} - x^*\|^2 + \alpha \left[ \delta f(\phi^{t}) -  l(\phi^{t})  \rangle \right] 
+\end{align}
+We already know that
+\begin{align}
+\E \| x^{t+1} - x^* \|^2 \leq & (1-\gamma \mu) \| x^t - x^*\|^2
+\\ \nonumber
+& + \gamma \left( (1+\beta) \gamma  - \frac{1}{L} \right) \E \| \delta f'_i(x^t) \|^2 
+\\ \nonumber
+& + 2(1+\beta^{-1}) \gamma^2 (L - \mu) \left[ \delta f(\phi^t) - l(\phi^t) \right]
+\\ \nonumber
+& - \left( 2 \gamma \left( \frac{L - \mu}{L} \right) \highlight{+} 2 \beta \mu \gamma^2 \right) \left[ \delta f(x^t)-  l(x^t) \right]
+\end{align}
+We can already read off the (best) possible rate as $\rho = (1-\gamma \mu)$. Obviously, as $\mu$ is given, the key is the choice of the step size $\gamma$.  
+
+Note that there is only one term that comes with a coefficient that will inevitably be positive, namely  $\delta f(\phi^t) - l(\phi^t)$. As we cannot deal with this term directly, the trick is to make this part of the Lyapunov function (this motivates the special choice). 
+
+\textit{How does the proposed generalization of SAGA affect this? First, the $(1+\beta)\gamma^2$ may end up being larger, e.g.~$2(1+\beta^{-1}) \gamma^2$ as we have to perform another squared norm splitting step. This seems not to be crucial. The more tricky part is an additional term $\gamma^2 \epsilon$ that will show up.}
+
+It is straightforward to compute the expectations of the remaining terms in $T^t$, namely
+\begin{align}
+\E \left[ \delta f(\phi^{t+1}) - l (\phi^{t+1}) \right] 
+= 
+\frac 1n \left[ \delta f(x^t) - l(x^t) \right] +  \frac{n-1}{n} \left[ \delta f(\phi^t) -  l(\phi^t) \right] 
+\end{align}
+This equation captures the (average) lagging behavoir of the $\phi^t$ iterates relative to the faster evolving $x^t$ iterate. \textit{Note that when generalizing SAGA, we will get a speed-up here, if we define the mapping between $i$ and $j$ dynamic, so that more data points can profit from the same fresh update in every step.}
+
+\paragraph*{Lyapunov function method: recurrence}
+
+Putting things together ($...$ denotes the above norm bound) we get 
+\begin{align}
+\E T^{t+1} \leq &... + \frac {\alpha} n \left[ \delta f(x^t) - l(x^t) \right] +  \frac{\alpha(n-1)}{n} \left[ \delta f(\phi^t) -  l(\phi^t) \right] 
+\end{align}
+
+We now have to compute the coefficients for all terms. We also need to subtract the contribution that gets absorbed in the Lyapunov function, namely we need $\rho \alpha \left[ \delta f(\phi^t) - l(\phi^t) \right]$.
+
+\begin{align}
+% 1 
+\E \| \delta f'_i(x^t) \|^2 \to & \left[ \gamma \left((1+\highlight{\beta}) \gamma - \frac 1L \right)  \right]  \\
+% 2
+\delta f(\phi^t) - l(\phi^t) \to & \left[ \highlight{\alpha} - \frac{\alpha}{n} + 2(1+\beta^{-1}) \gamma^2 (L - \mu) \right] 
+\\
+% 3 
+\delta f(x^t)  - l(x^t) 
+\to & \left[ \frac \alpha n- 2\gamma \left( \frac{L -\mu}{L} \right)- 2 \beta \mu \gamma^2  \right] 
+\end{align}
+
+\paragraph*{Coefficients}
+
+The coefficient argument is quite involved. We first check asymptoics, assuming $\gamma = 1/(2\mu n)$ as $n \to \infty$.  The first coefficient is negative. The second term is negative for any $\alpha>0$. The third term can be coarsly reduced to 
+\begin{align}
+\alpha < \frac{1}{\mu}\frac{L-\mu}{L} 
+\end{align}
+We do not go into the details of a more detailed analysis. 
+
+\paragraph*{Generalized Version}
+
+In the generalized version we would have a constant (non-vanishing) error of $\gamma^2 \epsilon$. Unless, we can take $\epsilon \to 0$ this will not disappear and hence the iterates will not converge towards a point. However, the expected progress of one iteration at round $t$ is $T^t - \E T^{t+1} \geq \gamma \mu T^t \geq \gamma \mu \| x^t - x^*\|^2$. So roghly speaking, we will make progress as long as  we are not too close to the optimum, namely
+\begin{align}
+\| x^t - x^*\|^2 > \frac{\epsilon}{\gamma  \mu}
+\end{align} 
+Can you formulate this precisely in terms of how the distance to the optimum shrinks up to some radius (related to the bound above)? 
+
+\newpage
+\subsection*{Analysis for the generalization of SAGA}
+
+We first start with the decomposition given in Eq.~\ref{eq:bound_vt}: 
+\begin{align}
+\E \| v^t \|^2 = \E \| v^t - \E[v^t] \|^2 + \E[v^t]^2
+= \E \| \underbrace{v^t - f'(x^t)}_{=:w^t}  ] \|^2 + \| f'(x^t)\|^2
+\end{align}
+
+The update direction is given by
+\begin{align}
+w^t := f'_i(x^t) - g_i(\phi^t) + g(\phi^t) - f'(x^t) \,. 
+\end{align}
+
+Instead of centering the analysis around $f'_i(x^*)$, we use the index $j$ that is mapped to datapoint $i$. Using Eq.~\ref{eq:beta_bound}, we get
+\begin{align}
+\nonumber
+\E \| v^t \|^2 &\leq \| f'(x^t) \|^2 + (1+\beta) \E \| \delta_j f'_i(x^t) - f'(x^t)\|^2 + (1+\beta^{-1}) \E \|  \delta_j g_i(\phi^t)  - g(\phi^t)\|^2 \nonumber \\
+& \leq (1+\beta) \E \| \delta_j f'_i(x^t) \|^2 + (1+\beta^{-1}) \E \|  \delta_j g_i(\phi^t) \|^2 -  \beta \|f'(x^t) \|^2 - (1+\beta^{-1}) \| g(\phi^t) \|^2 \nonumber \\
+& = 2 (1+\beta) ( \E\| f'_i(x^t) - f'_i(x^*) \|^2 + \E \| f'_i(x^*) - f'_j(x^*)\|^2 ) \nonumber \\
+&+ (1+\beta^{-1})  \E \|  \delta_j g_i(\phi^t) \|^2
+- \beta \|f'(x^t) \|^2 - (1+\beta^{-1}) \| g(\phi^t) \|^2 \nonumber \\
+&= 2 (1+\beta) ( \E\| f'_i(x^t) - f'_i(x^*) \|^2)
++ (1+\beta^{-1})  \E \|  \delta_j g_i(\phi^t) \|^2 \nonumber \\
+& + 2 (1 + \beta) (\E \| f'_i(x^*) - f'_j(x^*)\|^2 )
+- \beta \|f'(x^t) \|^2 - (1+\beta^{-1}) \| g(\phi^t) \|^2
+\end{align}
+where $\delta_j f'_i(x^t) = f'_i(x^t) - f'_j(x^*)$ and $\delta_j
+g_i(\phi^t) = g_i(\phi^t) - f'_j(x^*)$. The second line uses $\E \| X
+- \E[X] \|^2 = \E \| X \|^2 - \| \E[X] \|^2$. The second inequality is due to
+Eq.~\ref{eq:bound_ij} (could have used a $\beta$ bound as well).
+
+We now assume that we only select one neighbor of i, i.e. $\tau_{ij}
+\in \{0,1\}$. Then the term $\delta_j g_i(\phi^t)$ simplifies to
+$\delta_j g_i(\phi^t) = f'_j(\phi^t) - f'_j(x^*) \leq 2L [\delta
+  f(\phi^t) - l(\phi^t)]$ where the inequality is due to Eq.~\ref{eq:lipschitz}.
+
+Using Eqs.~\ref{eq:lipschitz},~\ref{eq:strong_convexity_f},~\ref{eq:strong_convexity_g}, we get
+\begin{align}
+\nonumber
+\E \| v^t \|^2 
+& \leq 2 (1+\beta) ( \E\| \delta f'_i(x^t) \|^2) + 2L (1+\beta^{-1}) \left[ \delta f(\phi^t) - l (\phi^t) \right] \nonumber \\
+& + 2 (1 + \beta) (\E \| f'_i(x^*) - f'_j(x^*)\|^2 ) \nonumber \\
+&- 2 \beta \mu ( \delta f(x^t) - l(x^t)) - 2 (1+\beta^{-1}) \mu ( \delta f(\phi^t) - l(\phi^t))
+\end{align}
+
+We now give a bound on $\E \|x^{t+1}-x^*\|^2$. First let's recall the bound given in Eq.~\ref{eq:complex-convex}:
+\begin{align}
+\left\langle  x^*- x^t,  f'(x^t)  \right\rangle  \leq 
+& - \frac{L-\mu}{L} \delta f(x^t) - \frac \mu 2 \| x^t - x^*\| 
+\\ \nonumber & 
+-\frac{1}{2L} \E \| \delta f_i'(x^t)\|^2 - \frac{\mu}{L} l(x^t)
+\end{align}
+
+Combining the previous 2 equations, we get
+\begin{align}
+\E \|x^{t+1}-x^*\|^2 & = \E \left\| x^t - \gamma v^t - x^* \right\|^2 
+\\ \nonumber & = 
+\| x^t -x^*\|^2  - 2 \gamma \left\langle  x^t - x^*,  f'(x^t)  \right\rangle 
++ \gamma^2 \E \left\| v^t \right\|^2
+\\ \nonumber
+&\leq \| x^t -x^*\|^2 - 2 \gamma \left(\frac{L-\mu}{L} \delta f(x^t) + \frac \mu 2 \| x^t - x^*\| + \frac{1}{2L} \E \| \delta f_i'(x^t)\|^2 + \frac{\mu}{L} l(x^t) \right)
+\\ \nonumber
+&+ \gamma^2 (
+2 (1+\beta) ( \E\| \delta f'_i(x^t) \|^2) + 2L (1+\beta^{-1}) \left[ \delta f(\phi^t) - l (\phi^t) \right]
+\\ \nonumber
+& + 2 (1 + \beta) (\E \| f'_i(x^*) - f'_j(x^*)\|^2 )
+\\ \nonumber
+&- 2 \beta \mu ( \delta f(x^t) - l(x^t)) - 2 (1+\beta^{-1}) \mu ( \delta f(\phi^t) - l(\phi^t)) )
+\\ \nonumber
+\leq & (1-\gamma \mu) \| x^t - x^*\|^2
+\\ \nonumber
+& + \gamma \left( 2 (1+\beta) \gamma  - \frac{1}{L} \right) \E \| \delta f'_i(x^t) \|^2 
+\\ \nonumber
+& + 2\gamma^2 (1+\beta^{-1}) (L - \mu) \left[ \delta f(\phi^t) - l(\phi^t) \right]
+\\ \nonumber
+& - \left( 2 \gamma \left( \frac{L - \mu}{L} \right) \highlight{+} 2 \beta \mu \gamma^2 \right) \left[ \delta f(x^t)-  l(x^t) \right]
+\\ \nonumber
+& + 2 \gamma^2 (2 + \beta + \beta^{-1}) (\E \| f'_i(x^*) - f'_j(x^*)\|^2 )
+\end{align}
+
+Recall that the proposed Lyapunov function is
+\begin{align}
+T^{t} := & \| x^{t} - x^*\|^2 + \alpha \left[ \delta f(\phi^{t}) -  l(\phi^{t})  \rangle \right] 
+\end{align}
+
+Putting things together ($...$ denotes the above norm bound) we get 
+\begin{align}
+\E T^{t+1} \leq &... + \frac {\alpha} n \left[ \delta f(x^t) - l(x^t) \right] +  \frac{\alpha(n-1)}{n} \left[ \delta f(\phi^t) -  l(\phi^t) \right] 
+\end{align}
+
+\begin{align}
+% 1 
+\E \| \delta f'_i(x^t) \|^2 \to & \left[ \gamma \left(2(1+\highlight{\beta}) \gamma - \frac 1L \right)  \right]  \\
+% 2
+\delta f(\phi^t) - l(\phi^t) \to & \left[ \highlight{\alpha} - \frac{\alpha}{n} + 2(1+\beta^{-1}) \gamma^2 (L - \mu) \right] 
+\\
+% 3 
+\delta f(x^t)  - l(x^t) 
+\to & \left[ \frac \alpha n- 2\gamma \left( \frac{L -\mu}{L} \right)- 2 \beta \mu \gamma^2  \right] 
+\end{align}
+
+
+\paragraph*{Coefficients}
+
+We do not go into the details of a more detailed analysis. 
+
+\newpage
+\section{Clustering (not up-to-date)}
+
+Two questions then arise:
+\begin{itemize}
+\item How to bound the error term $\E \| g_i(x^*) - g_j(x^*)\|^2$? Under what conditions does it get close to zero? (consider for example what happens as $K \rightarrow n$)
+\item Develop the expression for $f(\phi^t)$
+\end{itemize}
+
+Let's first try to answer the second question. Consider the
+expectation of $f(\phi^t)$ over $K$ clusters defined as
+$$
+\E f(\phi^t) = \sum_k p^t(k) f(\phi^t_k),
+$$ where $p^t(k)$ is the probability of cluster $k$ at time $t$. We
+could for example use a fixed probability $p^t(k) = \frac{1}{K}$ or
+dynamically update this quantity by considering the ratio of the
+number of points mapped to cluster $k$ against the total number of
+points processed so far $p^t(k) = \frac{n_k}{t}$.\\
+
+At iteration $t+1$, we perform the following update
+\begin{align}
+\E f(\phi^{t+1}) = \sum_{k \backslash k'} p^{t+1}(k) f(\phi^{t+1}_k) + p^{t+1}(k') f(\phi^{t+1}_{k'}).
+\end{align}
+
+Given that $f(\phi^{t+1}_k) = f(\phi^{t}_k) \;\; \forall k \neq k'$, we get
+\begin{align}
+\E f(\phi^{t+1}) - \E f(\phi^t) &= \sum_{k \backslash k'} p^{t+1}(k) f(\phi^{t+1}_k) - \sum_k p^t(k) f(\phi^t_k) + p^{t+1}(k') f(\phi^{t+1}_{k'}) \nonumber \\
+&= \sum_{k \backslash k'} (p^{t+1}(k) - p^t(k)) f(\phi^{t}_k) + p^{t+1}(k') f(\phi^{t+1}_{k'}) - p^t(k') f(\phi^t_{k'})
+\end{align}
+
+What if we consider fixed probabilities, i.e. $p^{t+1}(k) = p^t(k) = \frac{1}{k}$? We then get
+\begin{equation}
+\E f(\phi^{t+1}) - \E f(\phi^t) = \frac{1}{k} ( f(\phi^{t+1}_{k'}) - f(\phi^t_{k'}))
+\label{eq:df}
+\end{equation}
+
+We now consider different strategies to update $f(\phi^{t+1}_{k'})$.
+
+\paragraph{Average over all the datapoints mapped to a cluster}
+Adding a new point $j$ to cluster $k'$ yields
+$$
+f(\phi^{t+1}_{k'}) = \frac{n_{k'}-1}{n_{k'}} f(\phi^t_{k'}) + \frac{1}{n_{k'}} f(x_t)
+$$
+
+Eq.~\ref{eq:df} then becomes
+\begin{align}
+\E f(\phi^{t+1}) - \E f(\phi^t) &= \frac{1}{k} \left( \frac{n_{k'}-1}{n_{k'}} f(\phi^t_{k'}) + \frac{1}{n_{k'}} f(x_t) - f(\phi^t_{k'}) \right) \nonumber \\
+&= \frac{1}{k} \left( -\frac{1}{n_{k'}} f(\phi^t_{k'}) + \frac{1}{n_{k'}} f(x_t) \right)
+\end{align}
+
+Taking the expectation over cluster $k'$ yields
+\begin{align}
+\E f(\phi^{t+1}) - \E f(\phi^t)
+&= \frac{1}{k} \left( -\frac{1}{\E n_{k'}} \E f(\phi^t_{k'}) + \frac{1}{\E n_{k'}} f(x_t) \right)
+\end{align}
+
+\vspace{5cm}
+Not finished...
+
+\paragraph{Only use the last datapoint mapped to a cluster}
+
+We have $ f(\phi^{t+1}_{k'}) = f(x_t)$ so Eq.~\ref{eq:df} then becomes
+\begin{align}
+\E f(\phi^{t+1}) - \E f(\phi^t) &= \frac{1}{k} \left(f(x_t) - f(\phi_{k'}^t) \right)
+\end{align}
+
+Not sure how to pursue?
+Consider two cases: (1) The cluster updated at iteration $t$ is $k'$ or (2) it's a different cluster.
+
+
+\newpage
+
+THIS IS FROM A FIRST ATTEMPT TO GENRALIZE SAGA, NO LONGER UP TO DATE
+
+\section*{Improving SAGA} 
+
+\subsection*{Faster Updates}
+
+\paragraph*{Clusters} Assume that we have $k$ clusters. For simplicity assume that they are all of equal size $m= n/k$. We will discuss how to form clusters later. 
+
+\paragraph*{Cluster updates} 
+Let us first assume that on selecting $i$ we would recompute the gradients for all $j$ in the same cluster without changing the update equation (so it is a bit fictional). What would happen? Basically, we would reduce the lag time of $\phi^t$ relative to $x^t$. Specifically, 
+\begin{align}
+\E \left[ \delta f(\phi^{t+1}) - l (\phi^{t+1}) \right] 
+= 
+\frac mn \left[ \delta f(x^t) - l(x^t) \right] +  \frac{n-m}{n} \left[ \delta f(\phi^t) -  l(\phi^t) \right] 
+\end{align}
+As a result in the above analysis, every ocurrence of $\alpha/n$ will be replaced with one of $\alpha/m$. The step size  $\gamma$ can thus be significantly increased from $\sim 1/n$ to $\sim 1/m$. But obviouisly, it is unclear of whether this gain is large enough to justify the additional costs of recomputing all $f'_j(x^t)$. 
+
+\paragraph*{Approximations} 
+What would happen, if we do not compute $f'_i(x^t)$ exactly, but rather use an approximate estimate $f'_j(\phi)$? So the estimate is off in two ways: first for $i$ we may use a different index $j$ of a data point in the same cluster. Assume that the two functions $f_i$ and $f_j$ are identical, then this would be perfectly OK. The question is, whether the use of approximations can be justified, say if we were to guaranetee that  $\| f'_i(x^t) - f'_j(x^t)\|^2 \leq \epsilon^t$ (for all $x$ or for those, where we actually evaluate gradients...). We will probably need to require that $\epsilon^t \to 0$ as $t \to \infty$. Best guess: $\epsilon^t \propto 1/t$. As the SAGA analysis already deals with the problem of computing corrections based on delayed, past gradients per data point, we hope to be able to reuse much of the proof methodology. 
+
+\paragraph*{Unbiasedness} Let us assume that per cluster $\alpha$, we maintain an estimate $f'_\alpha = f'_j(x^r)$ where $x^r$ is some previous iterate and $j \in \alpha$ (using this notation for cluster membership) for some $j$. One may also consider weighted sums, e.g.~computed from some sort of averaging. As we have assumed that clusters are of the same size (something that may be tricky in practice), we can also compute $f'(\phi)$ as the average of these $f'_\alpha$, so that the update directions remain unbiased estimates of the true gradient. This assumptions allows us to not have to consider the more complicated case of stochastic gradient descent with bias. More generally, one would need to know the cluster sizes in order to guarantee perfected unbiasedness. 
+
+\paragraph*{Revisiting the norm bound} 
+
+We had before 
+\begin{align}
+\underbrace{w^t}_{\text{stochastic}} 
+:= \underbrace{v^t}_{\text{update vector}}
+-  \underbrace{f'(x^t)}_{\text{deterministic}} = f'_i(x^t) - f'_i(\phi^t_i) + f'(\phi^t) - f'(x^t) \,. 
+\end{align}
+With the modified update rule, we would get 
+\begin{align}
+w^t = \left[ f'_i(x^t) - f'(x^t) \right] - 
+\underbrace{\left[ f'_{\alpha(i)}(\bar\phi^t_{\alpha(i)}) - f'(\bar \phi^t) \right]}_{\text{variance correction}}, \quad 
+f(\bar \phi^t) := \frac 1k \sum_\alpha f_\alpha(\bar\phi_\alpha^t)
+\end{align}
+where we use the notation $\bar \phi$ to refer to the matrix of iterate values, which are used in computing the corrections. Similar to SAGA, this leads to  
+\begin{align}
+\E \| v^t \|^2 \leq \| f'(x^t) \|^2 + 2 \E \| \delta f'_i(x^t)\|^2 + 2 \E \|  \delta f'_{\alpha(i)}(\bar \phi_{\alpha(i)}^t)\|^2
+\end{align}
+In order to bound the last term, SAGA exploits the basic equation (Lemma 2)
+\begin{align}
+\| f'(x) - f'(y) \|^2 \leq 2L\left[ f(y) - f(x) - \langle f'(x), y-x \rangle \right] 
+\end{align}
+which in our case reads as 
+\begin{align}
+\| f'_\alpha(\bar \phi_\alpha)  - f_i'(x^*) \|^2 \leq 2L\left[ f_\alpha(\bar \phi_\alpha) - f_i(x^*) - \langle f_i'(x^*), \bar \phi_\alpha -x^* \rangle \right] 
+\end{align}
+
+\end{document}

@@ -1,0 +1,173 @@
+\documentclass{article}
+
+% use Times
+\usepackage{times}
+\input{commands}
+\usepackage{amsmath}
+\usepackage{nips15submit_e,times}
+\author{
+Hadi Daneshmand, Aurelien Lucchi, Thomas Hofmann
+}
+
+\nipsfinalcopy
+
+
+\begin{document}
+\title{Stochastic Gradient Descent with Constant Step Size}
+\maketitle
+
+\section{Setting}
+Assume the vector $\x \in \R^d$ is drawn from Gaussian distribution
+$N(0,\Sigma_{d \times d})$ and we are given noisy observation of a
+linear model $y = \langle \x, \w^* \rangle + \epsilon$, where $\epsilon$ is a
+Gaussian noise $N(0,\sigma^2)$. Let $L$ denote the maximum eigenvalue of
+covariance matrix $\Sigma$ and $\mu$ is the minimum eigenvalue. We are given $n$ observation of this model i.e.
+ $\T_n = \{ 
+(\x_i,y_i)\}_{i=1}^n$. The empirical loss function is 
+\begin{equation*}
+	\risk_n(\w) = \frac{1}{n} \sum_{i=1}^n \left(\langle \x_i, \w\rangle -
+	y_i\right)^2
+\end{equation*}
+Let the matrix $X_n$ is row-wise arrange of input vectors $x_i$s. Then the
+Hessian matrix of the above risk is $\Sigma_n = X_n^T X_n$. When $n \gg d$, the
+matrix $\Sigma_n$ get closer to $\Sigma$ and therefore the empirical loss is
+$\mu$-strongly convex. Let $\ERM = \arg\min_{\w}\risk_n(\w)$ denote
+the empirical risk minimizer (ERM). We know that the for all the $\w$, the
+statistical learning theory imposes a bound on the excess risk w.h.p:
+\begin{equation*}
+	\E_{\T_n}\| \risk_n(\w)- \risk(\w) \|^2 \leq
+	\bound(n)
+\end{equation*}
+We use the compact notation $\bound(n)$ for the generalization bound,
+$\risk(\w)$ is the expected risk. We can also guarantee that: 
+\begin{equation*}
+	\risk_n(\ERM)- \risk(\opt) \leq
+	c \bound(n)
+\end{equation*}
+where $c$ is a constant independent of $n$, $L$, $\mu$, and $d$. Note that the
+value of $c$ could varies in each line in our analysis and it only indicates a
+general notation for a constant coefficient. 
+\section{Variance of Stochastic Gradient}
+The stochastic gradient of the above function is: 
+\begin{equation*}
+	\g_i(\w) = \nabla_{i}  \risk_n (\w) = 2\left(\langle \x_i, \w\rangle -
+	y_i\right) \x_i
+\end{equation*} 
+Let bound the variance
+of gradient $\|\g_r(\w)\|^2$ for arbitrary vector $\w$ over the random choice
+of the index $r \in \{ 1, \ldots, n \}$:
+\begin{eqnarray*}
+	& \E_r \| g_r(w) \|^2 & = \E_r \|2\left(\langle \x_r, \w\rangle -
+	y_r\right) \x_r \|^2 \\ 
+	& & = \E_r \left[4\left(\langle \x_r, \w\rangle -
+	y_r\right)^2 \|\x_r\|^2\right]
+\end{eqnarray*}
+Assume the norm of $\x_r$ is bounded means $\forall \x_r \in \T_n$ the
+inequality $\|\x_r\|^2 \leq C$ holds. Consequently, we have the following
+upper-bound on the variance of the norm of stochastic gradient: 
+\begin{eqnarray}
+	& \E_r \| g_r(w) \|^2  & \leq 4 C \E_r \left[\left(\langle \x_r, \w\rangle -
+	y_r\right)^2 \right] \nonumber \\
+	& & \leq 4 C \risk_n(\w) \label{eq:variance_bound}
+\end{eqnarray}
+Now, we focus on $\risk_n(\w)$: 
+\begin{eqnarray}
+& \risk_n(\w) & = \risk_n(\w) \mp \risk_n(\ERM) \mp \risk_n(\opt) \mp
+\risk(\opt)
+\nonumber
+\\
+& & \leq \risk_n(\w) - \risk_n(\ERM) +c \bound(n) + \risk(\opt)
+\label{eq:risk_bound}
+\end{eqnarray}
+\section{SGD with constant step size}
+Let, rewrite one iteration of SGD:
+\begin{equation*}
+	\w^+ = \w - \eta \g_r(\w)
+\end{equation*}
+where $r$ is a random index uniformly from $1$ to $n$. Now, we bound the risk
+after one iteration: 
+\begin{eqnarray*}
+	&  \E_r \| \w^+ - \ERM\|^2 & = \|\w - \eta \g_r(\w) - \ERM \|^2 \\
+	& & = \| \w - \ERM \|^2 + \eta^2 \E_r \| \g_r(\w) \|^2 - 2 \eta \langle
+	\E_r \g_r(\w), \w - \ERM \rangle \\ 
+	& & \leq \| \w - \ERM \|^2 + 4 C \eta^2 \risk_n(\w)  - 2 \eta \langle
+	\nabla \risk_n(\w), \w - \ERM \rangle
+\end{eqnarray*}
+The last inequality is achieved by bound of variance at equation
+\ref{eq:variance_bound}. Now, we can plug in the risk bound of inequality
+\ref{eq:risk_bound} in above inequality: 
+\begin{multline} \label{eq:sgd_onestep}
+	\E_r \| \w^+ - \ERM\|^2 \leq \| \w - \ERM \|^2 \\
+	+ 4 C \eta^2 \left[\risk_n(\w) - \risk_n(\ERM) + 2 \bound(n) + \risk(\opt)\right]
+	\\  - 2
+	\eta \langle \nabla \risk_n(\w), \w - \ERM \rangle
+\end{multline}
+Now, we need $\mu$-strong convexity assumption on the empirical risk
+$\risk_n$; in other words, we assume that the following inequality holds for every $\w$,
+and $\ERM$:
+\begin{equation*}
+	\langle \nabla \risk_n(\w), \w - \ERM \rangle \geq \risk_n(\w) - \risk_n(\ERM)
+	+ \frac{\mu}{2} \| \w - \ERM \|^2 
+\end{equation*}
+Using $\mu$-strong convexity we can rewrite the inequality \ref{eq:sgd_onestep}: 
+\begin{multline*}
+	\E_r \| \w^+ - \ERM\|^2 \leq (1-\mu \eta) \| \w - \ERM \|^2 \\
+	+ \eta (4C\eta -2) \left[ \risk_n(\w) - \risk_n(\ERM) \right]
+	+ C \eta^2 \left[c \bound(n) + \risk(\opt)\right]
+\end{multline*}
+According to definition of $\ERM$, we have $\risk_n(\w) - \risk_n(\ERM) \geq
+0$; If we choose the $\eta$ such that $\eta \leq \frac{1}{2 C}$, then we can be
+sure that $(4C\eta -2) \left[ \risk_n(\w) - \risk_n(\ERM) \right] <0
+$.Therefore, we can simplify the upper-bound as: 
+\begin{equation*}
+	\E_r \| \w^+ - \ERM\|^2 \leq (1-\mu \eta) \| \w - \ERM \|^2 + C \eta^2 \left[c
+	\bound(n) + \risk(\opt)\right]
+\end{equation*}
+The above recursion inequality equips us to bound the sub-optimality after $t$
+iterations. 
+\begin{eqnarray*}
+	& \E_r \| \w^T - \ERM\|^2 & \leq (1-\mu \eta)^T \| \w_0 - \ERM \|^2 + C \eta^2
+	\sum_{t=0}^{T-1} (1-\mu \eta)^{t} \left[c
+	\bound(n) + \risk(\opt)\right] \\ 
+	& & \leq  (1-\mu \eta)^T \| \w_0 - \ERM \|^2 + C \frac{\eta}{\mu}
+	 \left[c
+	\bound(n) + \risk(\opt)\right]
+\end{eqnarray*}
+Now, we can chose a proper learning rate $\eta$ to make the trade-off between
+two parts of convergence rate. 
+Let explain more about $\risk(\opt)$, which is really a challenging term. This
+term depends on the varaince of the noise i.e. $\sigma^2$. Therefore, the
+convergence of SGD with a constant step size highly depends on the noise of the
+observation. 
+\section{Variance Reduction Issue}
+I will propose a surpersing variance reduction method, here. As mentioned
+before, the most enoying therm of the variance is $\risk(\w^*)$ that depends on
+the noise. We want to relax this dependancy. I keep just the past gradient
+associated with data point $\x_r$ in the table and we use this past gradient to
+update the gradient. Consider $\Gamma_s$ is the stored gradient in the table in
+the last step; We use the following variance reduce gradient: 
+\begin{equation*}
+	\G_r^{r'}(\w) = \g_r(\w) + \I \left(r' = s \right) \Gamma_s - \frac{1}{n}
+	\Gamma_s
+\end{equation*}
+where $\I(.)$ denotes the indicator function, and $r'$ is a random index that is
+indpedent of the the random index $r$. Firstly, we prove that this estimator is
+unbiased estimation of the gradient $\nabla \risk_n(\w)$ :
+\begin{eqnarray*}
+ & \E_{r,r'} \left[\G_r^{r'}(\w) \right] & = \E_r \g_r(\w) + \Gamma_s \E_{r'} \I
+ \left(r' = s \right) - \frac{1}{n} \Gamma_s \\ 
+ & & = \nabla \risk_n(\w) + \frac{1}{n} \Gamma_s - \frac{1}{n} \Gamma_s = \nabla
+ \risk_n(\w)
+\end{eqnarray*}
+Now, we bound the variance of stochastic gradient; Let $\g_{r'}(\w_s) = \I(r'=s)
+\Gamma_s - \frac{1}{n} \Gamma_s$ which is a zero mean random variable indepdent
+of $\g_r(\w)$. Here, $\w_s$ is the past paramters. We also rearange the
+stochastic gradient as $\g_r(\w) = \G_r^{r'}(\w) - \g_{r'}(\w_s)$.
+
+\begin{equation*}
+	\E_{r,r'} \|\g_r(\w) \|^2 = \E_{r,r'} \| \G_r^{r'}(\w) \|^2 + \E_{r'}\| 
+	\g_{r'}(\w_s) \|^2 - 2 \langle \G_r^{r'}(\w), \g_{r'}(\w_s) \rangle
+\end{equation*}
+
+
+\end{document}

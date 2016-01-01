@@ -1,0 +1,137 @@
+\documentclass{article}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{color}
+\usepackage[margin=0.5in]{geometry}
+\usepackage{graphicx}
+
+\input{defs}
+
+\begin{document}
+
+\title{SDCA}
+\author{Aurelien Lucchi et. al.}
+
+\maketitle
+
+We consider the SDCA without duality method proposed by Shalev.
+
+The goal is to minimize $f(\w) = \psi(\w) + \sqnorm{w}$.
+
+\begin{align}
+\alpha_i^{(t)} = \alpha_i^{(t-1)} - \eta \lambda n \left( \nabla \psi_i(w^{(t-1)}) + \alpha_i^{(t-1)} \right) \nonumber \\
+\w^{(t)} = \w^{(t-1)} - \eta \lambda n \left( \nabla \psi_i(w^{(t-1)})  + \alpha_i^{(t-1)} \right)
+\label{eq:update_w}
+\end{align}
+
+For this update rule to make sense, the following identity has to be satisfied:
+\begin{equation}
+\w^t = \frac{1}{\lambda n} \sum_i \alpha_i^{t}, \text{i.e.} \quad \lambda \w_t = \E [\alpha_i]
+\label{eq:w_alpha}
+\end{equation}
+
+Proof:
+\begin{align}
+\w^t = \frac{1}{\lambda n} \sum_i \alpha_i^{t} &= \frac{1}{\lambda n} \sum_i \alpha_i^{t-1} - \frac{1}{\lambda n} \left( \alpha_i^{t-1} - \alpha_i^{t} \right) \nonumber \\
+&= \w^{t-1} - \eta \left( \nabla \psi_i(w^{(t-1)}) + \alpha_i^{(t-1)} \right)
+\end{align}
+
+
+This method has been shown to reduce variance. Contrasting the update
+rule in Eq.~\ref{eq:update_w} to other update rules:
+
+$$
+(SAGA) \quad \quad \w^{(t)} = \w^{(t-1)} - \eta \left( \nabla f_i(\w^t) - \nabla f_i(\phi_i^t) + \frac{1}{n} \sum_k \nabla f_k(\phi_k^t) \right)
+$$
+
+$$
+(\epsilon-SAGA) \quad \quad \w^{(t)} = \w^{(t-1)} - \eta \left( \nabla f_i(\w^t) - \nabla f_j(\phi_i^t) + \frac{1}{n} \sum_k \nabla f_k(\phi_k^t) \right), j \in \mathcal{N}_i,
+$$
+where $\mathcal{N}_i$ is the $\epsilon$-neighborhood of datapoint $i$.
+
+\section{How can we derive an update similar to $\epsilon$-SAGA?}
+
+\paragraph{Method 1}
+
+A naive way would be:
+\begin{align}
+\alpha_i^{(t)} = \alpha_i^{(t-1)} - \eta \lambda n \left( \nabla \psi_i(w^{(t-1)}) + \alpha_{\highlight{j}}^{(t-1)} \right) \nonumber \\
+\w^{(t)} = \w^{(t-1)} - \eta \lambda n \left( \nabla \psi_i(w^{(t-1)})  + \alpha_{\highlight{j}}^{(t-1)} \right), j \in \mathcal{N}_i
+\label{eq:update_w}
+\end{align}
+
+This does indeed preserve Eq.~\ref{eq:w_alpha}:
+\begin{align}
+\w^t = \frac{1}{\lambda n} \sum_i \alpha_i^{t} &= \frac{1}{\lambda n} \sum_i \alpha_i^{t-1} - \frac{1}{\lambda n} \left( \alpha_i^{t-1} - \alpha_i^{t} \right) \nonumber \\
+&= \w^{t-1} - \eta \left( \nabla \psi_i(w^{(t-1)}) + \alpha_j^{(t-1)} \right)
+\end{align}
+
+\highlight{Note: Might want to make sure that $\E \vt = \nabla f(\w)$, where $\vt = \nabla \psi_i(w^{(t-1)}) + \alpha_j^{(t-1)}$.}
+
+\paragraph{Method 2}
+
+Cluster the datapoints and then use one $\alpha$ variable per group (equivalent to updating all the alpha variables of a cluster at the same time).
+
+Recall the following relationship between $\w$ and the alpha variables:
+\begin{align}
+\w^t = \frac{1}{\lambda n} \sum_l \alpha_l^{t}
+%&= \frac{1}{\lambda n} \sum_{l \not\in c_i} \alpha_l^{t} + \frac{1}{\lambda n} \sum_{m \in c_i} \alpha_m^{t} \nonumber \\
+&= \frac{1}{\lambda n} \sum_i \alpha_i^{t-1} - \frac{1}{\lambda n} \sum_{m \in c_i} \left( \alpha_m^{t-1} - \alpha_m^{t} \right) \nonumber \\
+&= \w^{t-1} - \eta \sum_{m \in c_i} \left( \nabla \psi_m(w^{(t-1)}) + \alpha_m^{(t-1)} \right)
+\label{eq:update_w_2}
+\end{align}
+
+From the equation above, we see that one has to normalize the alpha update by the size of the cluster $|c_i|$ as follows:
+\begin{align}
+\alpha_m^{(t)} = \alpha_m^{(t-1)} - \frac{1}{|c_i|} \eta \lambda n \left( \nabla \psi_i(w^{(t-1)}) + \alpha_m^{(t-1)} \right) \quad\quad \forall m \in c_i
+\label{eq:update_alpha_2}
+\end{align}
+
+Combining Eqs.~\ref{eq:update_w_2} and ~\ref{eq:update_alpha_2}, we get:
+\begin{align}
+\w^t &= \frac{1}{\lambda n} \sum_i \alpha_i^{t-1} - \frac{1}{\lambda n} \sum_{m \in c_i} \left( \alpha_m^{t-1} - \alpha_m^{t} \right) \nonumber \\
+&= \w^{t-1} - \frac{1}{\lambda n} \sum_{m \in c_i} \left( \frac{1}{|c_i|} \eta \lambda n \left( \nabla \psi_i(w^{(t-1)}) + \alpha_m^{(t-1)} \right) \right) \nonumber \\
+&= \w^{t-1} - \eta \left( \nabla \psi_i(w^{(t-1)}) + \alpha_i^{(t-1)} \right) \nonumber
+\end{align}
+
+In practice, we can only keep one $\alpha_m$ per cluster (i.e. $\nabla \psi_m(w^{(t-1)}$ is also shared for all the variables in the cluster).
+
+\section{Convergence}
+
+Note that the SDCA update can be written as
+$$
+\w^t = \w^{t-1} - \eta \vt, \text{with} \quad \vt = \nabla \phi_i (\w^{t-1}) + \alpha_j^{t-1}
+$$
+
+The variance is then
+\begin{align}
+\E \sqnorm{\vt} &= \E \sqnorm{\alpha_j^{t-1} + \nabla \phi_i (\w^{t-1})} = \E \sqnorm{\alpha_j^{t-1} - \alpha_j^* + \alpha_j^* + \nabla \phi_i (\w^{t-1})} \nonumber \\
+&\leq 2 \E \sqnorm{\alpha_j^{t-1} - \alpha_j^*} + 2 \E \sqnorm{- \nabla \phi_i (\w^{t-1}) - \alpha_j^*} \nonumber \\
+&\leq 2 \E \sqnorm{\alpha_j^{t-1} - \alpha_j^*} \nonumber
++ 4 \E \sqnorm{- \nabla \phi_i (\w^{t-1}) - \alpha_i^*} + 4 \E \sqnorm{\alpha_i^* - \alpha_j^*} \nonumber \\
+%&\leq 2 (2 \E \sqnorm{\alpha_j^{t-1} - \alpha_i^{*}} + 2 \E \sqnorm{\alpha_i^{*} - \alpha_j^*} ) \nonumber
+%+ 2 (2 \E \sqnorm{- \nabla \phi_i (\w^{t-1}) - \alpha_i^*} + 2 \E \sqnorm{\alpha_i^* - \alpha_j^*}) \nonumber \\
+%&= 4 \E \sqnorm{\alpha_j^{t-1} - \alpha_i^{*}} + 4 \E \sqnorm{- \nabla \phi_i (\w^{t-1}) - \alpha_i^*} 
+%+ \underbrace{8 \E \sqnorm{\alpha_i^{*} - \alpha_j^*}}_\text{Additional term} \nonumber
+\end{align}
+
+We see that we need $i = j$ as $\w_t \rightarrow \wstar$ for the variance to go to 0.
+
+\begin{mylemma}
+Norm of convex vector combinations
+\begin{align}
+& \| (1-\beta) a + \beta b \|^2 \\
+& = (1-\beta)^2 \| a\|^2 + \beta^2 \| b\|^2 + 2 \beta(1-\beta) \langle a, b\rangle 
+\nonumber \\
+& = (1-\beta) \| a\|^2 + \beta \| b\|^2 - \beta (1-\beta) \|a\|^2 - \beta (1-\beta) \|b\|^2 + 2 \beta(1-\beta) \langle a, b\rangle 
+\nonumber\\
+&= (1-\beta) \| a\|^2 + \beta \| b\|^2 - \beta (1-\beta) \left( \| a\|^2 + \| b\|^2 - 2 \langle a, b \rangle \right)
+\nonumber\\
+&= (1-\beta) \| a\|^2 + \beta \| b\|^2 - \beta (1-\beta) \| a - b\|^2 
+\nonumber
+\end{align}
+\end{mylemma}
+
+\end{document}

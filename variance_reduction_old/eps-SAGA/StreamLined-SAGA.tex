@@ -1,0 +1,570 @@
+\documentclass{article}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amsthm}
+\newtheorem{lemma}{Lemma}
+\newtheorem{theorem}{Theorem}
+\newtheorem{corollary}{Corollary}
+
+\newcommand{\E}{{\bf E}}
+\newcommand{\w}{w}
+\renewcommand{\v}{v}
+\newcommand{\V}{{\bf V}}
+\newcommand{\wt}[1]{\w({#1})}
+\renewcommand{\Re}{{\mathbb R}}
+\newcommand{\rnd}[1]{{\underline{#1}}}
+\newcommand{\dd}[1]{\delta \hspace*{-0.5pt}#1}
+
+\title{Neighborhood Watch: Algorithm \&  Analysis}
+\author{Thomas Hofmann\\ ETH Zurich}
+
+
+\begin{document}
+\maketitle
+
+\section{Algorithm}
+
+\subsection{Variance Reduced SGD}
+
+Given a strongly convex optimization problem with objective $f(w) = \frac 1n \sum_i f_i(w)$, and unique optimum $w^*$, we want to investigate a class of stochastic gradient descent (SGD) algorithms with updates taking the  form:
+\begin{align}
+w^+ = w - \gamma g_i(w),  \quad g_i(w)=  f'_i(w) - \bar \alpha_i 
+\label{eq:sgd-corrected}
+\end{align}
+Here  $i$ is a randomly selected index and $\bar\alpha_i$ is an unbiased variance correction term, i.e. $\E \bar\alpha_i = 0$. We are aiming for updates of asymptotically vanishing variance, meaning that $g_i(w) \to 0$ as $w \to w^*$, which obviously requires that $\bar\alpha_i \to f'_i(w^*)$.
+
+\subsection{SAGA-style Corrections}
+
+The SAGA algorithm  updates (non-bias adjusted) variance corrections $\alpha_i$ after selecting data point $i$ as 
+\begin{align}
+\alpha^+_j  = 
+\begin{cases}
+f'_i(w) & \text{if $i=j$} \\
+\alpha_j & \text{otherwise}
+\end{cases}
+\end{align} 
+where we further define the bias adjusted versions via $\bar\alpha_i := \alpha_i - \bar \alpha$ and $\bar \alpha := \frac 1n \sum_{i=1}^n  \alpha_i$. Obviously, $\bar \alpha$ can be updated incrementally via $\bar \alpha^+ = \bar \alpha + \frac 1n (\alpha_i^+ - \alpha_i)$. One convenient property of SAGA is that it can reuse the stochastic gradient $f_i'(w)$ computed at step $t$ to update both, $w$ as well as the correction $\alpha_i$ at no additional costs. We can also consider a variant of $SAGA$, which we call $q$-SAGA that updates $q \geq 1$ of the $\alpha_j$ variables at at time. While this is practically less interesting, it will be a convenient generalization for the sake of the analysis.
+
+\subsection{SVRG Corrections}
+
+We re-formulate a variant of SVRG with update parameter $q >0$ in the following manner. At each step generate a random variable $r \sim \text{Uniform}[0;1)$ and update 
+\begin{align}
+\alpha_j^+  = 
+\begin{cases}
+f_j'(w), & \text{if $r < q/n$} \\
+\alpha_j & \text{otherwise}
+\end{cases}
+\end{align}
+Note that either all $\alpha_j$ are updated or none of them is. For $q=1$ in expectation one parameter is updated per step, which is the same as in SAGA. The main difference is that SAGA always updates exactly one, while SVRG occasionally updates all $\alpha$ parameters at the same time. Obviosuly, this requires an additional epoch through the data. 
+
+\subsection{Neighborhood-based Corrections}
+
+We assume that we have structured our data set in a way such that for each data index $i$, there is a set of close neighbors ${\cal N}_i$ with $| {\cal N}_i|=q$. We can obtain the neighborhoods through equipartioning the data into $m=n/q$ clusters of size $q$ or -- easier -- through approximate neighbor search. Based on this neighborhood system, we define a modified version of SAGA updates, where neighbors in ${\cal N}_j$ are used to update $\alpha_j$ via 
+\begin{align}
+\alpha^+_j  = 
+\begin{cases}
+f'_i(w) & \text{if $i \in {\cal N}_j$} \\
+\alpha_j & \text{otherwise}
+\end{cases}
+\end{align} 
+%
+Note that one advantage of clustering the data is that we can also save on space and computation needed for bookkeeping of the $\alpha$ variables, because we can maintain one variable $\alpha_k$ per cluster $k$. The more general neighborhood construction, however, gives more flexibility in constructing neighborhoods on the fly. 
+
+\section{Analysis}
+
+\subsection{Primal Recurrence}
+
+The evolution equation for $w$ implies the recurrence 
+\begin{align}
+\| w^+ - w^* \|^2 & = \| (w-w^*) - \gamma g_i(w) \|^2 \nonumber
+\\ & = \| w - w^* \|^2 - 2 \gamma \langle g_i(w), w-w^*\rangle + \gamma^2 \| g_i(w) \|^2
+\label{eq:recurrence}
+\end{align}
+In expectation, we can exploit strong convexity of $f$ to bound the linear term as follows:
+\begin{lemma}[Strong Convexity Progress Lemma] Let $f$ be $\mu$-convex with unique solution $w^*$ and $G$ a random update direction such that $\E G=f'(w)$, then  
+\begin{align}
+\E \langle G, w-w^* \rangle  = \langle f'(w), w-w^* \rangle \ge  f(w) - f(w^*)+ \frac \mu 2  \| w-w^*\|^2
+\label{eq:naive-strong-convexity}
+\end{align}
+\label{lemma:naive-strong-convexity}
+\begin{proof} Basic convexity result, e.g.~\cite{} 
+\end{proof}
+\end{lemma}
+
+\subsection{Variance Bound} 
+
+We need to bound the expected squared norm of the update direction in \eqref{eq:recurrence}.  
+
+\begin{lemma}[Variance Bound]
+For unbiased random updates as in \eqref{eq:sgd-corrected} and any $\beta>0$, we get the upper bound 
+\begin{align}
+\E \|g_i(w)\|^2 \le 
+& (1+\beta) \E \| f'_i(w) - f'_i(w^*) \|^2  - \beta \| f'(w) \|^2 \nonumber \\
+& + \left(1+ \beta^{-1} \right) \E \| \bar \alpha_i - f_i'(w^*) )\|^2
+\end{align}
+
+\begin{proof} 
+Let us first pull out the deterministic part $\E g_i(w) = f'(w)$, which corresponds to full (i.e.~non-stochastic) gradient descent 
+\begin{align}
+\E \|g_i(w)\|^2 = \E \| f'_i(w) - \bar \alpha_i  \|^2  = \E \| f'_i(w) - f'(w) - \bar \alpha_i  \|^2 + \| f'(w)\|^2 \,.
+\end{align}
+Using a $\beta$-parameterized bound $(\beta >0)$ for splitting on the reference function $f'_i(w^*)$, we get
+\begin{align}
+ \E \| f'_i(w) - f'(w) - \bar \alpha_i  \|^2  \leq & \; (1+\beta) \E \| f'_i(w) - f'_i(w^*) - f'(w) \|^2 \\
+& + \left(1+ \beta^{-1} \right) \E \| \bar \alpha_i - f_i'(w^*) )\|^2 \,.
+\nonumber
+\end{align} 
+Now we apply an inverse variance decomposition on the the first expected squared norm term to get
+\begin{align}
+&  \E \| f'_i(w) - f'_i(w^*) - f'(w) \|^2  =   \E \| f'_i(w) - f'_i(w^*)  \|^2 -  \| f'(w)\|^2
+\end{align}
+as $f'(w) = \E[f'_i(w) - f'_i(w^*)]= \E[f'_i(w)] $. Absorbing the gardient norm with the previous one, we arrive at the claim.
+\end{proof} 
+\label{lemma:var-bound}
+\end{lemma}
+
+In order to deal with norm of the gradient appearing in Lemma \ref{lemma:var-bound} we use the following result. 
+\begin{lemma}
+Let $f$ be strongly $\mu$-convex, then 
+\begin{align}
+\| f'(w) \|^2 \ge 2 \mu \left( f(w) - f(w^*) \right) \,.
+\label{eq:gradient-norm-bound} 
+\end{align} 
+\begin{proof} 
+Elementary \cite{}
+\end{proof}
+\label{lemma:gradient-norm-bound} 
+\end{lemma} 
+
+\begin{corollary}
+Under the assumptions of Lemma \ref{lemma:var-bound}:
+\begin{align}
+\E \|g_i(w)\|^2 \le & (1+\beta) \E \| f'_i(w) - f'_i(w^*) \|^2 + \left(1+ \beta^{-1} \right) \E \| \bar \alpha_i - f_i'(w^*) )\|^2 
+\nonumber \\
+& - 2 \mu \beta \left( f(w) - f(w^*) \right) 
+\end{align}
+\begin{proof}
+Use of Lemma \ref{lemma:gradient-norm-bound} to bound the gradient norm in Lemma \ref{lemma:var-bound}.
+\end{proof} 
+\label{corollary:variance}
+\end{corollary}
+
+\subsection{Gradient Smoothness} 
+
+In order to further bound the terms appearing in the upper bound on $\E \|g_i(w)\|^2$, we make the further assumption of $L$-smoothness of the gradients for all $f_i$, i.e.~ 
+\begin{align}
+\| f'_i(w) - f_i'(w^*) \| \le L\| w - w^*\| \,,
+\end{align}
+which implies the following bound with regard to suboptimaility 
+\begin{lemma}[Stochastic Gradient Variation Around Optimimum]
+Let $f_i$ be comvex, $L$-smooth functions. Assume that $f=\frac 1n \sum_i f_i$ has a unique minimizer $w^*$. 
+Define 
+\begin{align}
+& h_i(w)  := f_i(w) - f_i(w^*)+  \langle w-w^*, f_i'(w^*) \rangle, 
+\end{align}
+then 
+\begin{align}
+& \| f'_i(w) - f_i'(w^*) \|^2 \le 2L h_i(w)
+\end{align}
+\label{lemma:stochastic-gradient-variation} 
+\begin{proof} 
+see Shalev-Schwarz, SAGA 
+\end{proof}
+\end{lemma}
+%
+\begin{corollary}
+\begin{align}
+\E \| f_i'(w) - f_i'(w^*)\|^2 \le \frac {2L }n \sum_i h_i(w) = 2L (f(w) - f(w^*))\,.
+\label{eq:smoothness-suboptimaility-bound}
+\end{align}
+\begin{proof}
+Note that  taking expectations on both sides of the claim of Lemma \ref{lemma:stochastic-gradient-variation}, the right hand side simplifies as 
+\begin{align}
+\E h_i(w)  = \frac 1n \sum_{i=1}^n (f_i(w) - f_i(w^*))+  \langle w-w^*, f'(w^*) \rangle = f(w) - f(w^*) 
+\end{align}
+by definition of $f$ and since $f'(w^*)=0$. 
+\end{proof}
+\label{cor:smoothness-suboptimaility-bound}
+\end{corollary}
+
+\begin{corollary}
+Under the assumptions of Lemma \ref{lemma:var-bound}:
+\begin{align}
+\E \|g_i(w)\|^2 \le & (2L (1+\beta)  - 2 \mu \beta) \left( f(w) - f(w^*) \right) \nonumber \\
+& + \left(1+ \beta^{-1} \right) \E \| \bar \alpha_i - f_i'(w^*) )\|^2 
+\end{align}
+\begin{proof}
+Apply Corollary \ref{cor:smoothness-suboptimaility-bound} to further simplify the result of Corollary \ref{corollary:variance}.
+\end{proof} 
+\label{eq:corollary3}
+\end{corollary}
+%
+Finally, we apply one further simplification 
+\begin{corollary}
+Under the assumptions of Lemma \ref{lemma:var-bound}:
+\begin{align}
+\E \|g_i(w)\|^2 \le & (2L (1+\beta)  - 2 \mu \beta) \left( f(w) - f(w^*) \right) \nonumber \\
+& + \left(1+ \beta^{-1} \right) \E \| \alpha_i - f_i'(w^*) )\|^2 
+\end{align}
+\begin{proof}
+Follows from inverse variance decompositon $\E \| \bar \alpha_i - f_i'(w^*) )\|^2  = \E \| \alpha_i - \bar \alpha - f_i'(w^*) \|^2 =
+\E \| \alpha_i - f_i'(w^*) \|^2 - \| \bar \alpha\|^2 \le \E \| \alpha_i - f_i'(w^*) \|^2$.
+\end{proof} 
+\label{corollary:final-bound}
+\end{corollary}
+
+\subsection{Intermediate Bound} 
+
+We summarize the analysis performed so far in the following lemma.
+\begin{lemma}
+For strongly $\mu$-convex $f$ and $L$-smooth $f_i$, the update equation in \eqref{eq:sgd-corrected} implies the following bound 
+\begin{align}
+\| w \!-\! w^*\|^2 \!-\!  \E \| w^+ \!-\! w^*\|^2  \ge  &\quad \gamma \mu \| w- w^*\|^2 \\ 
+& + 2\gamma \left[ 1 - \gamma  (L (1+\beta)  - \mu \beta) \right] (f(w) - f(w^*)) \nonumber \\
+& - \gamma^2 \left(1+ \beta^{-1} \right) \E \| \alpha_i - f_i'(w^*) )\|^2 
+\nonumber
+\end{align}
+\begin{proof}  
+Starting from \eqref{eq:recurrence} and applying Corollary \ref{corollary:final-bound} along with  Lemma \ref{lemma:naive-strong-convexity}.
+\end{proof}
+\label{lemma:intermediate}
+\end{lemma}
+
+
+\subsection{Bounding the Corrections} 
+
+How can we further bound  $\E \| \alpha_i - f_i'(w^*) \|^2$? Note that in the case of SAGA, SVRG, and the variants discussed here, all $\alpha_i$ corrections are just stochastic gradients evaluated at previous iterates 
+\begin{align}
+\alpha_i = f_i'(w^{\tau_i}), \quad \tau_i < t
+\end{align}
+which allows to apply the same smoothness bound  as above 
+\begin{align}
+\| \alpha_i-f'_i(w^*)\|^2 \le 2L  h_i(w^{\tau_i}) \,.
+\label{eq:alpha-bound}
+\end{align}
+The main (non-trivial) remaining challenge arises from the fact, that these bounds may not be evaluated at a common $\w$ for each index $i$ (as in SAGA). 
+
+In the neighborhood based version, things get slightly more complicated as we are using only an approximation of the true stochastic gradient for the variance correction. We apply a similar bound as before to get for some $j \in {\cal N}_i$
+\begin{align}
+\| \alpha_i-f'_i(w^*)\|^2 = & \| f'_j(w^{\tau_i}) - f'_i(w^*) \|^2 \\
+\le & (1+\phi) \| f'_i(w^{\tau_i} - f'_i(w^*)\|^2 + (1+\phi^{-1}) \|  f'_j(w^{\tau_i}) - f'_i(w^{\tau_i}) \|^2 
+\nonumber
+\label{eq:clustered-split}
+\end{align}
+The first of these terms is the same as in SAGA, only re-scaled by $(1+\phi)$. The second term, we assume to be bounded by
+\begin{align}
+\E \| f'_j(w) - f_i'(w) \|^2  < \epsilon, \quad (\forall w \in {\cal W})
+\end{align}
+where the expectation is over the random index $i$ and $j$ is sampled (conditioned on $i$) uniformly from ${\cal N}_i$.  
+
+\subsection{Geometric Convergence} 
+
+\paragraph{Motivation} 
+We would like to show that for a sutiable choice of the step size $\gamma$ each iteration results in a contraction that brings us closer to the optimum, i.e.~$\E \| w^+ - w^*\|^2 \le (1-\rho) \| w - w^*\|^2$. where $0 < \rho <1$ is the geometric convergence rate. However, the main challenge comes from the fact that $\alpha_i$ store stochastic gradients from previous iterations, i.e.~they consitute quantities that are not evaluated at the current iterate $w$. This requires a somewhat more complex proof technique. 
+
+Naively, we could aim for showing that the $\alpha$-updates bring us closer to their optimal values, i.e.~$\alpha_i^* = f_i'(w^*)$. However, it is difficult to obtain such bounds directly, say on $\E \| \alpha_i - \alpha_i^*\|^2$ under updates of $\alpha$. A more general and flexible proof strategy is to define an upper bound $H_i \geq \| \alpha_i - \alpha_i^*\|^2$ such that $H_i \to 0$ as $w \to w^*$ and then to derive suitable contractions that involve the quantities $H_i$. While $\| \alpha_i - \alpha_i^*\|^2$ may not decrease at a monotonic rate (or at all), the upper bound may be much better behaved.
+
+\paragraph{Updates on Bounds}
+In terms of notation, we will think of quantities $H_i$ as being updated in synch with $\alpha_i$, e.g.~in the case of plain SAGA through
+\begin{align}
+H_j^+ = 
+\begin{cases}
+2L \, h_i(w) & \text{if $i=j$} \\
+H_j & \text{otherwise}
+\end{cases} 
+\label{eq:recurrence-h}
+\end{align} 
+so that we always maintain valid bounds $\| \alpha_i - f_i'(w^*) \|^2 \le H_i$ and $\E\| \alpha_i - f_i'(w^*) \|^2 \le \bar H$ with $\bar H := \frac 1n \sum_{i=1}^n H_i$. Of course, we may also decide to update multiple $H_i$ at a time as in $q$-SAGA or SVRG. Basically, whenever an $\alpha_i$ is updated, so is the corresponding $H_i$.  Note that for neighborhood based SAGA, we will maintain bounds on $\| f'_i(w) - f_i'(w^*) \|^2$ and treat the term $\| f_i(w) - f_j'(w)\|^2$ as a separate error term, i.e.~we will have 
+ \begin{align}
+\| \alpha_i - f'_i(w^*) \|^2 \leq (1 + \phi) H_i + (1+ \phi^{-1}) \epsilon \,.
+ \end{align}
+ 
+ \paragraph{Lyapunov Function} 
+We follow the general idea of [SAGA] and define a Lyapunov function as the basis of the convergence proof. Note that our function is considerably simpler than the one used in [SAGA]. We  define 
+\renewcommand{\L}{{\mathcal L}}
+\begin{align}
+\L(w,H) = \| w- w^*\|^2 + \left( \frac{\gamma n}{L q} \right) \sigma   \bar H 
+\end{align}
+with a free parameter $\sigma$. As will be clear from the proof, the specific choice of the constant in brackets leads to a valid range $0 < \sigma < 1$.  In expectation under a random update, the Lyapunov function $\L$ changes as
+\begin{align}
+\E \L(w^+,H^+) & = \E \| w^+ - w^*\|^2  + \left( \frac{\gamma n}{L q} \right) \sigma  \E \bar H^+ \,.
+\nonumber
+\end{align}
+The first part is due to the state update and we have already have Lemma \ref{lemma:intermediate} that we can make use of. The second part is due to the recurrence \eqref{eq:recurrence-h}, which mirros the update of the $\alpha$ variables. For SAGA, the latter term can be directly calculated as
+\begin{align}
+\E \bar H^+ = \bar H + \frac 1n \E \left[ 2L\, h_i(w) - H_i \right]
+= \left( \frac{n-1}{n} \right) \bar H + \frac{2L}{n} (f(w)-f(w^*))
+\end{align}
+where we have made use of the fact that $\E h_i(w) = f(w)-f(w^*)$.  If we update $q$ points instead of just one, some care needs to be taken as to how to account for that. If each $\alpha_j$ has the same probability $\frac qn$ to be updated, then we get more generally 
+\begin{align}
+\E \bar H^+ = \left( \frac{n-q}{n} \right) \bar H + \frac{2Lq}{n} \, (f(w) - f(w^*))
+\label{eq:h-recurrence}
+\end{align}
+This is true for $q$-SAGA and also for SVRG. It is the main reason, why we require $|{\cal N}_j| =q$ in the neighborhood version of SAGA version.
+
+
+\subsection{Convergence Proof}
+
+We are looking for a contraction of the Lyapunov function with some unknown rate $(1-\rho)$.  In addition, we will try to balance out all terms that involve the solution suboptimality $f(w) - f(w^*)$.  Our main result can be stated as:
+\begin{theorem}
+\label{theorem:main}
+With the definitions and assumptions as above and any choice of $\beta>0$ and $0 < \sigma <1$: 
+\begin{align}
+\L(w,H) - \E\L(w^+,H^+) \ge \rho \L(w,H)
+\end{align}
+with
+\begin{align}
+\rho \geq   
+ \frac{\mu}{L} 
+ \min \left\{  
+  \frac{\sigma}{R \sigma + \left(1+\beta^{-1}\right)}, 
+  \frac {1 - \sigma }{1+\beta}
+\right\} \,.
+\end{align}
+where $R:=  \frac{n \mu}{qL}$.
+\begin{proof}
+The proof is provided in the main text.
+\end{proof}
+\end{theorem}
+
+\paragraph{Constraint on the rate} From Lemma \ref{lemma:intermediate} we can see by just looking at coefficients of the term $\| w- w^*\|^2$ that $\rho \leq \gamma \mu$. In the following, we will take this as the target rate and see how large the step size $\gamma$ can be chosen.
+
+\paragraph{$\bar H$ term}  The shrinkage effect on $\bar H$ leads to a contribution 
+\begin{align}
+\triangle^+_H := \frac{\gamma n}{Lq} \sigma  \bar H - \frac{\gamma n}{Lq} \frac{(n-q)\sigma}{n}   \bar H 
+= \frac{\gamma}{L} \sigma  \bar H \,.
+\end{align}
+But as we are using $H_i$ to bound $\| \alpha_i - f_i'(w^*) \|^2$, showing up in Lemma \ref{lemma:intermediate}, we need to subtract a suitable term, namely
+\begin{align}
+\triangle^-_H :=   \gamma^2  (1 + \beta^{-1}) \bar H  \,.
+\end{align}
+In the clustered case, we will get an additional factor $(1+\phi)$ as can be seen from \eqref{eq:clustered-split}.  Combining the two terms and collecting constants, we get 
+\begin{align}
+\triangle_H := \triangle_H^+ - \triangle_H^- = \frac{\gamma n}{Lq} \sigma 
+\left[ \frac {Lq}{n} \right] \left[  \frac 1L - \frac{\gamma \left(1 + \beta^{-1} \right)}{\sigma} \right] \bar H  \,.
+\end{align}
+%
+As we aim for a contraction rate of $\rho = \gamma \mu$, this leads to  a constraint on the step size
+%\begin{align}
+%& \frac {\sigma }L  - \gamma \left(1 + \beta^{-1} \right) \ge  \rho \sigma
+%\iff
+%\gamma \le \frac{\sigma}{1+ \beta^{-1}}  \left[ \frac {1}L - \rho \right]
+%\end{align}
+%More specifically for the choice $\rho = \gamma \mu$ as motivated above, we get a requirement 
+\begin{align}
+& \frac 1 L  - \frac{\gamma \left(1 + \beta^{-1} \right)}{\sigma} \ge  \frac {n \rho} {qL} =  \frac{n \gamma \mu}{qL}
+\iff  \gamma \le \frac 1L \cdot \frac{\sigma}{R\sigma + \left(1+\beta^{-1}\right)} 
+\label{eq:step-bound-from-h}
+\end{align}
+where we have defined $R:= \frac{n \mu}{qL}$. 
+
+\paragraph{Suboptimality terms}
+
+We next investigate terms that can be bounded by suboptimality, i.e.~$f(w)-f^*(w)$.  From Lemma \ref{lemma:intermediate} we get 
+\begin{align}
+\triangle_f^1 := 2 \gamma \left[ 1- \gamma  (L (1+\beta)  -  \mu \beta) \right] 
+\end{align}
+%
+However, we also have $f(w)-f(w^*)$ occur in the $\bar H$ recurrence in \eqref{eq:h-recurrence}. After working through cancelations of the constants one gets
+\begin{align}
+\triangle_f^2 := -2 \gamma \sigma 
+\end{align}
+A word of interpretation here: as we follow a stochastic update direction that in expectation equals the gradient, we are guarenteed to make progress of $2\gamma (f(w)-f(w^*)$.  This "positive" contribution can be used to hold the $\gamma^2$ terms in the variance "in check", in part by bounding them directly (negative terms in  $\triangle_f^1$), in part by "transferring" some amount of progress to $\bar H$ ($\triangle_f^2$ term) and then bounding the remaining terms through a multiple of $\bar H$. Combining both terms, we require 
+\begin{align}
+& \triangle_f^1 + \triangle_f^2 \ge 0 \iff 
+\sigma+  \gamma L (1 + \beta) 
+\le 1 + \gamma \mu \beta \iff 
+\gamma \leq \frac{1 - \sigma}{L + \beta (L-\mu)}
+\label{eq:step-bound-from-sub}
+\end{align}
+Here, we can directly see that $\sigma<1$ is needed in order to get a positive step size as $\mu \leq L$ implies that the denominator is positive. We would like to simplify the bound, which we can get by strengthening as follows: 
+\begin{align}
+\frac{1 - \sigma}{L + \beta (L-\mu)} \geq \frac{1-\sigma}{L(1+\beta)}\ge \gamma
+\end{align}
+%
+So we have derived three bounds, which we can be summarized in the claim of the theorem. $\qed$\\
+
+The theorem provides a two-dimensional family of bounds as $\beta>0$ and $0 < \sigma <1$ can be chosen. The question is, which choice of constant gives the best (maximal) rate $\rho^*$. The optimal choice of $\sigma$ is provided by the following corollary.
+\begin{corollary}[Optimal choice of $\sigma$]
+In Theorem \ref{theorem:main}, the maximal rate $\rho^*$ is obtained by chosing
+\begin{align}
+\sigma & = \frac{1}{2R} \left[ R-(a+b) + \sqrt{R^2 + (a+b)^2 - 2R(a-b)} \right] 
+\end{align}
+where $a=(1+\beta)$ and $b= (1+\beta^{-1})$. 
+\begin{proof}
+We have to equate both expressions in the minimum of Theorem \ref{theorem:main}, resulting in 
+\begin{align}
+a \sigma & = ( R \sigma + b) (1-\sigma) \iff R \sigma^2 + (a+b-R) \sigma - b =0
+\end{align}
+Applying the standard formula for quadratic equations provides the claim. 
+\end{proof}
+\end{corollary}
+
+Solving the resulting bound for $\beta$ yields the best bound. Here, we simply state a specialization to the case of $\beta=1$.
+\begin{corollary}
+The optimal rate is lower bounded by 
+\begin{align}
+\rho^* \ge \frac \mu L \left[ \frac 12 - \frac 14 \left( 1 - \frac 4R + \sqrt{1+ \left( \frac{4}{R}\right)^2} \right) \right]  
+\end{align}
+\begin{proof} With the special choice $\beta=1$, we get 
+\begin{align}
+\sigma & = \frac{1}{2R} \left[ R-4 + \sqrt{R^2+16} \right] 
+\end{align}
+Plugging this into the second bound, we get 
+\begin{align}
+\rho = \frac \mu L \left[ \frac 12 - \frac 1{4R} \left( R-4 + \sqrt{R^2+16} \right)  \right]
+\end{align}
+which can be reduced to the right-hand-side of the claim.
+\end{proof}
+\end{corollary}
+
+\paragraph{Large $R$ Case}
+
+The above expressions for the rate are somewhat difficult to interpret and we would like to get a simpler appoximation for large $n$. Note that for the relevant large data case $n \to \infty$, we get $R \to \infty$ so that $\sigma \to 1$. So we can approximate the optimal solution by linearizing the first bound around $\sigma=1$ (the second is already linear). Taylor expansion results in 
+\begin{align}
+u(\sigma)= \frac{1}{R + b} - (1-\sigma) \frac b {(R+b)^2}
+\end{align}
+from which we get the approximate linear relationship
+\begin{align}
+& \frac{1}{R + b} - (1-\sigma) \frac b {(R+b)^2} = \frac{(1-\sigma)}{a}  \iff \\
+& (1-\sigma) = \frac{1}{R + b}   \left( \frac 1a +  \frac b {(R+b)^2} \right)^{-1}
+% \\
+%\iff & (1-\sigma') = \left( \frac {R+b}{a} +  \frac b {(R+b)} \right)^{-1} \\
+%\iff & (1-\sigma') = \left( \frac {(R+b)^2 + ab}{a(R+b)} \right)^{-1}
+=  \frac {a(R+b)}{(R+b)^2 + ab}  \le \frac aR
+\end{align}
+This suggests (in the large $R$ limit) the choice $\sigma  =1 - \frac {1+\beta}{R}$. Insterting into the second bound yields $ \frac \mu{LR} = \frac{q}{n}$ (independent of $\beta$). Inserting the above choice for $\sigma$ into the first bound gives a smaller value (which hence determines the minimum of both bounds):
+\begin{corollary}
+\begin{align}
+\rho^* \ge \frac{q}{n} \frac{R- 1- \beta}{R - \beta +\beta^{-1}}
+\label{eq:bound-param-beta} 
+\end{align}
+\label{corollary:largeR}
+\end{corollary}
+For $\beta=1$ we would get $\rho^* \ge \frac \mu L \frac{R-2}{R^2} = \frac qn \, \frac {R-2}{R}$, which for $R>2$ gives a contraction and for large enough $R$ is again $\approx \frac qn$. 
+
+\paragraph{Effect of $q$}
+What is the derivative with regard to $q$? Note that $R \propto 1/q$. So we get
+\begin{align}
+\frac{d \rho}{ dq} = \frac{1}{n}  \cdot \left[ 1 - \frac 1R \frac{16}{\sqrt{1+ \left( \frac{4}{R}\right)^2}} \right]
+\end{align}
+For large $R$, the rate indeed increases in proportion to $q$ (as suggested by Corollary \ref{corollary:largeR}), however for small $R$, the effect is dampened. This suggests that it is important to consider modifications such as the ones suggested that allow for choices $q>1$. 
+
+\subsection{Neighborhood-Shared SAGA}
+
+We now provide results for the SAGA algorithm, where corrections are shared across neighborhoods or clusters. For ease of exposition, we assume that we have pre-clustered the data into $m = n/q$ clusters of equal size $q$. We want to carry over much of the above analysis. 
+
+First of all, we get an additional penalty term $(1+\phi)>1$ that we need to take into account. So where ever we had $(1+\beta^{-1})$ before, we now will have a factor $(1+\beta^{-1})(1+\phi)$ since the main results have never "looked inside" $(1+\beta^{-1})$ this is mereley a syntactic substitution leading to $b = (1+\beta^{-1})(1+\phi)$ and thus somewhat weaker constants. 
+
+More challenging is the error $\| f_i(w^*) - f_j(w^*) \|^2 < \epsilon$ for $i \sim j$ as it introduces a finite (non-vanishing) error that can only be controlled over the granularity of the clusters (resulting in a specific $\epsilon$ via further Lipschitz assumption). What we have been able to obtain in this case is a geometric convergence towards a neighborhood of the optimal $w^*$. 
+\begin{theorem}
+Let  $\rho$ be a rate guarenteed by Theorem \ref{theorem:main} for a non-clustered version of $q$-SAGA. Then we are guaranteed to get in expectation a geometric contraction rate of $\rho'= (\sqrt 3-1) \rho$ towards an $\eta$-ball around $w^*$, where $\eta = \frac{2}{\mu} \sqrt{2\epsilon \rho}$.
+\begin{proof}
+It is straightforward to derive 
+\begin{align}
+\L(w,H) - \E\L(w^+,H^+) \ge \rho \L(w,H) - 4 \gamma^2  \epsilon
+\end{align}
+In order to get a contraction of $\rho'=(1-\zeta)\rho$, it is required that 
+\begin{align}
+\zeta \rho \, \L(w,H) \ge 4 \gamma^2 \epsilon
+\end{align}
+As $\L(w,H) \geq \| w - w^*\|^2$ and $\gamma = \frac 1\mu (1-\zeta)\rho$ we get
+\begin{align}
+\|w -w^*\|^2 \ge \frac{4 \epsilon \rho}{ \mu^2} \frac {(1-\zeta)^2}{\zeta} 
+\end{align}
+By chosing $\zeta$ appropriately
+\begin{align}
+(1-\zeta)^2 = 2 \zeta \iff \zeta^2 - 4 \zeta + 1 =0 \iff \zeta = 2 - \sqrt{3}
+\end{align}
+we get 
+\begin{align}
+\| w - w^*\| \ge \eta := \frac 2 \mu \sqrt{2\epsilon \rho}
+\end{align}
+as claimed. 
+\end{proof}
+\end{theorem}
+Note that in the big data regime $\rho \approx 1/m = q/n$ (m: number of clusters). So by decreasing the cluster granularity, both $\epsilon$ and $m$ will work in our favor. In particular, if we allow $m \propto n$, then the ball of attraction shrinks with $\frac 1 {\sqrt{n}}$ towards the optimum $w^*$.\\[10mm]
+
+% This was meant to provide a way to trade-off the sacrifice in rate vs. speed 
+%
+% Let us assume that initially $\| w_0 - w^*\|^2 =: C$. Moreover assume that we get a contraction at a rate $\rho$ not just on $\L$, but "on average" (needs to be made more precise) also for $\| w - w^*\|^2$. If we want to reach a $w$ such that $\| w - w^* \| < \eta$, then at a rate $\rho'$  it would take $T$ steps, where
+%\begin{align}
+%(1-\rho')^T C \le \eta^2 \iff T \ge \frac{2 \log \eta -\log C}{\log (1-\rho')}
+%\end{align}
+%Plugging in 
+%\begin{align}
+%T \ge \frac{2 \log \epsilon - 2 \log \mu  +  \log 2 + 2\log (1-\zeta) - \log \zeta +  \log \rho - \log C} {\log \zeta + \log \rho }
+%\end{align}
+%This is of the form 
+%\begin{align}
+%T \ge \frac{C_1  + \log \frac{(1-\zeta)^2}{\zeta}}{C_2 + \log \zeta}
+%\end{align}
+%with negative constants $C_1, C_2$. Minimize with regard to $\zeta$. 
+
+\newpage
+
+
+\section{Appendix}
+
+\subsection{Unequal Cluster Sizes}
+
+More generally, we get 
+\begin{align}
+\E \bar H^+ & = \bar H + \frac 1n \sum_{i=1}^n \frac 1n \sum_{j \sim i} \left[ 2L \, h_j(w) - H_j \right] \\
+& = \bar H + \frac 1n \sum_{j=1}^n \frac{P(\pi(j))}{n} \left[ 2L \, h_j(w) - H_j \right] 
+\end{align}
+The problem is in the non-uniformity: the probability to (implicitly) update the corrections is proportional to the size $P(\pi(i))$ of the cluster a point belong to. This is intuitively clear as clusters get selected proportionally to their size, if we sample points uniformly. The problem is that now the expectation of $h_j$ needs to be computed with respect to a distribution induced by the clustering and will not simplify to $f(w)-f(w^*)$.  
+
+Another approach is to work backwards: how can we share updates among data points so that the resulting expectations are correct. The probability that any $\alpha_j$ is updated in an iteration should be $q/n$, independent of $j$ and its cluster membership. This means that there should be exactly $q$ neighbors that can change $\alpha_j$. It may still be that some $i$ influence more $j$ than others (in a clustering setting, the relation of sharing would be symmetric and transitive), but this would not be problematic as on average we will still get the correct results. 
+
+\paragraph{New write-up}
+
+Define a neighborhood structure on $\{1,\dots,n\}$ as follows. For each $i$ select the $q$ (approximate) nearest neighbors ${\cal N}_i \subseteq \{1,\dots,n\}$, i.e.~$|{\cal N}_i| = q$. One way to maintain the relevant information is to propagate a stochastic gradient $f'_j(w)$ according to the update rule 
+\begin{align}
+\alpha_i = 
+\begin{cases}
+f_j'(w) & \text{if $j \in {\cal N}_i$} \\
+\alpha_i & \text{otherwise} \,.
+\end{cases}
+\end{align}
+This requires on average to perform $q$ updates, e.g.~modifications in a pointer array. Note that we also need to update $\bar \alpha$.
+
+\subsection{Streaming Setting}
+
+Assume that we are in a setting where we have an unbounded stream of data, generated according to some unknown distribution. Hence a $\mu$-convex $f(w) = \E f_X(w)$ is to be minimized, where $f_X: \Re^d \to \Re$ are convex and $L$-smooth. 
+
+We can investigate the same update rule as before. Of course, standard variance-reduction methods are not applicable or not interesting: SVRG requires full gradient computations and SAGA only offers an advantage, if we observe the same $x$ multiple times (which for data involving real numbers is an event of measure zero). However, the sharing approach via neighborhoods and clusters is still applicable and we would like to analyze its behavior. Note that one challenge is in computing $\bar \alpha = \E \alpha_X$, which, more precisely, amounts to computing for each cluster the probability that a new data point $x$ will be assigned to it. We will come back to this. 
+
+First of all, it is clear that we get a similar bound in expectation on the contraction in terms of $\| w - w^*\|^2$ as stated in Lemma \ref{lemma:intermediate}, generalizing expectations with regard to a fixed sample to arbitrary distributions. We assume for simplicity first that we have a fixed number of $m$ clusters, represented by centroids $z_k$, $k=1,\dots,m$.\footnote{Note that, as we have usually a target variable -- class label or real-valued response -- we need to cluster data points such that they are of the same class and/or include the target variable in the clustering.} We will then maintain $\alpha_k$ and corresponding $H_k$ as before. 
+
+We can not hope to do better than $\| w - w^*\|^2 \in O(1/t)$. How can we make this show up in the analysis? 
+
+\subsection{Further Calculations}
+
+\paragraph{Linearization of first bound:}
+We need the derivative
+\begin{align}
+u(x) = x/(Rx+b), \quad u'(x) = 1/(Rx+b) - Rx/(Rx+b)^2
+\end{align}
+evaluated at $x=1$, i.e.~$u'(1)= 1/(R+b) - R/(R+b)^2= b/(R+b)^2$.
+
+\paragraph{Attempt to find optimal $\beta$}
+
+To get a precise result, we can maximize with respect to $\beta$. From the quotient rule, we get 
+\begin{align}
+& R -\beta + \beta^{-1} \stackrel ! = (R-1-\beta)(1 + \beta^{-2}) \iff \\
+% & -\beta^{-1} = -\beta + (R-1) \beta^{-2}  - \beta^{-1} \iff \\
+% & R \beta^2 - \beta^3 + \beta = (R-1-\beta) ( \beta^2 +1) \iff \\
+& \beta^2 + 2\beta + (1-R) = 0  \iff   \beta = \sqrt{R} -1 \,.
+\end{align}
+We can insert this back into \eqref{eq:bound-param-beta} to arrive at 
+\begin{align}
+\rho & \le \frac 1R \, \frac{R-\sqrt R}{R - \sqrt R+1+\frac{1}{\sqrt{R}-1}} \\
+& = \frac 1R \frac{(R-1) (R-\sqrt R)}{(R -1)(R - \sqrt R+1)+\sqrt R +1} \\
+& = \frac 1R \frac{(R^2 -R -R\sqrt R+\sqrt R) }{R^2-(R+2) \sqrt R}
+\end{align}
+Not clear how to make sense of  that. 
+
+
+
+\end{document}

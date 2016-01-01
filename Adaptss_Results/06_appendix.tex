@@ -1,0 +1,125 @@
+\newpage
+\appendix
+\section{Appendix}
+\label{App:Appendix}
+
+\begin{lemma}
+	Assume function $f(\w) \in \smoothstrong$, then for all $\w_1$ and $\w_2$ the
+	following inequality holds: 
+    \begin{equation*}
+    	| f(\w_1) - f(\w_2) - \langle \nabla f(\w_2), \w_1 - \w_2 \rangle | \leq
+    	L \| \w_1 - \w_2 \| ^2 
+    \end{equation*}
+\end{lemma}
+
+\begin{proof}
+	The proof is provide by \cite{nesterov2004introductory} (Lemma 1.2.3). However
+	we provide a simpler proof here to keep the consistancy. Based on the ``Mean
+	Value Theorem'', there is a $\w_{\tau} = \w_2 + \tau(\w_1-\w_2), \tau \in [0,1]$
+	that satisfies:
+	\begin{equation*}
+		f(\w_1) - f(\w_2) = \langle \nabla f(\w_{\tau}), \w_1 - \w_2 \rangle
+	\end{equation*}
+	Pluging the above equation inside the left side of inequality, yields: 
+	\begin{eqnarray*}
+		& | f(\w_1) - f(\w_2) - \langle \nabla f(\w_2), \w_1 - \w_2 \rangle | \\ 
+		& = | \langle \nabla f(\w_{\tau}) - \nabla f(\w_2), \w_1 - \w_2 \rangle| \\ 
+		& \leq \|  \nabla f(\w_{\tau}) - \nabla f(\w_2) \| \|\w_1 - \w_2 \|
+		\\
+		& \leq L \|  \w_{\tau} - \w_2 \| \|\w_1 - \w_2 \| \leq L \|\w_1 -
+		\w_2 \|^2 \\
+	\end{eqnarray*}
+	The third and forth steps are achieved by Cauchy-Schwarz inequality and the
+	$L$-smoothness assumption, respectively. 
+\end{proof}
+\begin{lemma} \label{lemma:saga_convergence}
+	As long as $\risk_{\T}(\w) \in \smoothstrong$ and $|\T| = n$, SAGA provides the
+	following suboptimality after $\C$ iterations: 
+	\begin{equation*}
+		|\risk_{\T}(\w^{\C}) - \risk_{\T}^* | \leq \rho_n^{\C} L \epsilon_0
+	\end{equation*}
+\end{lemma}
+\begin{proof}
+	SAGA yields the following
+suboptimality using $\C$ iterations \cite{defazio2014saga} as
+long as $\risk_{\T} \in \smoothstrong$:
+\begin{equation*}
+	\E \| \w^{\C} - \w^*_{\T} \|^2 \leq \rho_{n}^{\C} \epsilon_0,
+\end{equation*}
+where $\epsilon_0$ denotes the initial error and expectation is over random
+choice of chosen training points for stochastic gradient up to step $\C$. Here,
+$\rho_{n}$ is the convergence factor defined as:
+\begin{equation*}
+	\rho_n = 1- \min\left\{ \frac{1}{n}, \frac{\mu}{ L} \right\}
+\end{equation*}
+We can translate this suboptimality in terms of risk using Corollary
+\ref{corollary:smoothstrongbound}. More precisely,
+\begin{equation*}
+	|\risk_{\T}( \w^{\C}) - \risk^*_{\T}| \leq L \rho_{n}^{\C} \epsilon_0
+\end{equation*}
+\end{proof}
+ \begin{theorem}
+ 		Let $\w_\S$ is $\epsilon$-suboptimal on sample $|\S| = m$, means 
+ 		$\risk_\S(\w_\S) - \risk_\S^* \le \epsilon$. 
+ 		If $\S \subset \T$ is a subset of $|\T| = n$, then suboptimality of $\w_\S$
+ 		on set $\T$ is bounded w.h.p as: 
+ 		\begin{align}
+			\E \left[ \risk_\T(\w_\S) - \risk_\T^*\right] \le \epsilon +
+			\frac{n-m}{n} \bound(m)
+		\end{align}
+		where expectation is over random choice of superset $\T$ with size $n$. 
+ \end{theorem}
+
+\begin{proof}
+ We consider the chain:
+\begin{align}
+\risk_\T(\w_\S) - \risk_\T^* = \risk_\T(\w_\S) \stackrel{[1]}{\mp} \risk_\S(\w_S) \stackrel{[2]}{\mp} \risk_\S(\w_\S^*) \stackrel{[3]}{-} \risk_\T(\w_\T^*)
+\end{align}
+We bound the three involved differences as follows: 
+\begin{align}
+\text{[2]} \quad & \risk_\S(\w_S)  - \risk_\S(\w_\S^*) \le \epsilon  \qquad 
+\text{($\epsilon$ optimality of $\w_\S$ with regard to $\risk_\S$)}
+\\
+\text{[3]} \quad & \E_\T \left[ \risk_\S(\w_\S^*) - \risk_\T(\w_\T^*) \right] \le 0 \qquad 
+\text{(optimizing over a subsample)}
+% \\
+%& \E_\T \left[ \risk_\S(\w_\S^*) - \E_{\T} \risk_\T(\w_\S^*) \right] \le 0 \qquad 
+%\text{(since $\E\risk_\S(\w^*_\S) \le \risk(\w_\S)$)}
+\end{align}
+The latter inequality can be justified by
+\begin{align}
+\E_{\S} \risk_\S(\w_\S^*) \stackrel{[4]}{\le} \E_{\T} \risk_\S(\w_\T^*)  \stackrel{[5]}= \E_{\T} \risk_\T(\w_\T^*)  
+\end{align}
+where 
+\begin{align}
+\text{[4]} \quad & \risk_\S(\w_\S^*) \le \risk_\S(\w), \quad \forall \w\\
+\text{[5]} \quad & \E_{\S | \T} \risk_\S(\w) = \risk_\T(\w), \quad \forall \w \quad \text{as $\S \subset \T$}
+\end{align}
+Moreover, we have that
+\begin{align}
+& \E_{\T-\S} \left[ \risk_\T(\w_\S) - \risk_\S(\w_S) \right] \le \frac{n- m}{n}
+| \risk(\w_S) - \risk_\S(\w_\S) | \label{eq:t-s} \qquad 
+\end{align}
+The above inequality might seems a bit complicate to prove this we follow as: 
+\begin{eqnarray*}
+  & \E_{\T-\S} \left[ \risk_\T(\w_\S) - \risk_\S(\w_S) \right] & = \E_{\T-\S}
+  \left[
+  \frac{1}{n} \left[  \sum_{\x \in \S} f_{\x}(\w_\S)  + \sum_{\y \in \T - \S}
+  f_{\y}(\w_\S)\right] - \frac{1}{m}  \sum_{\x \in \S} f_{\x}(\w_\S)  \right]\\
+  & & =  
+  \frac{n-m}{n} \E_{\T-\S} \left[ \frac{1}{n-m} \sum_{\y \in \T - \S}
+  f_{\y}(\w_\S) -  \risk_\S(\w_{\S}) \right] \\
+  & & = \frac{n-m}{n} \E_{\T-\S} \left[ \frac{1}{n-m} \sum_{\y \in \T - \S}
+  f_{\y}(\w_\S) -  \risk_\S(\w_{\S}) \right]\\ 
+  & &  = \frac{n-m}{n}\left[ \E_{\T-\S} \left[ \risk_{\T-\S}(\w_\S) \right]-
+  \risk_\S(\w_{\S}) \right] \\ 
+  & & = \frac{n-m}{n} \left[\risk(\w_{\S}) - \risk_\S(\w_{\S})\right]
+\end{eqnarray*}
+
+and hence 
+\begin{align}
+\text{[1]} \quad & \E_{\T} \left[ \risk_\T(\w_\S) - \risk_\S(\w_S) \right] \le
+\frac{n-m}{n} \sup_{\w} | \risk(\w) - \risk_\S(\w) | \le \frac{n-m}{n} \bound(n)
+\end{align}
+The inequalities [1], [2], and [3] conclude the suboptimality bound. 
+\end{proof}

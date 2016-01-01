@@ -1,0 +1,127 @@
+\section{Problem Setting}
+\subsection{Empirical Risk Minimization}
+We assume that there is some (unknown) distribution $P$ that generates samples
+$\x \sim P$. For a given training set $\T = \{\x_i: \x_i \sim P \}$, we denote
+the empirical risk (ER) and its minimizer by
+\begin{align}
+\risk_\T(\w) := \frac {1}{|\T|} \sum_{\x \in \T} f_{\x}(\w),
+\qquad \w^*_\T := \argmin_{\w} \risk_{\T}(\w) 
+\end{align}
+Moreover, we define the expected risk of a parameter as $\risk(\w) := \E
+f_{\x}(\w)$ and its minimum and minimzer by $\risk^*$ and $\w^*$, respectively.
+Since the distribution $P$ is unknown, empirical risk minimization approach
+uses empirical minimizer $\w_n = \arg\min_{\w} \risk_{\T}(\w)$ to estimate
+$\w^*$. In later section, we will mention the depedency of empirical risk
+minimizer (ERM) to expected risk minimizer. Nonethless, our focus is on
+empirical risk throughout this section. The following conditions
+on empirical risk underlie in our analysis:
+\begin{itemize}
+  \item \textbf{$\mu$-strong convexity:} we assume for all sufficiently large
+  sample size $\forall \T:|\T|> \T_0$, the empirical risk is $\mu$-strongly
+  convex with high probability, which means: 
+  \begin{equation*}
+  	\langle \nabla \risk_\T(\w_1) - \nabla \risk_\T(\w_2), \w_1 - \w_2 \rangle
+  	\geq  \mu \| \w_1 - \w_2 \|_2^2
+  \end{equation*}
+  \item \textbf{Partial $L$-smoothness:} This assumption indicates that the
+  gradient of each summand of empirical risk is $L$-Lipschitz. Note that this
+  assumption is stronger than the $L$-smoothness assumption on the empirical
+  risk.
+  \begin{equation*}
+  	\| \nabla f_{\x}(\w_1) - \nabla f_{\x}(\w_2) \|_2
+  	\leq  L \| \w_1 - \w_2 \|_2
+  \end{equation*}
+  \item \textbf{Continuity:} The domain $\domain[\risk_\T(\w_1)]$ spans
+  $\R^d$ and it is continous on this domain. Furthermore, its gradient exists on
+  all domain. 
+\end{itemize}
+Let $\smoothstrong$ denote all empirical risks
+ for which above conditions hold. The following lemma holds for
+all functions $f(\w) \in \smoothstrong$. 
+\begin{lemma}
+	Assume function $f(\w) \in \smoothstrong$, then for all $\w_1$ and $\w_2$ the
+	following inequality holds: 
+    \begin{equation*}
+    	| f(\w_1) - f(\w_2) - \langle \nabla f(\w_2), \w_1 - \w_2 \rangle | \leq
+    	L \| \w_1 - \w_2 \| ^2 
+    \end{equation*}
+\end{lemma}
+
+\begin{corollary} \label{corollary:smoothstrongbound}
+	Let $f(\w) \in \smoothstrong$ and $f^*$ and $\w^*$ denote its minimum and
+	minimal, then: 
+	\begin{equation*}
+		\frac{\mu}{2} \| \w - \w^*  \| \leq | f(\w) - f^* | \leq L \| \w - \w^* \|^2
+	\end{equation*}
+\end{corollary}
+\begin{proof}
+	The left side inequality is direct result of $\mu$-strong convexity
+	assumption and the optimality of $\w^*$. The right side is achieved by
+	the last Lemma.
+\end{proof}
+
+\subsection{Generalization bound}
+Generalization bounds aim at uniformly bounding the deviation between the empirical and the expected risk over the function class at hand. A typical bound takes the form
+\begin{equation*}
+\E_\T \left[ \sup_{\w} \left| \risk(\w) - \risk_\T(\w) \right| \right]  \leq
+\bound(n) \label{eq:bound}
+\end{equation*} 
+where the expectation is over a random sample $\T$ of fixed size $|\T|=n$. 
+Here $\bound$ is a bound that depends on $n$, usually in a ratio $d/n$ relative
+to some capacity measure $d$ of the function class (e.g.~in the linear case the dimensionality or the VC dimension), which we assume to be constant in our discussion.  
+A simple, often conservative bound may scale as $\bound(n) \in \bigO(1/\sqrt{n})$. 
+It is sometimes possible to derive more optimistic bounds on the estimation accuracy (e.g.~in the realizable case) 
+such as $\bound(n) \in \bigO(\log(n)/n)$ or even $\bound(n) \in\bigO(1/n)$. 
+
+ Surprsingly, our proposed convergence does depend on the
+generalization bound. Let $\learning(P,f)$ denote a learning problem, which
+means the learning problem $\learning$ can be fully discribed using distribution $P$ and the loss
+ function $f$. According to the generalization bound $\bound(n)$, learning
+ problems can be categorize to two important groups:
+ \begin{itemize}
+   \item $\learning \in \Gu$: Problems with ``General Uniform
+   convergence rate'' of ERM. In this case, the generalization bound declines
+    with respect to square root of size of the training set, i.e. $\bound(n) =
+   \bigO\left(\frac{1}{\sqrt{n}}\right)$.
+   The term ``general" indicates that most of learning problems lies in this
+   category.
+   \item $\learning \in \Fu$: Some learning problem enjoys a ``Fast Uniform
+   Convergence rate'' of ERM, which is $\bound(n) = \bigO \left( \frac{1}{n}
+   \right)$ \cite{bousquet2008tradeoffs}. 
+ \end{itemize}
+ For these two classes of learning problems we provide different optimization
+ methods with different convergence rate. Note that the bounds hold with high
+ probability over the choice of the sample set. So there could always be sample sets that violate the bound. Morever, the uniform convergence (supremum over all solutions $\w$) is required to allow dependencies between $\w$  and the (random) data. It holds in particular it holds for $\w$ that are minimizer of empirical risks or approximations thereof.
+Assume we have some solution $\w_\T$ that is (by design) guranteed to be an
+$\epsilon$-approximation in the empirical risk, namely $\risk_\T(\w_\T) - \risk_\T^* \le \epsilon$.
+ We can bound its $\epsilon$-suboptimality in expectation over the random choice of
+ $\T$ as follows \cite{bousquet2008tradeoffs}:
+\begin{align}
+\label{eq:exprisk-bound}
+\E \risk(\w_\T) - \risk^*  & = 
+\E \left[ \risk(\w_\T) \mp \risk_{\T}(\w_{\T}) \mp \risk_{\T}(\w_{\T}^*) \mp
+\risk_\T(\w^*) \right]   - \risk(\w^*)
+% \\  & \le \E \sup_\w \{ | \risk(\w) -  \risk_\S(\w) | \} + \epsilon + 0 + \E \risk_\S(\w^*) - \risk(\w^*) 
+\\ & \le \E \sup_{\w} \{ | \risk(\w) -  \risk_\T(\w) | \} + \epsilon  \le 
+\bound(n) + \epsilon
+\nonumber
+\end{align}
+
+\subsection{Callenge of large-scale learning with SAGA}
+\label{sec:callenge_saga} Consider the setting where $\risk_{\T}(\w) \in \smoothstrong$,
+$\frac{1}{n} \leq \frac{\mu}{L}$ and $|\T| = n$.
+Our setting is restricted to computation of the stochastic gradient for
+$n$ times, which is equivalent to one pass over the data.
+Lemma \ref{lemma:saga_convergence} provides the following convergence rate for
+SAGA in terms of suboptimality of empirical risk. 
+	\begin{equation*}
+		|\risk_{\T}(\w^{n}) - \risk_{\T}^* | \leq \rho_n^{n} L \epsilon_0
+	\end{equation*}
+where the convergence factor is $\rho_n = 1 - \frac{1}{n}$. The larger value of
+$n$ slows down optimization because $ \lim_{n \to \infty} \rho_n	= 1$. This
+leads to a constant sub-optimality for all $n$, more precisely: 
+\begin{equation*}
+	\rho_n^{n} L \epsilon_0 = (1-\frac{1}{n}) L \epsilon_0 \leq \exp(-1) L
+	\epsilon_0 
+\end{equation*}
+We aimed at improving the convergence of SAGA in the one pass setting. 

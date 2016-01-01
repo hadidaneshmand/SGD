@@ -1,0 +1,17 @@
+.metadata/*
+.recommenders/*
+*/.metadata/*
+*/.*
+*/bin/*
+*.class
+*.pdf
+*/build/*
+*.gz
+*.zip
+*.project
+*.texlipse
+*.blg
+*.bbl
+*.log
+*.out
+*.aux

@@ -1,0 +1,287 @@
+#!/usr/bin/python
+
+#import matplotlib as mpl                                                                                                         
+#mpl.use('Agg')                                                                                                                 
+#import matplotlib.pyplot as plt
+
+import os
+import plotData
+import sys
+from optparse import OptionParser
+from pylab import *
+
+def column(matrix, i):
+    return [row[i] for row in matrix]
+
+parser = OptionParser()
+parser.add_option("-c", "--scp", dest="scp", default=1, help="Scp to server")
+parser.add_option("-d", "--dir_name", dest="dir_name", default="training_files_", help="Directory name")
+parser.add_option("-e", "--exact_search", dest="exact_search", default=0, help="If 1, search for the exact directory name")
+parser.add_option("-f", "--filter", dest="filter", default="", help="Only Directories containing this substring will be processed")
+parser.add_option("-l", "--show_legend", dest="show_legend", default=1, help="Show legend")
+parser.add_option("-o", "--output_dir", dest="output_dir", default="", help="Name of the directory where the html file will be copied")
+parser.add_option("-t", "--max_delta_time", dest="max_delta_time", default=0.0, help="max_delta_time")
+parser.add_option("-y", "--coeff_y_lim", dest="coeff_y_lim", default=-1.0, help="Coefficient for ylim")
+
+(options, args) = parser.parse_args()
+
+coeff_y_lim = float(options.coeff_y_lim)
+show_legend = int(options.show_legend)
+exact_search = int(options.exact_search) == 1
+
+output_dir = os.environ['HOME'] + '/public_html/' + options.output_dir
+
+if not os.access(output_dir, os.F_OK):
+    print 'Creating output directory ' + output_dir
+    os.mkdir(output_dir)
+
+dir_names = options.dir_name.split(',')
+
+for d in xrange(0,len(dir_names)):
+    dir_names[d] = dir_names[d].replace('+', '.*')
+
+# name, col_idx, use_multi_coeff
+var_names_with_attributes = [
+    ['sgd_error', 0],
+    ['sgd_loss', 0],
+    ['sgd_val_loss', 0],
+    ['sgd_test_loss', 0],
+    ['sgd_norm_v', 0],
+    ['sgd_norm_w', 0],
+    ['sgd_norm_g', 0],
+    ['sgd_eta', 0],
+    ['vite_loss', 0],
+    ['vite_val_loss', 0],
+    ['vite_test_loss', 0],
+    ['vite_norm_v', 0],
+    ['vite_norm_g_before', 0],
+    ['vite_norm_g_after', 0],
+    ['vite_norm_w', 0],
+    ['vite_norm_s', 0],
+    ['svgr_norm_w', 0],
+    ['svgr_loss', 0],
+    ['svgr_val_loss', 0],
+    ['svgr_test_loss', 0],
+    ['svgr_sample_loss', 0],
+    ['svgr_sample_val_loss', 0],
+    ['svgr_sample_test_loss', 0],
+    ['svgr_sample_error', 0],
+    ['svgr_sample_norm_w', 0],
+    ['svgr_sample_norm_ge', 0],
+    ['svgr_sample_norm_v', 0],
+    ['svgr_cl_loss', 0],
+    ['svgr_cl_val_loss', 0],
+    ['svgr_cl_test_loss', 0],
+    ['svgr_cl_eta', 0],
+    ['svgr_cl_norm_v', 0],
+    ['lvite_loss', 0],
+    ['lvite_val_loss', 0],
+    ['lvite_test_loss', 0],
+    ['lvite_eta', 0],
+    ['lvite_deviation_angle_w', 0],
+    ['lvite_deviation_angle_g', 0],
+    ['lvite_deviation_norm_w', 0],
+    ['lvite_deviation_norm_g', 0],
+    ['lvite_norm_mu', 0],
+    ['lvite_norm_g', 0],
+    ['lvite_norm_ge', 0],
+    ['lvite_norm_v', 0],
+    ['lvite_norm_w', 0],
+    ['lvite_norm_we', 0],
+    ['sqn_error', 0],
+    ['sqn_loss', 0],
+    ['sqn_val_loss', 0],
+    ['sqn_test_loss', 0],
+    ['sqn_norm_w', 0],
+    ['sqn_norm_g', 0],
+    ['sqn_norm_Jg', 0],
+    ['slbfgs_error', 0],
+    ['slbfgs_loss', 0],
+    ['slbfgs_val_loss', 0],
+    ['slbfgs_norm_w', 0],
+    ['slbfgs_eta', 0],
+    ['slbfgs_norm_g_before', 0],
+    ['slbfgs_norm_g_after', 0],
+    ['slbfgs_norm_g_after2', 0],
+    ['sbfgs_error', 0],
+    ['sbfgs_loss', 0],
+    ['sbfgs_val_loss', 0],
+    ['sbfgs_norm_v', 0],
+    ['sbfgs_norm_w', 0],
+    ['sbfgs_eta', 0],
+    ['sbfgs_norm_s', 0],
+    ['sbfgs_norm_y', 0],
+    ['sbfgs_norm_J', 0],
+    ['sbfgs_min_eig_J', 0],
+    ['sbfgs_norm_g_before', 0],
+    ['sbfgs_norm_g_after', 0],
+    ['sbfgs_deviation_angle_g', 0],
+    ['sbfgs_deviation_norm_g', 0],
+    ['slbfgs_vr_error', 0],
+    ['slbfgs_vr_loss', 0],
+    ['slbfgs_vr_val_loss', 0],
+    ['slbfgs_vr_norm_v', 0],
+    ['slbfgs_vr_norm_w', 0],
+    ['slbfgs_vr_eta', 0],
+    ['slbfgs_vr_norm_J', 0],
+    ['slbfgs_vr_min_eig_J', 0],
+    ['slbfgs_vr_norm_g_before', 0],
+    ['slbfgs_vr_norm_g_after', 0],
+    #['bfgs_error', 0],
+    #['bfgs_loss', 0],
+    #['bfgs_val_loss', 0],
+    #['bfgs_norm_w', 0],
+    #['bfgs_eta', 0],
+    ['adagrad_error', 0],
+    ['adagrad_loss', 0],
+    ['adagrad_val_loss', 0],
+    ['adagrad_norm_w', 0],
+    ['adagrad_eta', 0],
+    ['dual_averaging_norm_g', 0],
+    ['dual_averaging_val_loss', 0],
+    ['dual_averaging_norm_w', 0],
+    ['dual_averaging_norm_wa', 0],
+    ['dual_averaging_norm_mu', 0],
+    ['dual_averaging_norm_g', 0],
+    ['sdca_loss', 0],
+    ['sdca_test_loss', 0],
+    ['sdca_primal', 0],
+    ['sdca_dual', 0],
+    ['sdca_norm_w', 0]
+    ];
+
+var_names = column(var_names_with_attributes, 0)
+col_idx = column(var_names_with_attributes, 1)
+
+list_plots = []
+for i in range(0,len(var_names)):
+    l = plotData.plotData_Std(dir_names, var_names[i], show_legend, col_idx[i], coeff_y_lim, exact_search)
+    list_plots.append(l)
+
+var_names_all = var_names
+
+# Display pairs of variables on the same graph
+
+# Pairs of plots to be plotted together on the same graph
+#pairs = [[1,8],[1,13],[1,28],[8,13],[8,28],[13,28]]
+pairs = []
+
+list_cs = plotData.getListCs()
+
+var_names_pairs = []
+for p in range(0, len(pairs)):
+
+    pair = pairs[p]
+    i0 = pair[0]
+    i1 = pair[1]
+
+    figure(num=p, figsize=(12, 10), dpi=100)
+    clf
+    k = 0
+    legend_names = []
+    for ip in range(0,2):
+        i = pair[ip]
+        if ip == 0:
+            fmt_type = 'v'
+        else:
+            fmt_type = 'o'
+        if (len(list_plots) > i):
+            list_iteration_ids = list_plots[i].id
+            list_mean = list_plots[i].mean
+            list_std = list_plots[i].std
+            list_legend = list_plots[i].legend
+
+            n_colors = len(list_mean)
+            colorarray = np.random.random_sample((n_colors, 3))
+            colorarray[:, -1] = 0.6
+            colorarray = np.vstack([colorarray, colorarray])
+
+            for j in range(0, len(list_mean)):
+                l = len(list_mean[j])
+                cs = list_cs[k][0] + list_cs[k][1]
+                if len(list_iteration_ids) > 0:
+                    x = list_iteration_ids[j][0:l]
+                else:
+                    x = range(0,l)
+                y = list_mean[j][0:l]
+                e = list_std[j][0:l]
+                legend_names.append(var_names[i] + '_' + list_legend[j])
+                # Overlay lines and error bars
+                #plot(x, y, linewidth=1.0, color = colorarray[j])
+                errorbar(x, y, e, linestyle='None', fmt=fmt_type, color = colorarray[j])
+                k = k + 1
+
+    plot_name = os.path.basename(var_names_all[i0]) + '_' + os.path.basename(var_names_all[i1])
+    var_names_pairs.append(plot_name)
+    if show_legend == 1 and len(legend_names) > 0:
+        legend(legend_names, loc='upper right')
+    output_file = plot_name + '.png'
+    print 'output_file ' + output_file
+    savefig(output_file)
+    clf
+    close(p)
+
+for i in range(0,len(var_names_pairs)):
+    var_names_all.append(var_names_pairs[i])
+
+
+# Copy png file to output directory
+if os.path.isdir(output_dir):
+    cmd = 'cp '
+    for i in range(0,len(var_names_all)):
+        name = os.path.basename(var_names_all[i])
+        if (i < len(col_idx)) and col_idx[i] != 0:
+            name += str(col_idx[i])
+        cmd = cmd + name + '.png '
+    cmd = cmd + output_dir
+    print cmd
+    os.system(cmd)
+
+# Create html page
+f = open(output_dir + "plots.html", "w")
+f.write('<HTML>\n')
+f.write('<HEAD>\n')
+f.write('<TITLE>Experiments - plots</TITLE>\n')
+f.write('</HEAD>\n')
+f.write('<BODY BGCOLOR="FFFFFF">\n')
+f.write('<CENTER>\n')
+
+f.write('<p>\n')
+
+legend_html_text = ''
+for j in range(0,len(var_names_all)):
+
+    name_j = os.path.basename(var_names_all[j])
+    if (j < len(col_idx)) and col_idx[j] != 0:
+            name_j += str(col_idx[j])
+
+    if os.access(name_j + '.png', os.F_OK) and ((len(list_plots) <= j) or (len(list_plots[j].mean) > 0)):
+        legend_html_text = legend_html_text + '<a href="#' + name_j + '">' + name_j + '</a>&nbsp;&nbsp;&nbsp;'
+
+f.write(legend_html_text)
+
+for i in range(0,len(var_names)):
+
+    name = os.path.basename(var_names[i])
+    if (i < len(col_idx)) and col_idx[i] != 0:
+        name += str(col_idx[i])
+
+    if os.access(name + '.png', os.F_OK) and ((len(list_plots) <= i) or (len(list_plots[i].mean) > 0)):
+
+        f.write('<p><a name="' + name + '">' + name + '</a></p>\n')
+        f.write('<img src="' + name + '.png" align="bottom">\n')
+        f.write('</br>\n')
+
+        f.write(legend_html_text)
+
+f.write('</p>\n')
+f.write('</CENTER>\n')
+f.write('</BODY>\n')
+f.write('</HTML>\n')
+f.close()
+
+if options.scp == 1:
+    cmd = 'scp -r /root/public_html/* alucchi@web-login.inf.ethz.ch:/home/alucchi/public_html/plots/'
+    print cmd
+    os.system(cmd)
+
