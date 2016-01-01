@@ -1,0 +1,139 @@
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.StringTokenizer;
+
+import opt.Adapt_Strategy;
+import opt.firstorder.FirstOrderOpt;
+import opt.firstorder.First_Order_Factory;
+import opt.firstorder.SAGA;
+import opt.firstorder.SAGA_Adapt;
+import opt.firstorder.SGD;
+import opt.firstorder.SVRG_Streaming;
+import opt.loss.LeastSquares_efficient;
+import opt.loss.Logistic_Loss;
+import opt.loss.Logistic_Loss_efficient;
+import opt.loss.Loss_static;
+import opt.loss.LeastSquares;
+import opt.loss.Loss_static_efficient;
+import data.DataPoint;
+import data.IOTools;
+import data.Result;
+import data.SparsePoint;
+
+
+public class sgd_saga_adapt_efficient {
+	public static DataPoint[] data; 
+	public static void readDataPointsFromFile(String filename, int startIndex, int data_size) {
+		data = new DataPoint[data_size]; 
+		try {
+			BufferedReader fp = new BufferedReader(new FileReader(filename));
+			String line;
+			int c = 0; 
+			while ((line = fp.readLine()) != null) {
+				try {
+					DataPoint point = new SparsePoint();
+					StringTokenizer st = new StringTokenizer(line, " +\t\n\r\f:");
+					double label = Double.valueOf(st.nextToken());					// label has to be at the first position of the text row
+					point.setLabel(label);
+
+					while (st.hasMoreTokens()) {
+						int feature = Integer.valueOf(st.nextToken()) - startIndex;
+						double value = Double.valueOf(st.nextToken());
+						point.set(feature, value);
+					}
+					
+					data[c] = point; 
+					c++; 
+					
+				} catch (NumberFormatException e) {
+					System.out.println("Could not read datapoint number "+c + " since Line "+line+" seems to be not properly formatted: "+e.getMessage());
+				}
+			}
+			fp.close();
+		} catch (IOException e) {
+			System.out.println("Could not read from file " + filename + " due to " + e.getMessage());
+		}
+	}
+	public static void main(String[] args) {
+		String configFilename = null;
+		if(args.length > 0) {
+			configFilename = args[0];
+		}
+		else{
+			System.out.println("Config file is missed");
+			return; 
+		}
+		opt.config.Config conf = new opt.config.Config();
+		conf.parseFile(configFilename);
+		System.out.println("agressive step size for saga: " + conf.agressive_step);
+		System.out.println("doubling: " + conf.doubling);
+		System.out.println("nTrials: " + conf.nTrials);
+		System.out.println("nPasses: " + conf.nPasses);
+		System.out.println("nSamplesPerPass: " + conf.nSamplesPerPass);
+		System.out.println("file: "+conf.dataPath);
+		System.out.println("data size:"+conf.c0);
+		readDataPointsFromFile( conf.dataPath, 1,conf.c0);
+		int numrep = conf.nTrials;
+		int nSamplesPerPass = conf.nSamplesPerPass; 
+	    int MaxItr = conf.nPasses; 
+	    int d = conf.featureDim; 
+	    int n = data.length;
+	    double L = 2; 
+//		for(int i=0;i<n;i++){ 
+//			data.set(i, (DataPoint) data.get(i).multiply(10)); 
+//		}
+		for(int i=0;i<n;i++){ 
+			if(data[i].getNorm()>L){ 
+				L = data[i].getNorm();
+			}
+		}
+		System.out.println("L:"+L);
+		if(L>10.0){ 
+			for(int i=0;i<data.length;i++){ 
+				data[i]=(DataPoint)data[i].normalize(); 
+			}
+		}
+		double lambda_n = 1.0/Math.sqrt(n);
+		double eta_n = 0.3/(L+lambda_n*n); 
+		if(conf.agressive_step){ 
+			eta_n = 1.0/(3*L);
+		}
+		Loss_static_efficient loss = new Logistic_Loss_efficient(data, d);
+		if(conf.lossType ==  opt.config.Config.LossType.REGRESSION){
+			loss = new LeastSquares_efficient(data,d); 
+		}
+		loss.setLambda(lambda_n);
+		SGD sgd = new SGD(loss);
+		sgd.setLearning_rate(lambda_n);
+		FirstOrderOpt[] methods = new FirstOrderOpt[5];
+		SAGA opt = new SAGA(loss,eta_n); 
+		opt.Iterate((int) (n*Math.log(n)));
+		methods[0] = sgd;
+		methods[1] = new SAGA(loss,eta_n);
+		double loss_opt = loss.getLoss(opt.getParam()); 
+		System.out.println("loss_opt:"+loss_opt);
+		Adapt_Strategy as = new Adapt_Strategy(n, (int) (L/lambda_n), false);
+		SAGA_Adapt saga_a = new SAGA_Adapt(loss.clone_loss(), as,lambda_n,L);
+		Adapt_Strategy as_doubl = new Adapt_Strategy(n, (int) (L/lambda_n), true);
+		methods[2] = saga_a;
+		methods[3] = new SAGA_Adapt(loss.clone_loss(), as_doubl, lambda_n, L);
+		int b = 3; 
+		int p = 2; 
+		double kappa = L/lambda_n; 
+		System.out.println("kapa:"+kappa);
+		double eta = 1.0/(5*Math.pow(b, p+1));
+		System.out.println("eta:"+eta);
+		int k_0 = (int) kappa;
+		System.out.println("k_0:"+k_0);
+		int m = (int) (kappa/eta); 
+		System.out.println("m:"+m);
+		SVRG_Streaming svrg = new SVRG_Streaming(loss.clone_loss(),eta, k_0, b,m); 
+		methods[4] = svrg; 
+		ArrayList<String> names = new ArrayList<String>(); 
+		Result res = First_Order_Factory.RunExperiment(numrep,loss, methods, MaxItr, nSamplesPerPass, loss_opt);
+        res.write2File(conf.logDir);
+	}
+}
