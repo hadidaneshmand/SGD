@@ -47,8 +47,10 @@ public class sgd_saga_adapt_efficient {
 						point.set(feature, value);
 					}
 					data[c] = point; 
-					c++; 
-				System.out.println("c:"+c);	
+					c++;
+				if(c %1000 == 0){ 
+					System.out.println("c:"+c);	
+				}
 				} catch (NumberFormatException e) {
 					System.out.println("Could not read datapoint number "+c + " since Line "+line+" seems to be not properly formatted: "+e.getMessage());
 				} 
