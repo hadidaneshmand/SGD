@@ -95,7 +95,9 @@ public class sgd_saga_adapt_efficient {
 			for(int i=0;i<data.length;i++){ 
 				data[i]=(DataPoint)data[i].normalize(); 
 			}
+			System.out.println("Data is normalized!!");
 		}
+		L = 1.5;
 		double lambda_n = 1.0/Math.sqrt(n);
 		double eta_n = 0.3/(L+lambda_n*n); 
 		if(conf.agressive_step){ 
