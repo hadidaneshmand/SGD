@@ -37,7 +37,11 @@ public class First_Order_Factory {
 			for(int i=0;i<names.size();i++){ 
 				out.addresult(names.get(i), convs.get(i));
 			}
+			System.out.println("Free memory (bytes): " + 
+					  Runtime.getRuntime().freeMemory());
 			System.gc();
+			System.out.println("Free memory after GC (bytes): " + 
+					  Runtime.getRuntime().freeMemory());
 		}
 		return out;
 	}

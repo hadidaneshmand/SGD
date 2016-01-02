@@ -60,6 +60,11 @@ public class sgd_saga_adapt_efficient {
 		} catch (IOException e) {
 			System.out.println("Could not read from file " + filename + " due to " + e.getMessage());
 		}
+		System.out.println("Free memory (bytes): " + 
+				  Runtime.getRuntime().freeMemory());
+		System.out.println("Total memory (bytes): " + 
+				  Runtime.getRuntime().totalMemory());
+		
 	}
 	public static void main(String[] args) {
 		String configFilename = null;
@@ -81,7 +86,8 @@ public class sgd_saga_adapt_efficient {
 //		conf.dataPath = "data/covtype"; 
 //		conf.featureDim = 54; 
 //		conf.logDir = "outs/test"; 
-
+		System.out.println("Total memory (bytes): " + 
+				  Runtime.getRuntime().totalMemory());
 		System.out.println("agressive step size for saga: " + conf.agressive_step);
 		System.out.println("doubling: " + conf.doubling);
 		System.out.println("nTrials: " + conf.nTrials);
