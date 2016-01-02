@@ -135,13 +135,28 @@ public class sgd_saga_adapt_efficient {
 		sgd.setLearning_rate(lambda_n);
 		FirstOrderOpt[] methods = new FirstOrderOpt[5];
 		SAGA opt = new SAGA(loss,eta_n); 
-		opt.Iterate((int) (n*Math.log(n)));
+//		opt.Iterate((int) (n*Math.log(n)));//TODO 
+		opt.Iterate(1000);
+		System.out.println("After SAGA: Free memory (bytes): " + 
+				  Runtime.getRuntime().freeMemory()+ ",Total memory (bytes): " + 
+						  Runtime.getRuntime().totalMemory());
 		methods[0] = sgd;
 		methods[1] = new SAGA(loss,eta_n);
 		double loss_opt = loss.getLoss(opt.getParam()); 
+		opt = null; 
+		System.gc(); 
+		System.out.println("After calling GC: Free memory (bytes): " + 
+				  Runtime.getRuntime().freeMemory()+ ",Total memory (bytes): " + 
+						  Runtime.getRuntime().totalMemory());
 		System.out.println("loss_opt:"+loss_opt);
 		Adapt_Strategy as = new Adapt_Strategy(n, (int) (L/lambda_n), false);
+		System.out.println("After Strategy: Free memory (bytes): " + 
+				  Runtime.getRuntime().freeMemory()+ ",Total memory (bytes): " + 
+						  Runtime.getRuntime().totalMemory());
 		SAGA_Adapt saga_a = new SAGA_Adapt(loss.clone_loss(), as,lambda_n,L);
+		System.out.println("After saga_a: Free memory (bytes): " + 
+				  Runtime.getRuntime().freeMemory()+ ",Total memory (bytes): " + 
+						  Runtime.getRuntime().totalMemory());
 		Adapt_Strategy as_doubl = new Adapt_Strategy(n, (int) (L/lambda_n), true);
 		methods[2] = saga_a;
 		methods[3] = new SAGA_Adapt(loss.clone_loss(), as_doubl, lambda_n, L);
