@@ -25,7 +25,7 @@ public class AdaptSAGA_Real {
 		return out;
 	}
 	public static void main(String[] args) {
-		List<DataPoint> data = IOTools.readDataPointsFromFile( "data/rcv1_train.binary", 1);
+		List<DataPoint> data = IOTools.readDataPointsFromFile( "data/covtype", 1);
 		System.out.println("n="+data.size());
 		int nSamplesPerPass = 100;
 		int MaxItr = 500; 

@@ -19,7 +19,7 @@ import data.Result;
 import data.SparsePoint;
 
 
-public class sgd_saga_adapt_efficient {
+public class st_sgd_saga_adapt_efficient {
 	public static DataPoint[] data; 
 	public static void readDataPointsFromFile(String filename, int startIndex, int data_size) {
 		int pos = 0; 
@@ -40,6 +40,7 @@ public class sgd_saga_adapt_efficient {
 						label = -1; 
 						neg++; 
 					}
+					
 					point.setLabel(label);
 
 					while (st.hasMoreTokens()) {
@@ -49,7 +50,7 @@ public class sgd_saga_adapt_efficient {
 					}
 					data[c] = point; 
 					c++;
-				if(c %1000 == 0){ 
+				if(c %10000 == 0){ 
 					System.out.println("c:"+c);	
 				}
 				} catch (NumberFormatException e) {
@@ -68,25 +69,24 @@ public class sgd_saga_adapt_efficient {
 		
 	}
 	public static void main(String[] args) {
-		String configFilename = null;
-		if(args.length > 0) {
-			configFilename = args[0];
-		}
-		else{
-			System.out.println("Config file is missed");
-			return; 
-		}
+//		String configFilename = null;
+//		if(args.length > 0) {
+//			configFilename = args[0];
+//		}
+//		else{
+//			System.out.println("Config file is missed");
+//			return; 
+//		}
 		opt.config.Config conf = new opt.config.Config();
-		conf.parseFile(configFilename);
-
-//		conf.doubling = false; 
-//		conf.agressive_step = false; 
-//		conf.nPasses = 100; 
-//		conf.nSamplesPerPass = 100; 
-//		conf.c0 = 1000; 
-//		conf.dataPath = "data/covtype"; 
-//		conf.featureDim = 54; 
-//		conf.logDir = "outs/test"; 
+//		conf.parseFile(configFilename);
+		conf.doubling = false; 
+		conf.agressive_step = false; 
+		conf.nPasses = 100; 
+		conf.nSamplesPerPass = 500; 
+		conf.c0 = 500000; 
+		conf.dataPath = "data/covtype"; 
+		conf.featureDim = 54; 
+		conf.logDir = "outs/covtype_5"; 
 		System.out.println("Total memory (bytes): " + 
 				  Runtime.getRuntime().totalMemory());
 		System.out.println("agressive step size for saga: " + conf.agressive_step);
@@ -133,7 +133,8 @@ public class sgd_saga_adapt_efficient {
 		}
 		loss.setLambda(lambda_n);
 		SGD sgd = new SGD(loss);
-		sgd.setLearning_rate(lambda_n);
+		sgd.setLearning_rate(0.1);
+		sgd.setConstant_step_size(true);
 		FirstOrderOpt[] methods = new FirstOrderOpt[5];
 		SAGA opt = new SAGA(loss,eta_n); 
 		opt.Iterate((int) (n*Math.log(n)));//TODO 
