@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.StringTokenizer;
 
 import opt.Adapt_Strategy;
+import opt.config.Config;
 import opt.firstorder.FirstOrderOpt;
 import opt.firstorder.First_Order_Factory;
 import opt.firstorder.SAGA;
@@ -97,6 +98,7 @@ public class sgd_saga_adapt_efficient {
 		System.out.println("file: "+conf.dataPath);
 		System.out.println("data size:"+conf.c0);
 		System.out.println("out dir:"+conf.logDir);
+		System.out.println("classification:" +(conf.lossType != Config.LossType.REGRESSION));
 		data = new DataPoint[conf.c0]; 
 		readDataPointsFromFile( conf.dataPath, 1,conf.c0);
 		int numrep = conf.nTrials;
