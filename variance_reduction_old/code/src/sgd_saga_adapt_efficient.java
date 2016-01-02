@@ -49,7 +49,7 @@ public class sgd_saga_adapt_efficient {
 					}
 					data[c] = point; 
 					c++;
-				if(c %1000 == 0){ 
+				if(c %50000 == 0){ 
 					System.out.println("c:"+c);	
 				}
 				} catch (NumberFormatException e) {
