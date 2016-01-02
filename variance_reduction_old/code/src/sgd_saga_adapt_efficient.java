@@ -134,7 +134,7 @@ public class sgd_saga_adapt_efficient {
 		loss.setLambda(lambda_n);
 		SGD sgd = new SGD(loss);
 		sgd.setLearning_rate(lambda_n);
-		FirstOrderOpt[] methods = new FirstOrderOpt[5];
+		FirstOrderOpt[] methods = new FirstOrderOpt[7];
 		SAGA opt = new SAGA(loss,eta_n); 
 		opt.Iterate((int) (n*Math.log(n)));//TODO 
 //		opt.Iterate(1000);
@@ -173,7 +173,14 @@ public class sgd_saga_adapt_efficient {
 		System.out.println("m:"+m);
 		SVRG_Streaming svrg = new SVRG_Streaming(loss.clone_loss(),eta, k_0, b,m); 
 		methods[4] = svrg; 
-		ArrayList<String> names = new ArrayList<String>(); 
+		SGD const_sgd = new SGD(loss.clone_loss()); 
+		const_sgd.setLearning_rate(0.05);
+		const_sgd.setConstant_step_size(true);
+		methods[5] = const_sgd; 
+		SGD const_sgd_small = new SGD(loss.clone_loss());
+		const_sgd_small.setLearning_rate(0.005);
+		const_sgd_small.setConstant_step_size(true);
+		methods[6] = const_sgd_small; 
 		Result res = First_Order_Factory.RunExperiment(numrep,loss, methods, MaxItr, nSamplesPerPass, loss_opt);
         res.write2File(conf.logDir);
 	}

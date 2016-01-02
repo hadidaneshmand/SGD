@@ -53,7 +53,7 @@ public class SGD extends FirstOrderOpt {
 
 	@Override
 	public String getName() {
-		return "SGD";
+		return "SGD:"+"L:"+getLearning_rate();
 	}
 
 	@Override
