@@ -39,6 +39,7 @@ public class First_Order_Factory {
 			}
 			System.out.println("Free memory (bytes): " + 
 					  Runtime.getRuntime().freeMemory());
+			methods = null; 
 			System.gc();
 			System.out.println("Free memory after GC (bytes): " + 
 					  Runtime.getRuntime().freeMemory());

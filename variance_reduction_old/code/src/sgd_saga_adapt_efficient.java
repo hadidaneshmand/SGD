@@ -135,8 +135,8 @@ public class sgd_saga_adapt_efficient {
 		sgd.setLearning_rate(lambda_n);
 		FirstOrderOpt[] methods = new FirstOrderOpt[5];
 		SAGA opt = new SAGA(loss,eta_n); 
-//		opt.Iterate((int) (n*Math.log(n)));//TODO 
-		opt.Iterate(1000);
+		opt.Iterate((int) (n*Math.log(n)));//TODO 
+//		opt.Iterate(1000);
 		System.out.println("After SAGA: Free memory (bytes): " + 
 				  Runtime.getRuntime().freeMemory()+ ",Total memory (bytes): " + 
 						  Runtime.getRuntime().totalMemory());
