@@ -6,6 +6,7 @@ import java.util.Random;
 
 import data.DataPoint;
 import data.DensePoint;
+import opt.utils;
 import opt.loss.Loss;
 
 public class SVRG_Streaming extends FirstOrderOpt{
@@ -38,11 +39,9 @@ public class SVRG_Streaming extends FirstOrderOpt{
 	}
 	public void computeAvg(int size){ 
 		avg = DensePoint.zero(loss.getDimension());
-		Random r = new Random();
-		r.setSeed(Calendar.getInstance().getTimeInMillis());
 		phi = new DataPoint[loss.getDataSize()];
 		for(int i=0;i<size;i++){ 
-			int rind = r.nextInt(loss.getDataSize()); 
+			int rind = utils.getInstance().getGenerator().nextInt(loss.getDataSize()); 
 			DataPoint p = loss.getStochasticGradient(rind, w); 
 			phi[rind] = p; 
 			avg = (DataPoint) avg.add(p);
@@ -52,17 +51,16 @@ public class SVRG_Streaming extends FirstOrderOpt{
 
 	@Override
 	public void Iterate(int stepNum) {
-		Random r = new Random(); 
 		for(int i=0;i<stepNum;i++){ 
 			T++; 
 			if(state == 0 && T+1 == samplesize){ 
 				computeAvg(samplesize);
-				m_hat = r.nextInt(m);
+				m_hat = utils.getInstance().getGenerator().nextInt(m);
 				samplesize = Math.min(b*samplesize,loss.getDataSize()); 
 				updatestate();
 			}
             else if(state == 1 && T <= m_hat){ 
-            	int rind = r.nextInt(loss.getDataSize()); 
+            	int rind = utils.getInstance().getGenerator().nextInt(loss.getDataSize()); 
 //            	rind = indecis.get(rind);
             	DataPoint p = loss.getStochasticGradient(rind, w); 
     			if(phi[rind]!=null){

@@ -18,10 +18,9 @@ public abstract class  VarianceReducedSG extends FirstOrderOpt {
 	@Override
 	public void Iterate(int stepNum) {
 		int n = loss.getDataSize();
-		Random random = new Random(); 
-		random.setSeed(Calendar.getInstance().getTimeInMillis());
+		
 		for (int i = 0; i < stepNum; ++i) {
-			int index = random.nextInt(n); 
+			int index = utils.getInstance().getGenerator().nextInt(n); 
 			// Compute stochastic gradient for p
 			DataPoint gp = loss.getStochasticGradient(index, w);
 			// Compute SAGA gradient

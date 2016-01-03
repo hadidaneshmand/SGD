@@ -17,3 +17,4 @@
 *.aux
 */outs/*
 */data/*
+variance_reduction_old/code/scripts/*

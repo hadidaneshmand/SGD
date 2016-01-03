@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import opt.loss.Loss;
+import data.DensePoint;
 import data.Result;
 
 public class First_Order_Factory_efficient {
@@ -26,8 +27,9 @@ public class First_Order_Factory_efficient {
 			for(int i=0;i<methods.length+1;i++){
 				convs.add(new ArrayList<Double>()); 
 			}
+			System.out.println("loss zero:"+loss.getLoss(DensePoint.zero(loss.getDimension())));
 			for(int i=0;i<methods.length;i++){ 
-				double error = Math.abs(loss.getLoss(methods[i].getParam())-opt_value); 
+				double error = Math.abs(loss.getLoss(DensePoint.zero(loss.getDimension()))-opt_value); 
 				error = Math.log(error)/Math.log(2); 
 				convs.get(i).add(error);
 			}

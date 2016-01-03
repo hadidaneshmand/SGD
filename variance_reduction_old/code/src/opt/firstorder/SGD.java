@@ -53,7 +53,10 @@ public class SGD extends FirstOrderOpt {
 
 	@Override
 	public String getName() {
-		return "SGD:"+"L:"+getLearning_rate();
+		if(isConstant_step_size()){
+		return "SGD:"+getLearning_rate();
+		}
+		return "SGD";
 	}
 
 	@Override

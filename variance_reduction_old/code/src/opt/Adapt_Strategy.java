@@ -12,7 +12,6 @@ public class Adapt_Strategy {
 	protected int T = 0; 
 	private boolean doubling;
 	protected int totalSize; 
-    
     public ArrayList<Integer> getSubInd(){ 
     	ArrayList<Integer> out = new ArrayList<Integer>(); 
     	for(int i=0;i<subsamplesi;i++){ 
@@ -34,9 +33,9 @@ public class Adapt_Strategy {
 
 	public int Tack(){ 
 		T++; 
-		Random random = new Random();
-		random.setSeed(Calendar.getInstance().getTimeInMillis()); 
-		int index = random.nextInt(getSubsamplesi());
+		
+
+		int index = utils.getInstance().getGenerator().nextInt(getSubsamplesi());
 		if(getSubsamplesi()<totalSize-1 && T>2*getSubsamplesi()){ 
 			if(isDoubling()){
 				setSubsamplesi(Math.min(2*getSubsamplesi(),totalSize-1));

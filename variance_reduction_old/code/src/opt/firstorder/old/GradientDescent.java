@@ -155,7 +155,7 @@ public class GradientDescent implements Optimizer  {
 	
 	@Override
 	public void optimize(int iteration_num) {
-		Random generator = utils.getGenerator();
+		Random generator = utils.getInstance().getGenerator();
 		if(conf.initType == Config.InitType.RANDOM) {
 			SparsePoint p = (SparsePoint) data.get(0);
 			for (int i : p.featureSet()) {
@@ -573,7 +573,7 @@ public  double computeLoss() {
     }
 	@Override
 	public void optimize(double tol) {
-		Random generator = utils.getGenerator();
+		Random generator = utils.getInstance().getGenerator();
 		if(conf.initType == Config.InitType.RANDOM) {
 			SparsePoint p = (SparsePoint) data.get(0);
 			for (int i : p.featureSet()) {

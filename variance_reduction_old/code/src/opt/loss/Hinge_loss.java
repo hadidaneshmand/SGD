@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
+import opt.utils;
 import data.DataPoint;
 import data.DensePoint;
 
@@ -32,7 +33,7 @@ public class Hinge_loss extends Loss_static{
 	public DataPoint getStochasticGradient(DataPoint w){
 		if(adaptive_sampling){ 
 			T++; 
-			int index = (new Random()).nextInt(subsamplesi); 
+			int index = utils.getInstance().getGenerator().nextInt(subsamplesi); 
 			if(T<getDataSize() && T>subsamplesi){ 
 				subsamplesi = Math.min(2*subsamplesi,getDataSize()); 
 				setLambda(1.0/Math.sqrt(subsamplesi));

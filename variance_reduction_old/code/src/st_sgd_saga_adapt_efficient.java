@@ -6,7 +6,6 @@ import java.util.StringTokenizer;
 
 import opt.Adapt_Strategy;
 import opt.firstorder.FirstOrderOpt;
-import opt.firstorder.First_Order_Factory;
 import opt.firstorder.First_Order_Factory_efficient;
 import opt.firstorder.SAGA;
 import opt.firstorder.SAGA_Adapt;
@@ -84,7 +83,7 @@ public class st_sgd_saga_adapt_efficient {
 		conf.agressive_step = false; 
 		conf.nPasses = 10; 
 		conf.nSamplesPerPass = 5000; 
-		conf.c0 = 50000; 
+		conf.c0 = 500000; 
 		conf.dataPath = "data/covtype"; 
 		conf.featureDim = 54; 
 		conf.logDir = "outs/covtype_5"; 

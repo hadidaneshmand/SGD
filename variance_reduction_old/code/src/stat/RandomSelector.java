@@ -3,11 +3,12 @@ package stat;
 import java.util.List;
 import java.util.Random;
 
+import opt.utils;
+
 
 
 public class RandomSelector {
     List<RandomVar> items ;
-    Random rand = new Random();
     double totalSum = 0;
 
     public RandomSelector(List<RandomVar> items) {
@@ -19,7 +20,7 @@ public class RandomSelector {
 
     public RandomVar getRSample() {
 
-        double index = rand.nextDouble()*totalSum;
+        double index = utils.getInstance().getGenerator().nextDouble()*totalSum;
         double sum = 0;
         int i=0;
         while(sum < index ) {

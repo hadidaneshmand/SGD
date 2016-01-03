@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
+import opt.utils;
 import data.DataPoint;
 import data.DensePoint;
 
@@ -34,9 +35,9 @@ public class LSH_Test extends LeastSquares_Importance {
 		List<DataPoint> out = new ArrayList<DataPoint>(); 
 		for(int j=0;j<size;j++){ 
 			DataPoint rv = new DensePoint(getDimension()); 
-			Random r = new Random();
+			
 			for(int i=0;i<dim;i++){
-				rv.set(i, r.nextGaussian());
+				rv.set(i, utils.getInstance().getGenerator().nextGaussian());
 			}
 			out.add(rv); 
 		}
@@ -76,8 +77,7 @@ public class LSH_Test extends LeastSquares_Importance {
 		}
 		if(index == -1){ 
 			System.out.println("Random!!");
-			Random r = new Random(); 
-			index = r.nextInt(data.size());
+			index = utils.getInstance().getGenerator().nextInt(data.size());
 		}
 		DataPoint g = getStochasticGradient(index,w); 
 		System.out.println("norm:"+g.getNorm()+",angle:"+query.angle(makedatahash(data.get(index))));

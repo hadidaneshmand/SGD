@@ -20,9 +20,19 @@ import data.Point;
 
 
 public class utils {
-
+	public static utils  u = null;
 	static Random generator = null;
-	
+	Random r;
+	public static utils getInstance(){ 
+		if( u == null){ 
+			u = new utils(); 
+		}
+		return u; 
+	}
+	private utils(){ 
+		r = new Random(); 
+		r.setSeed(Calendar.getInstance().getTimeInMillis());
+	}
 	/*
 	 * Generate k samples from 0 to n
 	 */
@@ -34,7 +44,7 @@ public class utils {
 				list_samples.add(i);
 			}
 		} else {
-			Random randomGenerator = getGenerator();
+			Random randomGenerator = utils.getInstance().getGenerator();
 			for(int i = 0; i < k; ++i) {
 				int idx = randomGenerator.nextInt(n);
 				list_samples.add(idx);
@@ -43,10 +53,9 @@ public class utils {
 		return list_samples;
 	}
 	
-	public static Random getGenerator() {
-		Random r = new Random();
-		r.setSeed(Calendar.getInstance().getTimeInMillis());
-		return r;
+	public Random getGenerator() {
+		
+		return r ;
 	}
 	
 	public static DataPoint loadOptFromFile(String filename) {

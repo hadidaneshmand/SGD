@@ -18,7 +18,7 @@ public class SGD_old extends GradientDescent {
 	
 	@Override
 	public void optimize(int iteration_num) {
-		Random generator = utils.getGenerator();
+		Random generator = utils.getInstance().getGenerator();
 		for (int k = 0; k < iteration_num; ++k) {
 			total_iterations++;
 			DataPoint p = data.get(generator.nextInt(data.size()));

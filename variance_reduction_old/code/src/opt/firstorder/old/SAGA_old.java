@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import opt.utils;
 import opt.config.Config;
 import data.DataPoint;
 import data.SparsePoint;
@@ -113,10 +114,9 @@ public class SAGA_old extends GradientDescent {
 	public void OneIteration(int batchsize){ 
 		// create list of samples
 		int n = data.size();
-		Random random = new Random();
 		for (int i = 0; i < batchsize; ++i) {
 			
-			int index = random.nextInt(n); 
+			int index = utils.getInstance().getGenerator().nextInt(n); 
 			DataPoint p = (DataPoint) data.get(index);
 			
 			// Compute stochastic gradient for p
