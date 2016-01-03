@@ -7,6 +7,7 @@ import java.util.StringTokenizer;
 import opt.Adapt_Strategy;
 import opt.firstorder.FirstOrderOpt;
 import opt.firstorder.First_Order_Factory;
+import opt.firstorder.First_Order_Factory_efficient;
 import opt.firstorder.SAGA;
 import opt.firstorder.SAGA_Adapt;
 import opt.firstorder.SGD;
@@ -81,9 +82,9 @@ public class st_sgd_saga_adapt_efficient {
 //		conf.parseFile(configFilename);
 		conf.doubling = false; 
 		conf.agressive_step = false; 
-		conf.nPasses = 100; 
-		conf.nSamplesPerPass = 500; 
-		conf.c0 = 500000; 
+		conf.nPasses = 10; 
+		conf.nSamplesPerPass = 5000; 
+		conf.c0 = 50000; 
 		conf.dataPath = "data/covtype"; 
 		conf.featureDim = 54; 
 		conf.logDir = "outs/covtype_5"; 
@@ -137,15 +138,15 @@ public class st_sgd_saga_adapt_efficient {
 		SGD sgd = new SGD(loss);
 		sgd.setLearning_rate(0.1);
 		sgd.setConstant_step_size(true);
-		FirstOrderOpt[] methods = new FirstOrderOpt[5];
+		First_Order_Factory_efficient.methods_in = new FirstOrderOpt[5];
 		SAGA opt = new SAGA(loss,eta_n); 
 		opt.Iterate((int) (n*Math.log(n)));//TODO 
 //		opt.Iterate(1000);
 		System.out.println("After SAGA: Free memory (bytes): " + 
 				  Runtime.getRuntime().freeMemory()+ ",Total memory (bytes): " + 
 						  Runtime.getRuntime().totalMemory());
-		methods[0] = sgd;
-		methods[1] = new SAGA(loss,eta_n);
+		First_Order_Factory_efficient.methods_in[0] = sgd;
+		First_Order_Factory_efficient.methods_in[1] = new SAGA(loss,eta_n);
 		double loss_opt = loss.getLoss(opt.getParam()); 
 		opt = null; 
 		System.gc(); 
@@ -162,8 +163,8 @@ public class st_sgd_saga_adapt_efficient {
 				  Runtime.getRuntime().freeMemory()+ ",Total memory (bytes): " + 
 						  Runtime.getRuntime().totalMemory());
 		Adapt_Strategy as_doubl = new Adapt_Strategy(n, (int) (L/lambda_n), true);
-		methods[2] = saga_a;
-		methods[3] = new SAGA_Adapt(loss.clone_loss(), as_doubl, lambda_n, L);
+		First_Order_Factory_efficient.methods_in[2] = saga_a;
+		First_Order_Factory_efficient.methods_in[3] = new SAGA_Adapt(loss.clone_loss(), as_doubl, lambda_n, L);
 		int b = 3; 
 		int p = 2; 
 		double kappa = L/lambda_n; 
@@ -175,9 +176,9 @@ public class st_sgd_saga_adapt_efficient {
 		int m = (int) (kappa/eta); 
 		System.out.println("m:"+m);
 		SVRG_Streaming svrg = new SVRG_Streaming(loss.clone_loss(),eta, k_0, b,m); 
-		methods[4] = svrg; 
+		First_Order_Factory_efficient.methods_in[4] = svrg; 
 		ArrayList<String> names = new ArrayList<String>(); 
-		Result res = First_Order_Factory.RunExperiment(numrep,loss, methods, MaxItr, nSamplesPerPass, loss_opt);
+		Result res = First_Order_Factory_efficient.RunExperiment(numrep,loss, MaxItr, nSamplesPerPass, loss_opt);
         res.write2File(conf.logDir);
 	}
 }

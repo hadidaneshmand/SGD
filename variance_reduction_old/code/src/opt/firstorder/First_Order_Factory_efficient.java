@@ -26,6 +26,12 @@ public class First_Order_Factory_efficient {
 			for(int i=0;i<methods.length+1;i++){
 				convs.add(new ArrayList<Double>()); 
 			}
+			for(int i=0;i<methods.length;i++){ 
+				double error = Math.abs(loss.getLoss(methods[i].getParam())-opt_value); 
+				error = Math.log(error)/Math.log(2); 
+				convs.get(i).add(error);
+			}
+			convs.get(convs.size()-1).add(0);
 			for(int k=0;k<maxItr;k++){
 				System.out.println("pass:"+k+"-----------------");
 				for(int i =0;i<methods.length;i++){ 

@@ -177,6 +177,9 @@ public class sgd_saga_adapt_efficient {
 		double kappa = L/lambda_n; 
 		System.out.println("kapa:"+kappa);
 		double eta = 1.0/(5*Math.pow(b, p+1));
+		if(n>= 100000){
+			eta = 1.0/(10*Math.pow(b, p+1)); 
+		}
 		System.out.println("eta:"+eta);
 		int k_0 = (int) kappa;
 		System.out.println("k_0:"+k_0);
