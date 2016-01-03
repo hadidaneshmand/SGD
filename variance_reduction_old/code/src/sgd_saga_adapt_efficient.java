@@ -8,6 +8,7 @@ import opt.Adapt_Strategy;
 import opt.config.Config;
 import opt.firstorder.FirstOrderOpt;
 import opt.firstorder.First_Order_Factory;
+import opt.firstorder.First_Order_Factory_efficient;
 import opt.firstorder.SAGA;
 import opt.firstorder.SAGA_Adapt;
 import opt.firstorder.SGD;
@@ -136,10 +137,10 @@ public class sgd_saga_adapt_efficient {
 		loss.setLambda(lambda_n);
 		SGD sgd = new SGD(loss);
 		sgd.setLearning_rate(lambda_n);
-		FirstOrderOpt[] methods = new FirstOrderOpt[7];
+		First_Order_Factory_efficient.methods_in = new FirstOrderOpt[7];
 		
-		methods[0] = sgd;
-		methods[1] = new SAGA(loss,eta_n);
+		First_Order_Factory_efficient.methods_in[0] = sgd;
+		First_Order_Factory_efficient.methods_in[1] = new SAGA(loss,eta_n);
 		double loss_opt = 0; 
 		if(conf.T0 == -1){
 			SAGA opt = new SAGA(loss,eta_n); 
@@ -159,7 +160,6 @@ public class sgd_saga_adapt_efficient {
 			loss_opt = conf.T0; 
 		}
 		
-		
 		System.out.println("loss_opt:"+loss_opt);
 		Adapt_Strategy as = new Adapt_Strategy(n, (int) (L/lambda_n), false);
 		System.out.println("After Strategy: Free memory (bytes): " + 
@@ -170,8 +170,8 @@ public class sgd_saga_adapt_efficient {
 				  Runtime.getRuntime().freeMemory()+ ",Total memory (bytes): " + 
 						  Runtime.getRuntime().totalMemory());
 		Adapt_Strategy as_doubl = new Adapt_Strategy(n, (int) (L/lambda_n), true);
-		methods[2] = saga_a;
-		methods[3] = new SAGA_Adapt(loss.clone_loss(), as_doubl, lambda_n, L);
+		First_Order_Factory_efficient.methods_in[2] = saga_a;
+		First_Order_Factory_efficient.methods_in[3] = new SAGA_Adapt(loss.clone_loss(), as_doubl, lambda_n, L);
 		int b = 3; 
 		int p = 2; 
 		double kappa = L/lambda_n; 
@@ -183,16 +183,16 @@ public class sgd_saga_adapt_efficient {
 		int m = (int) (kappa/eta); 
 		System.out.println("m:"+m);
 		SVRG_Streaming svrg = new SVRG_Streaming(loss.clone_loss(),eta, k_0, b,m); 
-		methods[4] = svrg; 
+		First_Order_Factory_efficient.methods_in[4] = svrg; 
 		SGD const_sgd = new SGD(loss.clone_loss()); 
 		const_sgd.setLearning_rate(0.05);
 		const_sgd.setConstant_step_size(true);
-		methods[5] = const_sgd; 
+		First_Order_Factory_efficient.methods_in[5] = const_sgd; 
 		SGD const_sgd_small = new SGD(loss.clone_loss());
 		const_sgd_small.setLearning_rate(0.005);
 		const_sgd_small.setConstant_step_size(true);
-		methods[6] = const_sgd_small; 
-		Result res = First_Order_Factory.RunExperiment(numrep,loss, methods, MaxItr, nSamplesPerPass, loss_opt);
+		First_Order_Factory_efficient.methods_in[6] = const_sgd_small; 
+		Result res = First_Order_Factory_efficient.RunExperiment(numrep,loss, MaxItr, nSamplesPerPass, loss_opt);
         res.write2File(conf.logDir);
 	}
 }
