@@ -348,8 +348,8 @@ public class Config {
 	// index of the first feature in the libsvm file format
 	public  int startIndex = 1;
 	
-	// controls speed of decrease of the step size
-	public  double T0 = 1;
+	// opt loss value
+	public  double T0 = -1;
 	
 	public  double variance_computation_pSamples = 1.0;
 	

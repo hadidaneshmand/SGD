@@ -97,6 +97,7 @@ public class st_sgd_saga_adapt_efficient {
 		System.out.println("file: "+conf.dataPath);
 		System.out.println("data size:"+conf.c0);
 		System.out.println("out dir:"+conf.logDir);
+		System.out.println("t0:"+conf.T0);
 		data = new DataPoint[conf.c0]; 
 		readDataPointsFromFile( conf.dataPath, 1,conf.c0);
 		int numrep = conf.nTrials;
@@ -130,6 +131,7 @@ public class st_sgd_saga_adapt_efficient {
 		Loss_static_efficient loss = new Logistic_Loss_efficient(data, d);
 		if(conf.lossType ==  opt.config.Config.LossType.REGRESSION){
 			loss = new LeastSquares_efficient(data,d); 
+			System.out.println("loss type is regression");
 		}
 		loss.setLambda(lambda_n);
 		SGD sgd = new SGD(loss);
