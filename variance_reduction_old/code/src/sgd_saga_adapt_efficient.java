@@ -141,7 +141,7 @@ public class sgd_saga_adapt_efficient {
 		methods[0] = sgd;
 		methods[1] = new SAGA(loss,eta_n);
 		double loss_opt = 0; 
-		if(conf.T0 != -1){
+		if(conf.T0 == -1){
 			SAGA opt = new SAGA(loss,eta_n); 
 			opt.Iterate((int) (n*Math.log(n)));//TODO 
 //			opt.Iterate(1000);
