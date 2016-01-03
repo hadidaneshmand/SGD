@@ -1,6 +1,7 @@
 package opt.firstorder;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Random;
 
 import data.DataPoint;
@@ -38,6 +39,7 @@ public class SVRG_Streaming extends FirstOrderOpt{
 	public void computeAvg(int size){ 
 		avg = DensePoint.zero(loss.getDimension());
 		Random r = new Random();
+		r.setSeed(Calendar.getInstance().getTimeInMillis());
 		phi = new DataPoint[loss.getDataSize()];
 		for(int i=0;i<size;i++){ 
 			int rind = r.nextInt(loss.getDataSize()); 

@@ -10,6 +10,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 import java.util.Random;
 
@@ -43,7 +44,9 @@ public class utils {
 	}
 	
 	public static Random getGenerator() {
-		return new Random();
+		Random r = new Random();
+		r.setSeed(Calendar.getInstance().getTimeInMillis());
+		return r;
 	}
 	
 	public static DataPoint loadOptFromFile(String filename) {

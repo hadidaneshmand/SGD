@@ -1,6 +1,7 @@
 package opt.firstorder;
 
 
+import java.util.Calendar;
 import java.util.Random;
 
 import opt.utils;
@@ -17,7 +18,8 @@ public abstract class  VarianceReducedSG extends FirstOrderOpt {
 	@Override
 	public void Iterate(int stepNum) {
 		int n = loss.getDataSize();
-		Random random = utils.getGenerator();
+		Random random = new Random(); 
+		random.setSeed(Calendar.getInstance().getTimeInMillis());
 		for (int i = 0; i < stepNum; ++i) {
 			int index = random.nextInt(n); 
 			// Compute stochastic gradient for p

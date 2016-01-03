@@ -1,6 +1,7 @@
 package opt;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Random;
 
@@ -33,7 +34,9 @@ public class Adapt_Strategy {
 
 	public int Tack(){ 
 		T++; 
-		int index = (new Random()).nextInt(getSubsamplesi());
+		Random random = new Random();
+		random.setSeed(Calendar.getInstance().getTimeInMillis()); 
+		int index = random.nextInt(getSubsamplesi());
 		if(getSubsamplesi()<totalSize-1 && T>2*getSubsamplesi()){ 
 			if(isDoubling()){
 				setSubsamplesi(Math.min(2*getSubsamplesi(),totalSize-1));
