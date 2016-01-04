@@ -23,6 +23,7 @@ import data.SparsePoint;
 
 public class sgd_saga_adapt_efficient {
 	public static DataPoint[] data; 
+	public static SAGA saga_opt; 
 	public static void readDataPointsFromFile(String filename, int startIndex, int data_size) {
 		int pos = 0; 
 		int neg = 0; 
@@ -143,14 +144,14 @@ public class sgd_saga_adapt_efficient {
 		First_Order_Factory_efficient.methods_in[1] = new SAGA(loss,eta_n);
 		double loss_opt = 0; 
 		if(conf.T0 == -1){
-			SAGA opt = new SAGA(loss,eta_n); 
-			opt.Iterate((int) (2*n*Math.log(n)));//TODO 
+			saga_opt = new SAGA(loss,eta_n); 
+			saga_opt.Iterate((int) (2*n*Math.log(n)));//TODO 
 //			opt.Iterate(1000);
 			System.out.println("After SAGA: Free memory (bytes): " + 
 					  Runtime.getRuntime().freeMemory()+ ",Total memory (bytes): " + 
 							  Runtime.getRuntime().totalMemory());
-			loss_opt = loss.getLoss(opt.getParam()); 
-			opt = null; 
+			loss_opt = loss.getLoss(saga_opt.getParam()); 
+			saga_opt = null; 
 			System.gc(); 
 			System.out.println("After calling GC: Free memory (bytes): " + 
 					  Runtime.getRuntime().freeMemory()+ ",Total memory (bytes): " + 

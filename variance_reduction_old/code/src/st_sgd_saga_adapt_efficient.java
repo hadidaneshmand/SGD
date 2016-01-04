@@ -21,6 +21,7 @@ import data.SparsePoint;
 
 public class st_sgd_saga_adapt_efficient {
 	public static DataPoint[] data; 
+	public static SAGA opt_saga; 
 	public static void readDataPointsFromFile(String filename, int startIndex, int data_size) {
 		int pos = 0; 
 		int neg = 0; 
@@ -50,7 +51,7 @@ public class st_sgd_saga_adapt_efficient {
 					}
 					data[c] = point; 
 					c++;
-				if(c %10000 == 0){ 
+				if(c %1000 == 0){ 
 					System.out.println("c:"+c);	
 				}
 				} catch (NumberFormatException e) {
@@ -83,10 +84,10 @@ public class st_sgd_saga_adapt_efficient {
 		conf.agressive_step = false; 
 		conf.nPasses = 10; 
 		conf.nSamplesPerPass = 5000; 
-		conf.c0 = 500000; 
-		conf.dataPath = "data/covtype"; 
-		conf.featureDim = 54; 
-		conf.logDir = "outs/covtype_5"; 
+		conf.c0 = 20000; 
+		conf.dataPath = "data/rcv1_train.binary"; 
+		conf.featureDim = 47236; 
+		conf.logDir = "outs/rcv1_train.binary"; 
 		System.out.println("Total memory (bytes): " + 
 				  Runtime.getRuntime().totalMemory());
 		System.out.println("agressive step size for saga: " + conf.agressive_step);
@@ -138,16 +139,16 @@ public class st_sgd_saga_adapt_efficient {
 		sgd.setLearning_rate(0.1);
 		sgd.setConstant_step_size(true);
 		First_Order_Factory_efficient.methods_in = new FirstOrderOpt[5];
-		SAGA opt = new SAGA(loss,eta_n); 
-		opt.Iterate((int) (n*Math.log(n)));//TODO 
+		opt_saga = new SAGA(loss,eta_n); 
+		opt_saga.Iterate((int) (n*Math.log(n)));//TODO 
 //		opt.Iterate(1000);
 		System.out.println("After SAGA: Free memory (bytes): " + 
 				  Runtime.getRuntime().freeMemory()+ ",Total memory (bytes): " + 
 						  Runtime.getRuntime().totalMemory());
 		First_Order_Factory_efficient.methods_in[0] = sgd;
 		First_Order_Factory_efficient.methods_in[1] = new SAGA(loss,eta_n);
-		double loss_opt = loss.getLoss(opt.getParam()); 
-		opt = null; 
+		double loss_opt = loss.getLoss(opt_saga.getParam()); 
+		opt_saga = null; 
 		System.gc(); 
 		System.out.println("After calling GC: Free memory (bytes): " + 
 				  Runtime.getRuntime().freeMemory()+ ",Total memory (bytes): " + 
