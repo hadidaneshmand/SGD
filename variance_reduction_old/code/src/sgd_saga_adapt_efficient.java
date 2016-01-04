@@ -34,7 +34,7 @@ public class sgd_saga_adapt_efficient {
 			while ((line = fp.readLine()) != null && c <data_size) {
 				try {
 					DataPoint point = new SparsePoint();
-					StringTokenizer st = new StringTokenizer(line, " +\t\n\r\f:");
+					StringTokenizer st = new StringTokenizer(line, " \t\n\r\f:");
 					double label = Double.valueOf(st.nextToken());					// label has to be at the first position of the text row
 					if(label == 1){ 
 						pos++;
@@ -54,6 +54,9 @@ public class sgd_saga_adapt_efficient {
 					c++;
 				if(c %50000 == 0){ 
 					System.out.println("c:"+c);	
+				}
+				if(c<10){ 
+					System.out.println(point.toString());
 				}
 				} catch (NumberFormatException e) {
 					System.out.println("Could not read datapoint number "+c + " since Line "+line+" seems to be not properly formatted: "+e.getMessage());
