@@ -122,7 +122,7 @@ public class sgd_saga_adapt_efficient {
 			}
 		}
 		System.out.println("L:"+L);
-		if(L>10.0){ 
+		if(L>60.0){ 
 			for(int i=0;i<data.length;i++){ 
 				data[i]=(DataPoint)data[i].normalize(); 
 			}
