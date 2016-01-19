@@ -81,9 +81,11 @@ public class SVRG_Streaming_Main extends FirstOrderOpt{
 	@Override
 	public FirstOrderOpt clone_method() {
 		SVRG_Streaming_Main out = new SVRG_Streaming_Main(loss.clone_loss(), getLearning_rate(), samplesize, b, m); 
-		out.past_w = new DensePoint(loss.getDimension());
-		for(int i=0;i<loss.getDimension();i++){ 
-			out.past_w.set(i, past_w.get(i));
+		if(past_w != null){
+			out.past_w = new DensePoint(loss.getDimension());
+			for(int i=0;i<loss.getDimension();i++){ 
+				out.past_w.set(i, past_w.get(i));
+			}
 		}
 		out.avg = new DensePoint(loss.getDimension());
 		for(int i=0;i<loss.getDimension();i++){ 
