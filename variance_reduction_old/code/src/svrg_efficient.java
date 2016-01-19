@@ -173,7 +173,7 @@ public class svrg_efficient {
 		System.out.println("eta:"+eta);
 		int k_0 = (int) kappa;
 		System.out.println("k_0:"+k_0);
-		int m = (int) (kappa/eta); 
+		int m = (int) (kappa/(eta*5)); 
 		System.out.println("m:"+m);
 		SVRG_Streaming svrg = new SVRG_Streaming(loss.clone_loss(),eta, k_0, b,m); 
 		SVRG_Streaming_Main svrg_main = new SVRG_Streaming_Main(loss.clone_loss(),eta, k_0, b,m); 
