@@ -5,7 +5,9 @@ import java.util.ArrayList;
 import java.util.StringTokenizer;
 
 import opt.Adapt_Strategy;
+import opt.config.Config;
 import opt.firstorder.FirstOrderOpt;
+import opt.firstorder.First_Order_Factory;
 import opt.firstorder.First_Order_Factory_efficient;
 import opt.firstorder.SAGA;
 import opt.firstorder.SAGA_Adapt;
@@ -22,7 +24,7 @@ import data.SparsePoint;
 
 public class svrg_efficient {
 	public static DataPoint[] data; 
-	public static SAGA opt_saga; 
+	public static SAGA saga_opt; 
 	public static void readDataPointsFromFile(String filename, int startIndex, int data_size) {
 		int pos = 0; 
 		int neg = 0; 
@@ -33,7 +35,7 @@ public class svrg_efficient {
 			while ((line = fp.readLine()) != null && c <data_size) {
 				try {
 					DataPoint point = new SparsePoint();
-					StringTokenizer st = new StringTokenizer(line, " +\t\n\r\f:");
+					StringTokenizer st = new StringTokenizer(line, " \t\n\r\f:");
 					double label = Double.valueOf(st.nextToken());					// label has to be at the first position of the text row
 					if(label == 1){ 
 						pos++;
@@ -42,7 +44,6 @@ public class svrg_efficient {
 						label = -1; 
 						neg++; 
 					}
-					
 					point.setLabel(label);
 
 					while (st.hasMoreTokens()) {
@@ -52,8 +53,11 @@ public class svrg_efficient {
 					}
 					data[c] = point; 
 					c++;
-				if(c %1000 == 0){ 
+				if(c %50000 == 0){ 
 					System.out.println("c:"+c);	
+				}
+				if(c<10){ 
+					System.out.println(point.toString());
 				}
 				} catch (NumberFormatException e) {
 					System.out.println("Could not read datapoint number "+c + " since Line "+line+" seems to be not properly formatted: "+e.getMessage());
@@ -71,24 +75,25 @@ public class svrg_efficient {
 		
 	}
 	public static void main(String[] args) {
-//		String configFilename = null;
-//		if(args.length > 0) {
-//			configFilename = args[0];
-//		}
-//		else{
-//			System.out.println("Config file is missed");
-//			return; 
-//		}
+		String configFilename = null;
+		if(args.length > 0) {
+			configFilename = args[0];
+		}
+		else{
+			System.out.println("Config file is missed");
+			return; 
+		}
 		opt.config.Config conf = new opt.config.Config();
-//		conf.parseFile(configFilename);
-		conf.doubling = false; 
-		conf.agressive_step = false; 
-		conf.nPasses = 10; 
-		conf.nSamplesPerPass = 5000; 
-		conf.c0 = 20000; 
-		conf.dataPath = "data/rcv1_train.binary"; 
-		conf.featureDim = 47236; 
-		conf.logDir = "outs/rcv1_train.binary"; 
+		conf.parseFile(configFilename);
+
+//		conf.doubling = false; 
+//		conf.agressive_step = false; 
+//		conf.nPasses = 100; 
+//		conf.nSamplesPerPass = 100; 
+//		conf.c0 = 1000; 
+//		conf.dataPath = "data/covtype"; 
+//		conf.featureDim = 54; 
+//		conf.logDir = "outs/test"; 
 		System.out.println("Total memory (bytes): " + 
 				  Runtime.getRuntime().totalMemory());
 		System.out.println("agressive step size for saga: " + conf.agressive_step);
@@ -99,7 +104,7 @@ public class svrg_efficient {
 		System.out.println("file: "+conf.dataPath);
 		System.out.println("data size:"+conf.c0);
 		System.out.println("out dir:"+conf.logDir);
-		System.out.println("t0:"+conf.T0);
+		System.out.println("classification:" +(conf.lossType != Config.LossType.REGRESSION));
 		data = new DataPoint[conf.c0]; 
 		readDataPointsFromFile( conf.dataPath, 1,conf.c0);
 		int numrep = conf.nTrials;
@@ -118,7 +123,7 @@ public class svrg_efficient {
 			}
 		}
 		System.out.println("L:"+L);
-		if(L>10.0){ 
+		if(L>60.0){ 
 			for(int i=0;i<data.length;i++){ 
 				data[i]=(DataPoint)data[i].normalize(); 
 			}
@@ -133,36 +138,46 @@ public class svrg_efficient {
 		Loss_static_efficient loss = new Logistic_Loss_efficient(data, d);
 		if(conf.lossType ==  opt.config.Config.LossType.REGRESSION){
 			loss = new LeastSquares_efficient(data,d); 
-			System.out.println("loss type is regression");
 		}
 		loss.setLambda(lambda_n);
 		First_Order_Factory_efficient.methods_in = new FirstOrderOpt[2];
-		opt_saga = new SAGA(loss,eta_n); 
-		opt_saga.Iterate((int) (n*Math.log(n)));//TODO 
-//		opt.Iterate(1000);
-		System.out.println("After SAGA: Free memory (bytes): " + 
-				  Runtime.getRuntime().freeMemory()+ ",Total memory (bytes): " + 
-						  Runtime.getRuntime().totalMemory());
-		double loss_opt = loss.getLoss(opt_saga.getParam()); 
-		opt_saga = null; 
-		System.gc(); 
-		System.out.println("After calling GC: Free memory (bytes): " + 
-				  Runtime.getRuntime().freeMemory()+ ",Total memory (bytes): " + 
-						  Runtime.getRuntime().totalMemory());
+		
+		double loss_opt = 0; 
+		if(conf.T0 == -1){
+			saga_opt = new SAGA(loss,eta_n); 
+			saga_opt.Iterate((int) (2*n*Math.log(n)));//TODO 
+//			opt.Iterate(1000);
+			System.out.println("After SAGA: Free memory (bytes): " + 
+					  Runtime.getRuntime().freeMemory()+ ",Total memory (bytes): " + 
+							  Runtime.getRuntime().totalMemory());
+			loss_opt = loss.getLoss(saga_opt.getParam()); 
+			saga_opt = null; 
+			System.gc(); 
+			System.out.println("After calling GC: Free memory (bytes): " + 
+					  Runtime.getRuntime().freeMemory()+ ",Total memory (bytes): " + 
+							  Runtime.getRuntime().totalMemory());
+		} 
+		else{ 
+			loss_opt = conf.T0; 
+		}
+		
 		System.out.println("loss_opt:"+loss_opt);
 		int b = 3; 
 		int p = 2; 
 		double kappa = L/lambda_n; 
 		System.out.println("kapa:"+kappa);
 		double eta = 1.0/(5*Math.pow(b, p+1));
+		if(n>= 100000){
+			eta = 1.0/(10*Math.pow(b, p+1)); 
+		}
 		System.out.println("eta:"+eta);
 		int k_0 = (int) kappa;
 		System.out.println("k_0:"+k_0);
 		int m = (int) (kappa/eta); 
 		System.out.println("m:"+m);
 		SVRG_Streaming svrg = new SVRG_Streaming(loss.clone_loss(),eta, k_0, b,m); 
+		SVRG_Streaming_Main svrg_main = new SVRG_Streaming_Main(loss.clone_loss(),eta, k_0, b,m); 
 		First_Order_Factory_efficient.methods_in[0] = svrg; 
-		SVRG_Streaming_Main svrg_main = new SVRG_Streaming_Main(loss.clone_loss(), eta, k_0, b, m);
 		First_Order_Factory_efficient.methods_in[1] = svrg_main; 
 		Result res = First_Order_Factory_efficient.RunExperiment(numrep,loss, MaxItr, nSamplesPerPass, loss_opt);
         res.write2File(conf.logDir);
