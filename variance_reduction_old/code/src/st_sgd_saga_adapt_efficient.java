@@ -99,6 +99,7 @@ public class st_sgd_saga_adapt_efficient {
 		System.out.println("data size:"+conf.c0);
 		System.out.println("out dir:"+conf.logDir);
 		System.out.println("t0:"+conf.T0);
+		System.out.println("testfile:"+conf.testFile);
 		data = new DataPoint[conf.c0]; 
 		readDataPointsFromFile( conf.dataPath, 1,conf.c0);
 		int numrep = conf.nTrials;
@@ -178,7 +179,6 @@ public class st_sgd_saga_adapt_efficient {
 		SVRG_Streaming svrg = new SVRG_Streaming(loss.clone_loss(),eta, k_0, b,m); 
 		First_Order_Factory_efficient.methods_in[4] = svrg; 
 		ArrayList<String> names = new ArrayList<String>(); 
-		Result res = First_Order_Factory_efficient.RunExperiment(numrep,loss, MaxItr, nSamplesPerPass, loss_opt);
-        res.write2File(conf.logDir);
+		First_Order_Factory_efficient.RunExperiment(numrep,loss, MaxItr, nSamplesPerPass, loss_opt,null,0,conf.logDir);
 	}
 }

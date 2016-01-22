@@ -28,11 +28,11 @@ public abstract class  VarianceReducedSG extends FirstOrderOpt {
 			updateMemory(gp, index);
 			// gradient step
 			w = (DataPoint) w.subtract(g.multiply(getLearning_rate()));
-			if(i % 20000 == 1){ 
-				System.out.println("VR Iteration: "+i +", Free memory (bytes): " + 
-				  Runtime.getRuntime().freeMemory()+ ", Total memory (bytes): " + 
-						  Runtime.getRuntime().totalMemory());
-			}
+//			if(i % 20000 == 1){ 
+//				System.out.println("VR Iteration: "+i +", Free memory (bytes): " + 
+//				  Runtime.getRuntime().freeMemory()+ ", Total memory (bytes): " + 
+//						  Runtime.getRuntime().totalMemory());
+//			}
 		}
 
 	}

@@ -13,9 +13,12 @@ import opt.firstorder.SAGA;
 import opt.firstorder.SAGA_Adapt;
 import opt.firstorder.SGD;
 import opt.firstorder.SVRG_Streaming;
+import opt.firstorder.SVRG_Streaming_Main;
 import opt.loss.LeastSquares_efficient;
 import opt.loss.Logistic_Loss_efficient;
+import opt.loss.Loss;
 import opt.loss.Loss_static_efficient;
+import opt.loss.MissClass_efficient;
 import data.DataPoint;
 import data.Result;
 import data.SparsePoint;
@@ -23,8 +26,9 @@ import data.SparsePoint;
 
 public class sgd_saga_adapt_efficient {
 	public static DataPoint[] data; 
+	public static DataPoint[] test_data = null; 
 	public static SAGA saga_opt; 
-	public static void readDataPointsFromFile(String filename, int startIndex, int data_size) {
+	public static void readDataPointsFromFile(String filename, int startIndex, int data_size, boolean is_test) {
 		int pos = 0; 
 		int neg = 0; 
 		try {
@@ -50,7 +54,12 @@ public class sgd_saga_adapt_efficient {
 						double value = Double.valueOf(st.nextToken());
 						point.set(feature, value);
 					}
-					data[c] = point; 
+					if(is_test){ 
+						test_data[c] = point;
+					}else{ 
+						data[c] = point;
+					}
+					 
 					c++;
 				if(c %50000 == 0){ 
 					System.out.println("c:"+c);	
@@ -104,8 +113,17 @@ public class sgd_saga_adapt_efficient {
 		System.out.println("data size:"+conf.c0);
 		System.out.println("out dir:"+conf.logDir);
 		System.out.println("classification:" +(conf.lossType != Config.LossType.REGRESSION));
+		System.out.println("testfile:"+conf.testFile);
+		
 		data = new DataPoint[conf.c0]; 
-		readDataPointsFromFile( conf.dataPath, 1,conf.c0);
+		readDataPointsFromFile( conf.dataPath, 1,conf.c0,false);
+		Loss_static_efficient test_loss = null; 
+		if(conf.testFile != null && !conf.testFile.isEmpty() ){ 
+			test_data = new DataPoint[conf.ntest]; 
+			readDataPointsFromFile(conf.testFile, 1,conf.ntest, true);
+			test_loss = new Logistic_Loss_efficient(test_data, conf.featureDim); 
+			test_loss.setLambda(0);
+		}
 		int numrep = conf.nTrials;
 		int nSamplesPerPass = conf.nSamplesPerPass; 
 	    int MaxItr = conf.nPasses; 
@@ -146,25 +164,28 @@ public class sgd_saga_adapt_efficient {
 		First_Order_Factory_efficient.methods_in[0] = sgd;
 		First_Order_Factory_efficient.methods_in[1] = new SAGA(loss,eta_n);
 		double loss_opt = 0; 
+		double test_opt = 0; 
 		if(conf.T0 == -1){
 			saga_opt = new SAGA(loss,eta_n); 
 			saga_opt.Iterate((int) (2*n*Math.log(n)));//TODO 
 //			opt.Iterate(1000);
-			System.out.println("After SAGA: Free memory (bytes): " + 
-					  Runtime.getRuntime().freeMemory()+ ",Total memory (bytes): " + 
-							  Runtime.getRuntime().totalMemory());
+//			System.out.println("After SAGA: Free memory (bytes): " + 
+//					  Runtime.getRuntime().freeMemory()+ ",Total memory (bytes): " + 
+//							  Runtime.getRuntime().totalMemory());
 			loss_opt = loss.getLoss(saga_opt.getParam()); 
+			test_opt = test_loss.getLoss(saga_opt.getParam()); 
 			saga_opt = null; 
 			System.gc(); 
-			System.out.println("After calling GC: Free memory (bytes): " + 
-					  Runtime.getRuntime().freeMemory()+ ",Total memory (bytes): " + 
-							  Runtime.getRuntime().totalMemory());
+//			System.out.println("After calling GC: Free memory (bytes): " + 
+//					  Runtime.getRuntime().freeMemory()+ ",Total memory (bytes): " + 
+//							  Runtime.getRuntime().totalMemory());
 		} 
 		else{ 
 			loss_opt = conf.T0; 
 		}
 		
 		System.out.println("loss_opt:"+loss_opt);
+		System.out.println("test_opt:"+test_opt);
 		Adapt_Strategy as = new Adapt_Strategy(n, (int) (L/lambda_n), false);
 		System.out.println("After Strategy: Free memory (bytes): " + 
 				  Runtime.getRuntime().freeMemory()+ ",Total memory (bytes): " + 
@@ -187,9 +208,9 @@ public class sgd_saga_adapt_efficient {
 		System.out.println("eta:"+eta);
 		int k_0 = (int) kappa;
 		System.out.println("k_0:"+k_0);
-		int m = (int) (kappa/eta); 
+		int m = (int) (kappa/(eta*5)); 
 		System.out.println("m:"+m);
-		SVRG_Streaming svrg = new SVRG_Streaming(loss.clone_loss(),eta, k_0, b,m); 
+		SVRG_Streaming_Main svrg = new SVRG_Streaming_Main(loss.clone_loss(),eta, k_0, b,m); 
 		First_Order_Factory_efficient.methods_in[4] = svrg; 
 		SGD const_sgd = new SGD(loss.clone_loss()); 
 		const_sgd.setLearning_rate(0.05);
@@ -199,7 +220,6 @@ public class sgd_saga_adapt_efficient {
 		const_sgd_small.setLearning_rate(0.005);
 		const_sgd_small.setConstant_step_size(true);
 		First_Order_Factory_efficient.methods_in[6] = const_sgd_small; 
-		Result res = First_Order_Factory_efficient.RunExperiment(numrep,loss, MaxItr, nSamplesPerPass, loss_opt);
-        res.write2File(conf.logDir);
+		First_Order_Factory_efficient.RunExperiment(numrep,loss, MaxItr, nSamplesPerPass, loss_opt,test_loss,test_opt,conf.logDir);
 	}
 }

@@ -168,6 +168,9 @@ public class Config {
 						case "ntrials":
 							nTrials = Integer.parseInt(value);
 							break;	
+						case "ntest":
+							ntest = Integer.parseInt(value);
+							break;
 
 						case "objtype":
 							switch(value) {
@@ -183,8 +186,8 @@ public class Config {
 							}
 							break;							
 							
-						case "optfilename":
-							optFilename = value;
+						case "testfile":
+							testFile = value;
 							break;
 							
 						case "randomizevalidationset":
@@ -335,9 +338,11 @@ public class Config {
 	
 	public  int nTrials = 1;
 	
+	public  int ntest = 0;
+	
 	public  ObjType objType = ObjType.OBJ_LOSS;
 	
-	public  String optFilename = "";
+	public  String testFile = "";
 	
 	public  boolean randomizeValidationSet = true;
 	

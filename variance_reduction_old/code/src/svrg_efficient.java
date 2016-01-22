@@ -179,7 +179,6 @@ public class svrg_efficient {
 		SVRG_Streaming_Main svrg_main = new SVRG_Streaming_Main(loss.clone_loss(),eta, k_0, b,m); 
 		First_Order_Factory_efficient.methods_in[0] = svrg; 
 		First_Order_Factory_efficient.methods_in[1] = svrg_main; 
-		Result res = First_Order_Factory_efficient.RunExperiment(numrep,loss, MaxItr, nSamplesPerPass, loss_opt);
-        res.write2File(conf.logDir);
+		First_Order_Factory_efficient.RunExperiment(numrep,loss, MaxItr, nSamplesPerPass, loss_opt,null,0,conf.logDir);
 	}
 }
