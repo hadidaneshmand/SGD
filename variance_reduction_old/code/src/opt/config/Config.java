@@ -9,7 +9,8 @@ import java.util.StringTokenizer;
 
 public class Config {
 	public boolean agressive_step ;
-	public boolean doubling; 
+	public boolean doubling;
+	public double train_ratio = -1 ; 
 	public Config() {
 		// Exists only to defeat instantiation.
 		
@@ -121,6 +122,9 @@ public class Config {
 							
 						case "lambda":
 							lambda = Double.parseDouble(value);
+							break;
+						case "train_ratio":
+							train_ratio  = Double.parseDouble(value);
 							break;
 							
 						case "loss_computation":
