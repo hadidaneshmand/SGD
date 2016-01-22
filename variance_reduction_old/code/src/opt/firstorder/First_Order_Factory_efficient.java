@@ -52,6 +52,7 @@ public class First_Order_Factory_efficient {
 					convs_test.get(i).add(error);
 				}
 				System.out.println("test:"+test_loss.getLoss(DensePoint.zero(loss.getDimension())));
+				convs_test.get(convs_test.size()-1).add(0);
 			}
 			
 			
