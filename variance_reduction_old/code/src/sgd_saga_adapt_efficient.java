@@ -159,7 +159,7 @@ public class sgd_saga_adapt_efficient {
 		loss.setLambda(lambda_n);
 		SGD sgd = new SGD(loss);
 		sgd.setLearning_rate(lambda_n);
-		First_Order_Factory_efficient.methods_in = new FirstOrderOpt[7];
+		First_Order_Factory_efficient.methods_in = new FirstOrderOpt[8];
 		
 		First_Order_Factory_efficient.methods_in[0] = sgd;
 		First_Order_Factory_efficient.methods_in[1] = new SAGA(loss,eta_n);
@@ -220,6 +220,8 @@ public class sgd_saga_adapt_efficient {
 		const_sgd_small.setLearning_rate(0.005);
 		const_sgd_small.setConstant_step_size(true);
 		First_Order_Factory_efficient.methods_in[6] = const_sgd_small; 
+		SVRG_Streaming svrg2 = new SVRG_Streaming(loss.clone_loss(),eta, k_0, b,m*5); 
+		First_Order_Factory_efficient.methods_in[7] = svrg2;
 		First_Order_Factory_efficient.RunExperiment(numrep,loss, MaxItr, nSamplesPerPass, loss_opt,test_loss,test_opt,conf.logDir);
 	}
 }
