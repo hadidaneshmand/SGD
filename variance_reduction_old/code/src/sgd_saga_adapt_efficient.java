@@ -2,6 +2,8 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.StringTokenizer;
 
 import opt.Adapt_Strategy;
@@ -114,16 +116,47 @@ public class sgd_saga_adapt_efficient {
 		System.out.println("out dir:"+conf.logDir);
 		System.out.println("classification:" +(conf.lossType != Config.LossType.REGRESSION));
 		System.out.println("testfile:"+conf.testFile);
-		
+		System.out.println("test_ratio:"+conf.train_ratio);
+		int train_si = conf.c0; 
+		int test_si = -1; 
+		if(conf.train_ratio!= -1){
+			train_si = (int)(conf.train_ratio*conf.c0); 
+			test_si = conf.c0 - train_si; 
+			
+		}
 		data = new DataPoint[conf.c0]; 
 		readDataPointsFromFile( conf.dataPath, 1,conf.c0,false);
 		Loss_static_efficient test_loss = null; 
+		
 		if(conf.testFile != null && !conf.testFile.isEmpty() ){ 
 			test_data = new DataPoint[conf.ntest]; 
 			readDataPointsFromFile(conf.testFile, 1,conf.ntest, true);
 			test_loss = new Logistic_Loss_efficient(test_data, conf.featureDim); 
 			test_loss.setLambda(0);
 		}
+		if(test_si!=-1){
+			DataPoint[] train_data = new DataPoint[train_si]; 
+			test_data = new DataPoint[test_si];
+			ArrayList<Integer> inds = new ArrayList<Integer>(); 
+			for(int i=0;i<conf.c0;i++){ 
+				inds.add(i); 
+			}
+			Collections.shuffle(inds);
+			for(int i=0;i<conf.c0;i++){ 
+				if(i<train_si){
+					train_data[i] = data[i]; 
+				}
+				else{ 
+					test_data[i-train_si] = data[i]; 
+				}
+			}
+			System.out.println("t_data="+test_data[0]);
+			data = train_data; 
+			System.out.println("t_data_after="+test_data[0]);
+			test_loss = new Logistic_Loss_efficient(test_data, conf.featureDim); 
+			test_loss.setLambda(0);
+		}
+		
 		int numrep = conf.nTrials;
 		int nSamplesPerPass = conf.nSamplesPerPass; 
 	    int MaxItr = conf.nPasses; 
@@ -173,7 +206,9 @@ public class sgd_saga_adapt_efficient {
 //					  Runtime.getRuntime().freeMemory()+ ",Total memory (bytes): " + 
 //							  Runtime.getRuntime().totalMemory());
 			loss_opt = loss.getLoss(saga_opt.getParam()); 
-			test_opt = test_loss.getLoss(saga_opt.getParam()); 
+			if(test_loss!=null){
+				test_opt = test_loss.getLoss(saga_opt.getParam()); 
+			}
 			saga_opt = null; 
 			System.gc(); 
 //			System.out.println("After calling GC: Free memory (bytes): " + 
