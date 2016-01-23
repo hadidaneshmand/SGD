@@ -98,7 +98,7 @@ public class st_sgd_saga_adapt_efficient {
 		System.out.println("file: "+conf.dataPath);
 		System.out.println("data size:"+conf.c0);
 		System.out.println("out dir:"+conf.logDir);
-		System.out.println("t0:"+conf.T0);
+		System.out.println("t0:"+conf.opt_train);
 		System.out.println("testfile:"+conf.testFile);
 		data = new DataPoint[conf.c0]; 
 		readDataPointsFromFile( conf.dataPath, 1,conf.c0);

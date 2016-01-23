@@ -143,7 +143,7 @@ public class svrg_efficient {
 		First_Order_Factory_efficient.methods_in = new FirstOrderOpt[2];
 		
 		double loss_opt = 0; 
-		if(conf.T0 == -1){
+		if(conf.opt_train == -1){
 			saga_opt = new SAGA(loss,eta_n); 
 			saga_opt.Iterate((int) (2*n*Math.log(n)));//TODO 
 //			opt.Iterate(1000);
@@ -158,7 +158,7 @@ public class svrg_efficient {
 							  Runtime.getRuntime().totalMemory());
 		} 
 		else{ 
-			loss_opt = conf.T0; 
+			loss_opt = conf.opt_train; 
 		}
 		
 		System.out.println("loss_opt:"+loss_opt);

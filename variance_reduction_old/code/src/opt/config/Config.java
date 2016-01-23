@@ -226,8 +226,12 @@ public class Config {
 							svrg_outer_pSamples = Double.parseDouble(value);
 							break;
 							
-						case "t0":
-							T0 = Double.parseDouble(value);
+						case "opt_train":
+							opt_train = Double.parseDouble(value);
+							break;
+							
+						case "opt_test":
+							opt_test = Double.parseDouble(value);
 							break;
 							
 						case "validation_set_ratio":
@@ -357,8 +361,10 @@ public class Config {
 	// index of the first feature in the libsvm file format
 	public  int startIndex = 1;
 	
-	// opt loss value
-	public  double T0 = -1;
+	// opt loss value on training data
+	public  double opt_train = -1;
+	// opt loss value on the test data
+    public  double opt_test = -1;
 	
 	public  double variance_computation_pSamples = 1.0;
 	
