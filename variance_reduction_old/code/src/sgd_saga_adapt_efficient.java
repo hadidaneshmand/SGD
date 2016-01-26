@@ -202,9 +202,9 @@ public class sgd_saga_adapt_efficient {
 			saga_opt = new SAGA(loss,eta_n); 
 			saga_opt.Iterate((int) (2*n*Math.log(n)));//TODO 
 //			opt.Iterate(1000);
-//			System.out.println("After SAGA: Free memory (bytes): " + 
-//					  Runtime.getRuntime().freeMemory()+ ",Total memory (bytes): " + 
-//							  Runtime.getRuntime().totalMemory());
+			System.out.println("After SAGA: Free memory (bytes): " + 
+					  Runtime.getRuntime().freeMemory()+ ",Total memory (bytes): " + 
+							  Runtime.getRuntime().totalMemory());
 			loss_opt = loss.getLoss(saga_opt.getParam()); 
 			if(test_loss!=null){
 				test_opt = test_loss.getLoss(saga_opt.getParam()); 
