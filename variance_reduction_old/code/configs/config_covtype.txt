@@ -1,8 +1,11 @@
 datapath=data/covtype
-c0=0
+c0=500000
 featuredim=54
 nclasses=2
 logdir=results/covtype
 npasses=1000
 nsamplesperpass=500
-ntrials=10
+ntrials=3
+train_ratio=0.9
+opt_train=0.5624969363030149
+opt_test=0.6448187372548126
