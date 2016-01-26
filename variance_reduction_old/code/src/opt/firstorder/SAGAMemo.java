@@ -6,6 +6,7 @@ import java.util.Random;
 import opt.loss.Loss;
 import data.DataPoint;
 import data.DensePoint;
+import data.DensePoint_efficient;
 
 public class SAGAMemo extends SAGA {
 	LinkedList<Integer> memoinds;
@@ -31,7 +32,7 @@ public class SAGAMemo extends SAGA {
 	public void updateMemory(DataPoint stochasticGradient, int index) {
 		if(phi[index] != null) {
 			// update average phi gradient
-			avg_phi = (DensePoint) avg_phi.subtract(phi[index]	);
+			avg_phi = (DensePoint_efficient) avg_phi.subtract(phi[index]	);
 			
 		} else {
 			// increment number of gradients
@@ -39,13 +40,13 @@ public class SAGAMemo extends SAGA {
 			++nGradients; 
 		}
 		// update average phi gradient
-		avg_phi = (DensePoint) avg_phi.add(stochasticGradient);
+		avg_phi = (DensePoint_efficient) avg_phi.add(stochasticGradient);
 		// store gradient in table phi
 		phi[index] = stochasticGradient;
 		if(memoinds.size()>memosize){
 			int find = memoinds.pollLast();
 //			System.out.println("phi[find]:"+(phi[find])+",find:"+find+",size:"+memoinds.size()); 
-			avg_phi = (DensePoint) avg_phi.subtract(phi[find]); 
+			avg_phi = (DensePoint_efficient) avg_phi.subtract(phi[find]); 
 			phi[find] = null; 
 			nGradients-=1;
 		}
@@ -64,7 +65,7 @@ public class SAGAMemo extends SAGA {
 		for(int i=0;i<loss.getDataSize();i++){
 			out.phi[i] = phi[i];
 		}
-		out.avg_phi = new DensePoint(loss.getDimension());
+		out.avg_phi = new DensePoint_efficient(loss.getDimension());
 		for(int i=0;i<loss.getDimension();i++){ 
 			out.avg_phi.set(i, avg_phi.get(i));
 		}

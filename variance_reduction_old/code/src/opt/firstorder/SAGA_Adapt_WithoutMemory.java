@@ -4,6 +4,7 @@ import opt.Adapt_Strategy;
 import opt.loss.Loss;
 import data.DataPoint;
 import data.DensePoint;
+import data.DensePoint_efficient;
 
 public class SAGA_Adapt_WithoutMemory extends SAGA_Adapt {
 	
@@ -37,7 +38,7 @@ public class SAGA_Adapt_WithoutMemory extends SAGA_Adapt {
 		phi = new DataPoint[loss.getDataSize()];
 	    nGradients	 = 0; //number of gradients stored so far
 		// average gradient
-		avg_phi = new DensePoint(loss.getDimension());
+		avg_phi = new DensePoint_efficient(loss.getDimension());
 		for(int i=0;i<loss.getDimension();i++){ 
 			avg_phi.set(i, 0.0);
 		}
@@ -49,7 +50,7 @@ public class SAGA_Adapt_WithoutMemory extends SAGA_Adapt {
 		for(int i=0;i<loss.getDataSize();i++){
 			out.phi[i] = phi[i];
 		}
-		out.avg_phi = new DensePoint(loss.getDimension());
+		out.avg_phi = new DensePoint_efficient(loss.getDimension());
 		for(int i=0;i<loss.getDimension();i++){ 
 			out.avg_phi.set(i, avg_phi.get(i));
 		}

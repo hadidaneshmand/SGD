@@ -55,6 +55,16 @@ public class SparsePoint extends DataPoint {
 				}
 				output.set(i, value+s.get(i));
 			}
+		} else if(p instanceof DensePoint_efficient){
+			DensePoint_efficient d = (DensePoint_efficient) p; 
+			int n = d.dimension(); 
+			output = new DensePoint_efficient(n);
+			for(int i = 0; i < n; i++) {
+				output.set(i, p.get(i));
+			}
+			for (int i : point.keySet()) {
+				output.set(i, point.get(i)+output.get(i));
+			}	
 		} else {
 			DensePoint d = (DensePoint) p;
 			int n = d.dimension();
@@ -184,7 +194,14 @@ public class SparsePoint extends DataPoint {
 			for (int i : s.point.keySet()) {
 				point.put(i, s.get(i));
 			}
-		} else {
+		} else if(p instanceof DensePoint_efficient){ 
+			DensePoint_efficient d = (DensePoint_efficient) p;
+			int n = d.dimension();
+			for(int i = 0; i < n; ++i) {
+				point.put(i, p.get(i));
+			}
+		}
+		else {
 			DensePoint d = (DensePoint) p;
 			int n = d.dimension();
 			for(int i = 0; i < n; ++i) {

@@ -12,6 +12,7 @@ public abstract class Loss_static_efficient implements Loss {
 	protected double lambda;
 	private int dimension;
 	
+	
 	public Loss_static_efficient(DataPoint[] data,int dimension) {
 		this.setDimension(dimension); 
 		this.data = data; 
@@ -71,6 +72,11 @@ public abstract class Loss_static_efficient implements Loss {
 
 	public void setDimension(int dimension) {
 		this.dimension = dimension;
+	}
+	
+	@Override
+	public void set_lambda(double lambda) {
+		this.lambda = lambda;
 	}
 	
 }

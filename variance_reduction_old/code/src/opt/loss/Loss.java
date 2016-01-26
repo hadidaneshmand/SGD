@@ -14,4 +14,5 @@ public interface Loss {
 	public DataPoint getAverageGradient(DataPoint w);
 	public DataPoint getStochasticGradient(ArrayList<Integer> indices, DataPoint w);
 	public Loss clone_loss();
+	public void set_lambda(double lambda);
 }

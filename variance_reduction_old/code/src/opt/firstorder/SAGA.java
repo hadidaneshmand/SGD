@@ -3,9 +3,10 @@ package opt.firstorder;
 import opt.loss.Loss;
 import data.DataPoint;
 import data.DensePoint;
+import data.DensePoint_efficient;
 
 public class SAGA extends VarianceReducedSG{
-	protected DensePoint avg_phi;
+	protected DensePoint_efficient avg_phi;
 	protected DataPoint[] phi;
 	protected int nGradients;
 	public SAGA(Loss loss, double learning_rate) {
@@ -15,7 +16,7 @@ public class SAGA extends VarianceReducedSG{
 		phi = new DensePoint[loss.getDataSize()];
 	    nGradients	 = 0; //number of gradients stored so far
 		// average gradient
-		avg_phi = new DensePoint(loss.getDimension());
+		avg_phi = new DensePoint_efficient(loss.getDimension());
 		for(int i=0;i<loss.getDimension();i++){ 
 			avg_phi.set(i, 0.0);
 		}
@@ -39,14 +40,14 @@ public class SAGA extends VarianceReducedSG{
 	public void updateMemory(DataPoint stochasticGradient, int index) {
 		if(phi[index] != null) {
 			// update average phi gradient
-			avg_phi = (DensePoint) avg_phi.subtract(phi[index]	);
+			avg_phi = (DensePoint_efficient) avg_phi.subtract(phi[index]);
 			
 		} else {
 			// increment number of gradients
 			++nGradients; 
 		}
 		// update average phi gradient
-		avg_phi = (DensePoint) avg_phi.add(stochasticGradient);
+		avg_phi = (DensePoint_efficient) avg_phi.add(stochasticGradient);
 		// store gradient in table phi
 		phi[index] = stochasticGradient;
 		
@@ -66,7 +67,7 @@ public class SAGA extends VarianceReducedSG{
 		for(int i=0;i<loss.getDataSize();i++){
 			out.phi[i] = phi[i];
 		}
-		out.avg_phi = new DensePoint(loss.getDimension());
+		out.avg_phi = new DensePoint_efficient(loss.getDimension());
 		for(int i=0;i<loss.getDimension();i++){ 
 			out.avg_phi.set(i, avg_phi.get(i));
 		}

@@ -5,6 +5,7 @@ import opt.Adapt_Strategy;
 import opt.loss.Loss;
 import data.DataPoint;
 import data.DensePoint;
+import data.DensePoint_efficient;
 
 public class SAGA_Adapt extends SAGA {
 	Adapt_Strategy as; 
@@ -60,7 +61,7 @@ public class SAGA_Adapt extends SAGA {
 		for(int i=0;i<loss.getDataSize();i++){
 			out.phi[i] = phi[i];
 		}
-		out.avg_phi = new DensePoint(loss.getDimension());
+		out.avg_phi = new DensePoint_efficient(loss.getDimension());
 		for(int i=0;i<loss.getDimension();i++){ 
 			out.avg_phi.set(i, avg_phi.get(i));
 		}

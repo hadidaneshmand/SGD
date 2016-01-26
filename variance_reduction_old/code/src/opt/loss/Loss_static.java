@@ -12,6 +12,7 @@ public abstract class Loss_static implements Loss {
 	protected double lambda;
 	private int dimension;
 	
+	
 	public Loss_static(List<DataPoint> data,int dimension) {
 		this.setDimension(dimension); 
 		this.setData(data);
@@ -53,6 +54,9 @@ public abstract class Loss_static implements Loss {
 		return gds;
 	}
 	public abstract double getLoss(DataPoint w);
+	public void set_lambda(double lambda){ 
+		this.lambda = lambda;
+	}
 	public double getLambda() {
 		return lambda;
 	}
