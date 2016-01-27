@@ -1,0 +1,8 @@
+datapath=data/mnist
+c0=60000
+featuredim=780
+nclasses=2
+logdir=results/mnist
+npasses=100
+nsamplesperpass=600
+ntrials=10

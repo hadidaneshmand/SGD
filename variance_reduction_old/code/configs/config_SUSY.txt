@@ -1,0 +1,10 @@
+datapath=data/SUSY
+loss_type=binary_svm
+c0=5000000
+featuredim=18
+nclasses=2
+logdir=results_n/SUSY
+npasses=25
+nsamplesperpass=100000
+ntrials=5
+train_ratio=0.8

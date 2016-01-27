@@ -1,0 +1,9 @@
+datapath=data/yearpr
+c0=6000
+featuredim=90
+nclasses=2
+logdir=results/yearpr_test
+npasses=100
+nsamplesperpass=500
+ntrials=10
+loss_type=regression

@@ -1,0 +1,9 @@
+datapath=data/a9a
+c0=32561
+featuredim=123
+nclasses=2
+logdir=results_n/a9a_newparm
+npasses=20
+nsamplesperpass=2500
+ntrials=15
+train_ratio=0.9

@@ -1,0 +1,8 @@
+datapath=data/rsim
+c0=0
+featuredim=20958
+nclasses=2
+logdir=results/rsim
+npasses=100
+nsamplesperpass=720
+ntrials=10

@@ -1,0 +1,8 @@
+datapath=data/rcv1
+c0=0
+featuredim=47236
+nclasses=2
+logdir=results/rcv1
+npasses=100
+nsamplesperpass=500
+ntrials=10

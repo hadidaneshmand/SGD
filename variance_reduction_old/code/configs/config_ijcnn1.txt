@@ -1,8 +1,10 @@
 datapath=data/ijcnn1
-c0=0
+c0=49990
 featuredim=22
 nclasses=2
-logdir=results/ijcnn1
-npasses=100
-nsamplesperpass=500
+logdir=results_n/ijcnn1
+npasses=50
+nsamplesperpass=1000
 ntrials=10
+ntest=91701
+testfile=data/ijcnn1.t

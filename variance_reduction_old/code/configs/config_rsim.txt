@@ -1,0 +1,11 @@
+datapath=data/rsim
+c0=72309
+featuredim=20958
+nclasses=2
+logdir=results_n/rsim
+npasses=20
+nsamplesperpass=3600
+ntrials=6
+train_ratio=0.9
+opt_train=0.5961769801967686
+opt_test=0.6072637777895998

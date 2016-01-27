@@ -1,0 +1,9 @@
+datapath=data/eps
+c0=100000
+featuredim=2000
+nclasses=2
+logdir=results/eps_1
+npasses=10
+nsamplesperpass=10000
+ntrials=1
+t0=0.6655818866896539

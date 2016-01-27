@@ -1,0 +1,8 @@
+datapath=data/w8a
+c0=0
+featuredim=300
+nclasses=2
+logdir=results/w8a
+npasses=100
+nsamplesperpass=500
+ntrials=10

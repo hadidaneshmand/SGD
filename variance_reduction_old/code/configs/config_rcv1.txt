@@ -1,0 +1,12 @@
+datapath=data/rcv1
+c0=20242
+featuredim=47236
+nclasses=2
+logdir=results_n/rcv1
+npasses=20
+nsamplesperpass=2000
+ntrials=5
+ntest=677399
+testfile=data/rcv1_test.binary
+opt_train=0.6385682918426125
+opt_test=0.5943277526696001
