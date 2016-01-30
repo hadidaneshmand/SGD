@@ -139,35 +139,43 @@ Let explain more about $\risk(\opt)$, which is really a challenging term. This
 term depends on the varaince of the noise i.e. $\sigma^2$. Therefore, the
 convergence of SGD with a constant step size highly depends on the noise of the
 observation. 
-\section{Variance Reduction Issue}
-I will propose a surpersing variance reduction method, here. As mentioned
-before, the most enoying therm of the variance is $\risk(\w^*)$ that depends on
-the noise. We want to relax this dependancy. I keep just the past gradient
-associated with data point $\x_r$ in the table and we use this past gradient to
-update the gradient. Consider $\Gamma_s$ is the stored gradient in the table in
-the last step; We use the following variance reduce gradient: 
+\section{Generalizing and improving the results}
+Now, we genralize the results to arbitarary $L$-smooth and $\mu$-strongly
+convex loss. Let rewrite an important inequality from paper
+\cite{johnson2013accelerating}(page 4 equation 8). 
 \begin{equation*}
-	\G_r^{r'}(\w) = \g_r(\w) + \I \left(r' = s \right) \Gamma_s - \frac{1}{n}
-	\Gamma_s
+	\E_r \|  \g_r(\w) - \g_r(\ERM) \|^2 \leq 2 L \left[\risk_n(\w) -
+	\risk_n(\ERM) \right]
 \end{equation*}
-where $\I(.)$ denotes the indicator function, and $r'$ is a random index that is
-indpedent of the the random index $r$. Firstly, we prove that this estimator is
-unbiased estimation of the gradient $\nabla \risk_n(\w)$ :
+Above results are based on $L$-smoothness assumption and the optimality
+condition for $\ERM$. Now, we can bound variance of stochatic gradient using
+this inequality. 
 \begin{eqnarray*}
- & \E_{r,r'} \left[\G_r^{r'}(\w) \right] & = \E_r \g_r(\w) + \Gamma_s \E_{r'} \I
- \left(r' = s \right) - \frac{1}{n} \Gamma_s \\ 
- & & = \nabla \risk_n(\w) + \frac{1}{n} \Gamma_s - \frac{1}{n} \Gamma_s = \nabla
- \risk_n(\w)
+	& \E_r \| \g_r(\w) \|^2 & \leq \E_r \| \g_r(\w) - \g_r(\ERM)\|^2 + \E_r \|
+	\g_r(\ERM) \|^2 \\ 
+	& &  \leq 2 L \left[\risk_n(\w) -
+	\risk_n(\ERM) \right] + \E_r \|
+	\g_r(\ERM) \|^2
 \end{eqnarray*}
-Now, we bound the variance of stochastic gradient; Let $\g_{r'}(\w_s) = \I(r'=s)
-\Gamma_s - \frac{1}{n} \Gamma_s$ which is a zero mean random variable indepdent
-of $\g_r(\w)$. Here, $\w_s$ is the past paramters. We also rearange the
-stochastic gradient as $\g_r(\w) = \G_r^{r'}(\w) - \g_{r'}(\w_s)$.
+Using above inequality we provide a new convergence rate for SGD with a constant
+step size $\eta$: 
 
-\begin{equation*}
-	\E_{r,r'} \|\g_r(\w) \|^2 = \E_{r,r'} \| \G_r^{r'}(\w) \|^2 + \E_{r'}\| 
-	\g_{r'}(\w_s) \|^2 - 2 \langle \G_r^{r'}(\w), \g_{r'}(\w_s) \rangle
-\end{equation*}
+\begin{eqnarray*}
+	&  \E_r \| \w^+ - \ERM\|^2 & = \|\w - \eta \g_r(\w) - \ERM \|^2 \\
+	& & = \| \w - \ERM \|^2 + \eta^2 \E_r \| \g_r(\w) \|^2 - 2 \eta \langle
+	\E_r \g_r(\w), \w - \ERM \rangle \\ 
+	& & \leq \| \w - \ERM \|^2 + \eta^2 \left( 2 L
+	\left[\risk_n(\w) - \risk_n(\ERM) \right] + \E_r \|
+	\g_r(\ERM) \|^2 \right) - 2 \eta \langle
+	\nabla \risk_n(\w), \w - \ERM \rangle \\ 
+	& & \leq 
+	(1-\eta \mu) \|\w  - \ERM \|^2 + 2\eta(L\eta - 1) \left[
+	\risk_n(\w) - \risk_n(\ERM) \right] + \eta^2 \E_r\| \g_r(\ERM) \|^2 \\
+	& & \leq_{(\eta<1/L)}(1-\eta \mu) \|\w  - \ERM \|^2 + \eta^2 \E_r\| \g_r(\ERM)
+	\|^2
+\end{eqnarray*}
 
 
+\bibliography{bibliography}
+\bibliographystyle{plain}
 \end{document}
