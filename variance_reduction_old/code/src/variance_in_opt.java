@@ -201,7 +201,7 @@ public class variance_in_opt {
 				loss = new LeastSquares_efficient(data,d); 
 			}
 			saga_opt = new SAGA(loss,eta_n); 
-			saga_opt.Iterate((int) (3*n*Math.log(n)));//TODO
+			saga_opt.Iterate((int) (10*n*Math.log(n)));//TODO
 			SGD sgd = new SGD(loss); 
 			sgd.setLearning_rate(eta);
 			sgd.setConstant_step_size(true);
