@@ -11,6 +11,7 @@ public class SGD extends FirstOrderOpt {
 
 	private int total_iterations;
 	private boolean constant_step_size; 
+	private double eta = 0.1;
 	public SGD(Loss loss) {
 		super(loss);
 		this.setLearning_rate(0.9); 
@@ -30,7 +31,7 @@ public class SGD extends FirstOrderOpt {
 					gamma = getLearning_rate();
 				}
 				else{ 
-					gamma = 0.1/(0.1+getLearning_rate()*total_iterations);
+					gamma = (1.0*eta)/(eta+getLearning_rate()*total_iterations);
 				}
 				w = (DataPoint) w.subtract(mu.multiply(gamma));
 			}
@@ -56,6 +57,9 @@ public class SGD extends FirstOrderOpt {
 		if(isConstant_step_size()){
 		return "SGD:"+getLearning_rate();
 		}
+		if(eta!=0.1){
+			return "SGD:"+getEta();
+		}
 		return "SGD";
 	}
 
@@ -67,6 +71,14 @@ public class SGD extends FirstOrderOpt {
 		sgd.total_iterations = this.total_iterations; 
 		sgd.w = this.cloneParam(); 
 		return sgd;
+	}
+
+	public double getEta() {
+		return eta;
+	}
+
+	public void setEta(double gamma) {
+		this.eta = gamma;
 	}
 
 }

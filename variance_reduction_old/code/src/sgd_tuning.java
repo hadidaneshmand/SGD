@@ -26,7 +26,7 @@ import data.Result;
 import data.SparsePoint;
 
 
-public class sgd_saga_adapt_efficient {
+public class sgd_tuning {
 	public static DataPoint[] data; 
 	public static DataPoint[] test_data = null; 
 	public static SAGA saga_opt; 
@@ -181,15 +181,6 @@ public class sgd_saga_adapt_efficient {
 		}
 		L = 1.5;
 		double lambda_n = 1.0/Math.sqrt(n);
-		if(conf.lambdaType == Config.LambdaType.SMALL){ 
-			lambda_n = Math.pow(1.0/n, 3.0/4); 
-			conf.logDir+="_small";
-		} 
-		else if(conf.lambdaType == Config.LambdaType.MEDIUM){ 
-			lambda_n = Math.pow(1.0/n, 2.0/3);
-			conf.logDir+="_large";
-		}
-			
 		System.out.println("lambda:"+lambda_n);
 		double eta_n = 0.3/(L+lambda_n*n); 
 		if(conf.agressive_step){ 
@@ -202,10 +193,23 @@ public class sgd_saga_adapt_efficient {
 		loss.setLambda(lambda_n);
 		SGD sgd = new SGD(loss);
 		sgd.setLearning_rate(lambda_n);
-		First_Order_Factory_efficient.methods_in = new FirstOrderOpt[8];
+		First_Order_Factory_efficient.methods_in = new FirstOrderOpt[4];
 		
 		First_Order_Factory_efficient.methods_in[0] = sgd;
-		First_Order_Factory_efficient.methods_in[1] = new SAGA(loss,eta_n);
+		SGD sgd_2 = new SGD(loss);
+		sgd_2.setLearning_rate(lambda_n);
+		SGD sgd_3 = new SGD(loss); 
+		sgd_3.setLearning_rate(lambda_n);
+		SGD sgd_4 = new SGD(loss); 
+		sgd_4.setLearning_rate(lambda_n);
+		sgd_2.setEta(1.0);
+		sgd_3.setEta(2.0);
+		sgd_4.setEta(10.0);
+		First_Order_Factory_efficient.methods_in[1] = sgd_2;
+		First_Order_Factory_efficient.methods_in[2] = sgd_3;
+		First_Order_Factory_efficient.methods_in[3] = sgd_4;
+		
+		
 		double loss_opt = 0; 
 		double test_opt = 0; 
 		if(conf.opt_train == -1){
@@ -231,43 +235,7 @@ public class sgd_saga_adapt_efficient {
 		}
 		System.out.println("loss_opt:"+loss_opt);
 		System.out.println("test_opt:"+test_opt);
-		Adapt_Strategy as = new Adapt_Strategy(n, (int) (L/lambda_n), false);
-		System.out.println("After Strategy: Free memory (bytes): " + 
-				  Runtime.getRuntime().freeMemory()+ ",Total memory (bytes): " + 
-						  Runtime.getRuntime().totalMemory());
-		SAGA_Adapt saga_a = new SAGA_Adapt(loss.clone_loss(), as,lambda_n,L);
-		System.out.println("After saga_a: Free memory (bytes): " + 
-				  Runtime.getRuntime().freeMemory()+ ",Total memory (bytes): " + 
-						  Runtime.getRuntime().totalMemory());
-		Adapt_Strategy as_doubl = new Adapt_Strategy(n, (int) (L/lambda_n), true);
-		First_Order_Factory_efficient.methods_in[2] = saga_a;
-		First_Order_Factory_efficient.methods_in[3] = new SAGA_Adapt(loss.clone_loss(), as_doubl, lambda_n, L);
-		int b = 3; 
-		int p = 2; 
-		double kappa = L/lambda_n; 
-		System.out.println("kapa:"+kappa);
 		
-		double eta = 1.0/(5*Math.pow(b, p+1));
-		if(n>= 100000){
-			eta = 1.0/(10*Math.pow(b, p+1)); 
-		}
-		System.out.println("eta:"+eta);
-		int k_0 = (int) kappa;
-		System.out.println("k_0:"+k_0);
-		int m = (int) (kappa/(eta)); 
-		System.out.println("m:"+m);
-		SVRG_Streaming_Main svrg = new SVRG_Streaming_Main(loss.clone_loss(),eta, k_0, b,m); 
-		First_Order_Factory_efficient.methods_in[4] = svrg; 
-		SGD const_sgd = new SGD(loss.clone_loss()); 
-		const_sgd.setLearning_rate(0.05);
-		const_sgd.setConstant_step_size(true);
-		First_Order_Factory_efficient.methods_in[5] = const_sgd; 
-		SGD const_sgd_small = new SGD(loss.clone_loss());
-		const_sgd_small.setLearning_rate(0.005);
-		const_sgd_small.setConstant_step_size(true);
-		First_Order_Factory_efficient.methods_in[6] = const_sgd_small; 
-		SVRG_Streaming svrg2 = new SVRG_Streaming(loss.clone_loss(),eta, k_0, b,m); 
-		First_Order_Factory_efficient.methods_in[7] = svrg2;
-		First_Order_Factory_efficient.RunExperiment(numrep,loss, MaxItr, nSamplesPerPass, loss_opt,test_loss,test_opt,conf.logDir);
+		First_Order_Factory_efficient.RunExperiment(numrep,loss, MaxItr, nSamplesPerPass, loss_opt,test_loss,test_opt,conf.logDir+"_sgd_tuning");
 	}
 }

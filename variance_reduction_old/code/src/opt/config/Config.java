@@ -212,8 +212,22 @@ public class Config {
 									samplingStrategy = SamplingStrategy.SVRG_CST_SAMPLING;
 									break;										
 							}
-							break;								
+							break;
 							
+						case "lambda_type":
+							switch(value) {
+								case "small":
+									lambdaType = LambdaType.SMALL;
+									break;
+								default:
+								case "medium":
+									lambdaType = lambdaType.MEDIUM;
+									break;	
+								case "large":
+									lambdaType = lambdaType.LARGE;
+									break;	
+							}
+							break;	
 						case "startindex":
 							startIndex = Integer.parseInt(value);
 							break;
@@ -279,6 +293,12 @@ public class Config {
 		BINARY_SVM
 	}
 	
+	public enum LambdaType {
+		LARGE, // 1/sqrt(n)
+		MEDIUM, // (1/n)^{2/3}
+		SMALL // (1/n)^{3/4} 
+	}
+	
 	public  LossType lossType = LossType.MULTICLASS_REGRESSION;
 	
 	public enum AlgType {
@@ -326,6 +346,8 @@ public class Config {
 	public  int featureDim = 13;
 	
 	public  InitType initType = InitType.ZERO;
+	
+	public LambdaType lambdaType = LambdaType.LARGE; 
 	
 	public  double lambda = 0; // regularizer coefficient
 	
