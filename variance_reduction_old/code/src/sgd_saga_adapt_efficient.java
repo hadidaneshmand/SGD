@@ -210,7 +210,7 @@ public class sgd_saga_adapt_efficient {
 		double test_opt = 0; 
 		if(conf.opt_train == -1){
 			saga_opt = new SAGA(loss,eta_n); 
-			saga_opt.Iterate((int) (10*n*Math.log(n)));//TODO 
+			saga_opt.Iterate((int) (2*n*Math.log(n)));//TODO 
 //			opt.Iterate(1000);
 			System.out.println("After SAGA: Free memory (bytes): " + 
 					  Runtime.getRuntime().freeMemory()+ ",Total memory (bytes): " + 
