@@ -265,7 +265,7 @@ public class sgd_saga_adapt_efficient {
 //			m = (int) (m/6.0); 
 //		}
 		System.out.println("m:"+m);
-		SVRG_Streaming_Main svrg = new SVRG_Streaming_Main(loss.clone_loss(),eta, k_0, b,m); 
+		SVRG_Streaming_Main svrg = new SVRG_Streaming_Main(loss.clone_loss(),eta, k_0, b,(int) (m/5.0)); 
 		First_Order_Factory_efficient.methods_in[4] = svrg; 
 		SGD const_sgd = new SGD(loss.clone_loss()); 
 		const_sgd.setLearning_rate(0.05);
