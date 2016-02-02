@@ -2,6 +2,7 @@ package opt.firstorder;
 
 
 import opt.Adapt_Strategy;
+import opt.Adapt_Strategy_iid;
 import opt.loss.Loss;
 import data.DataPoint;
 import data.DensePoint;
@@ -15,6 +16,9 @@ public class SAGA_Adapt extends SAGA {
     public String getName() {
     	if(as.isDoubling()){
     		return "ADAPTDoubling";
+    	}
+    	if(as instanceof Adapt_Strategy_iid){ 
+    		return "ADAPTIID";
     	}
     	return "ADAPTSAGA";
     }

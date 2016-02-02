@@ -10,7 +10,7 @@ public class Adapt_Strategy {
 	protected int subsamplesi = 0; 
 	protected ArrayList<Integer> indices; 
 	protected int T = 0; 
-	private boolean doubling;
+	protected boolean doubling;
 	protected int totalSize; 
     public ArrayList<Integer> getSubInd(){ 
     	ArrayList<Integer> out = new ArrayList<Integer>(); 
