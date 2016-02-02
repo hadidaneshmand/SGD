@@ -188,7 +188,7 @@ public class sgd_saga_adapt_efficient {
 		} 
 		else if(conf.lambdaType == Config.LambdaType.MEDIUM){ 
 			lambda_n = Math.pow(1.0/n, 2.0/3);
-			conf.logDir+="_large";
+			conf.logDir+="_medium";
 		}
 			
 		System.out.println("lambda:"+lambda_n);
