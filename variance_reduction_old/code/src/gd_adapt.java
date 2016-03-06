@@ -233,6 +233,7 @@ public class gd_adapt {
 		ArrayList<String> names = new ArrayList<String>(); 
 		names.add("gd");names.add("gd_steps");names.add("dyna-sgd");names.add("dyna-sgd_steps");names.add("lbfgs");names.add("lbfgs_steps"); names.add("dyna-lbfgs");names.add("dyna-lbfgs_steps"); 
 		Result result = new Result(names); 
+		Result result_test = new Result(names); 
 		for(int i=0;i<conf.nTrials;i++){ 
 			ArrayList<ArrayList<Double>> arr_results = new ArrayList<ArrayList<Double>>(); 
 			for(int j=0;j<names.size();j++){
@@ -245,18 +246,37 @@ public class gd_adapt {
 					arr_results.get(j).add(0.0); 
 				}
 			}
+			ArrayList<ArrayList<Double>> arr_test = new ArrayList<ArrayList<Double>>(); 
+			if(test_loss != null){ 
+				for(int j=0;j<names.size();j++){
+					arr_test.add(j,new ArrayList<Double>()); 
+					if(j%2 ==0){
+						FirstOrderOpt method = methods[(int)(j/2.0)]; 
+						arr_test.get(j).add(test_loss.getLoss(method.getParam())-test_opt); 
+					}
+					else{
+						arr_test.get(j).add(0.0);
+					}
+				}
+			}
 			for(int j=0;j<methods.length;j++){ 
 				FirstOrderOpt method = methods[j].clone_method(); 
 				int past_cg = 0; 
 				while((method.getNum_computed_gradients()/(1.0*n)) < conf.nPasses){ 
 					int new_cg = (int) (method.getNum_computed_gradients()/(0.5*n)) ;
-					System.out.println("======= "+names.get(2*j)+" =======");
 					method.Iterate(1);
 					if(new_cg!=past_cg){ 
 						double error = loss.getLoss(method.getParam())-loss_opt; 
-						System.out.println("loss["+method.getNum_computed_gradients()+"]="+error);
+						System.out.println("======= "+names.get(2*j)+" =======");
+						System.out.println("loss["+(method.getNum_computed_gradients()/(1.0*n))+"]="+error);
 						arr_results.get(j*2).add(error); 
 						arr_results.get(j*2+1).add(method.getNum_computed_gradients()/(1.0*n)); 
+						if(test_loss!=null){
+							double error_test = test_loss.getLoss(method.getParam())-test_opt; 
+							System.out.println("test_loss["+(method.getNum_computed_gradients()/(1.0*n))+"]="+error_test);
+							arr_test.get(j*2).add(error_test); 
+							arr_test.get(j*2+1).add(method.getNum_computed_gradients()/(1.0*n));
+						}
 					}
 				   past_cg = new_cg; 
 				}
@@ -264,7 +284,13 @@ public class gd_adapt {
 			for(int j=0;j<names.size();j++){ 
 				result.addresult(names.get(j), arr_results.get(j));
 			}
+			if(test_loss!=null){
+				for(int j=0;j<names.size();j++){ 
+					result_test.addresult(names.get(j), arr_test.get(j));
+				}
+			}
 		}
 		result.write2File(conf.logDir+"_lbfgs");
+		result_test.write2File(conf.logDir+"_lbfgs_test");
 	}
 }
