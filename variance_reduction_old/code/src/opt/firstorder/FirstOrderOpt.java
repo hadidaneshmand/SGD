@@ -7,8 +7,8 @@ import data.DensePoint;
 public abstract class FirstOrderOpt {
 	protected Loss loss; 
 	protected DataPoint w; 
-	protected double learning_rate; 
-	
+	protected double learning_rate = 0.8; 
+	protected double num_computed_gradients = 0;
 	public FirstOrderOpt(Loss loss) {
 		this.loss = loss;
 		w = new DensePoint(loss.getDimension());
@@ -16,6 +16,7 @@ public abstract class FirstOrderOpt {
 			w.set(i, 0.0);
 		}
 	}
+	
 	public abstract void Iterate(int stepNum);
 	public abstract String getName();
 	public void setParam(DataPoint w){ 
@@ -38,4 +39,13 @@ public abstract class FirstOrderOpt {
 		}
 		return w_past;
 	}
+
+	public double getNum_computed_gradients() {
+		return num_computed_gradients;
+	}
+
+	public void setNum_computed_gradients(double num_computed_gradients) {
+		this.num_computed_gradients = num_computed_gradients;
+	}
+	
 }

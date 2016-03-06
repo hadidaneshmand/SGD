@@ -1,3 +1,4 @@
+package backup;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -8,7 +9,6 @@ import opt.firstorder.SAGA;
 import opt.firstorder.SAGA_Adapt;
 import opt.firstorder.SGD;
 import opt.firstorder.SVRG_Streaming;
-import opt.loss.LeastSquares;
 import opt.loss.LogisticRegression;
 import opt.loss.Loss_static;
 import data.DataPoint;
@@ -16,7 +16,7 @@ import data.IOTools;
 import data.Result;
 
 
-public class AdaptSAGA_Real {
+public class exp_test {
 	public static List<DataPoint> getsubsample(List<DataPoint> in, List<Integer> indices){ 
 		List<DataPoint> out = new ArrayList<DataPoint>(); 
 		for(int i = 0;i<indices.size();i++){ 
@@ -25,13 +25,15 @@ public class AdaptSAGA_Real {
 		return out;
 	}
 	public static void main(String[] args) {
-		List<DataPoint> data = IOTools.readDataPointsFromFile( "data/covtype", 1);
+		List<DataPoint> data = IOTools.readDataPointsFromFile( "data/ijcnn1", 1);
+    	List<DataPoint> test_set = IOTools.readDataPointsFromFile( "data/ijcnn1", 1);
 		System.out.println("n="+data.size());
 		int nSamplesPerPass = 100;
 		int MaxItr = 500; 
-		int d =  47236;
+		int d = 300;
 		int n = data.size();
 		double L = 2; 
+		
 //		for(int i=0;i<n;i++){ 
 //			data.set(i, (DataPoint) data.get(i).multiply(10)); 
 //		}
@@ -40,10 +42,10 @@ public class AdaptSAGA_Real {
 				L = data.get(i).getNorm();
 			}
 		}
-		System.out.println("L:" + L);
+		System.out.println("L:"+L);
 		double lambda_n = 1.0/Math.sqrt(n);
 		double eta_n = 0.3/(L+lambda_n*n); 
-		Loss_static loss = new LeastSquares(data, d);
+		Loss_static loss = new LogisticRegression(data, d);
 		loss.setLambda(lambda_n);
 		SGD sgd = new SGD(loss);
 		sgd.setLearning_rate(0.1);
@@ -74,7 +76,7 @@ public class AdaptSAGA_Real {
 		methods[4] = svrg; 
 		int numrep = 1;
 		Result res = First_Order_Factory.RunExperiment(numrep,loss, methods, MaxItr, nSamplesPerPass, loss_opt);
-        res.write2File("outs/rcv1");
+        res.write2File("outs/ijcnn1_streaming");
 		
 	}
 }

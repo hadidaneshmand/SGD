@@ -1,3 +1,4 @@
+package backup;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
@@ -7,7 +8,6 @@ import java.util.Collections;
 import java.util.StringTokenizer;
 
 import opt.Adapt_Strategy;
-import opt.Adapt_Strategy_Lazy;
 import opt.config.Config;
 import opt.firstorder.FirstOrderOpt;
 import opt.firstorder.First_Order_Factory;
@@ -223,7 +223,7 @@ public class adapt_lambda {
 		}
 		System.out.println("loss_opt:"+loss_opt);
 		System.out.println("test_opt:"+test_opt);
-		Adapt_Strategy_Lazy as = new Adapt_Strategy_Lazy((int) (n), (int)2*d, true);
+		Adapt_Strategy as = new Adapt_Strategy((int) (n), (int)2*d, true);
 		Loss l = loss.clone_loss();
 		l.set_lambda(1.0/(2*d));
 		SAGA_Adapt saga_a = new SAGA_Adapt_Lambda(l, as,lambda_n,L);

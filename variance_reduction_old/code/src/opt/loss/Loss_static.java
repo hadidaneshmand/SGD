@@ -23,7 +23,7 @@ public abstract class Loss_static implements Loss {
 	public DataPoint getStochasticGradient(DataPoint w){
 		return getStochasticGradient(utils.getInstance().getGenerator().nextInt(data.size()), w);
 	}
-	public DataPoint getStochasticGradient(ArrayList<Integer> indices, DataPoint w){
+	public DataPoint getStochasticGradient(List<Integer> indices, DataPoint w){
 		DataPoint g = new DensePoint(getDimension());
 		for(int i=0;i<dimension;i++){ 
 			g.set(i, 0);

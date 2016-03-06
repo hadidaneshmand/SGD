@@ -1,3 +1,4 @@
+package backup;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
@@ -26,7 +27,7 @@ import data.Result;
 import data.SparsePoint;
 
 
-public class sgd_tuning {
+public class eta_sgd_lambda {
 	public static DataPoint[] data; 
 	public static DataPoint[] test_data = null; 
 	public static SAGA saga_opt; 

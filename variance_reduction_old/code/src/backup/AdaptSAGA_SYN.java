@@ -1,8 +1,8 @@
+package backup;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-import opt.AdaptSNew;
 import opt.Adapt_Strategy;
 import opt.firstorder.FirstOrderOpt;
 import opt.firstorder.SAGA;
@@ -113,7 +113,7 @@ public class AdaptSAGA_SYN {
 		Adapt_Strategy as_saga = new Adapt_Strategy(n, ((int)( 1.0/mu)), false);
 		Adapt_Strategy as_saga_fr = new Adapt_Strategy(n, ((int)( 1.0/mu)), false);
 		Adapt_Strategy as_saga_gd = new Adapt_Strategy(n, ((int)( 1.0/mu)), false);
-		AdaptSNew as_new = new AdaptSNew(n, ((int)( 1.0/mu)), false);
+		Adapt_Strategy as_new = new Adapt_Strategy(n, ((int)( 1.0/mu)), false);
 		SAGA_Adapt saga_adapt = new SAGA_Adapt(new LeastSquares(data, d), as_saga,mu,L);
 		SAGA_Adapt_WithoutMemory saga_memofree = new SAGA_Adapt_WithoutMemory(new LeastSquares(data, d), as_saga_fr,mu,L);
 		SGD sgd = new SGD(new LeastSquares(data, d));

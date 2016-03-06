@@ -181,7 +181,7 @@ public class sdg_constant_efficient {
 		}
 		L = 1.5;
 		
-		double lambda_n = 1.0/n;
+		double lambda_n = 0;
 		
 		double eta_n = 0.3/(L+lambda_n*n); 
 		if(conf.agressive_step){ 
@@ -202,7 +202,7 @@ public class sdg_constant_efficient {
 		double test_opt = 0; 
 		if(conf.opt_train == -1){
 			saga_opt = new SAGA(loss,eta_n); 
-			saga_opt.Iterate((int) (2*n*Math.log(n)));//TODO 
+			saga_opt.Iterate((int) (10*n*Math.log(n)));//TODO 
 //			opt.Iterate(1000);
 			System.out.println("After SAGA: Free memory (bytes): " + 
 					  Runtime.getRuntime().freeMemory()+ ",Total memory (bytes): " + 
@@ -223,6 +223,6 @@ public class sdg_constant_efficient {
 		}
 		System.out.println("loss_opt:"+loss_opt);
 		System.out.println("test_opt:"+test_opt);
-		First_Order_Factory_efficient.RunExperiment(numrep,loss, MaxItr, nSamplesPerPass, loss_opt,test_loss,test_opt,conf.logDir);
+		First_Order_Factory_efficient.RunExperiment(numrep,loss, 30, n, loss_opt,test_loss,test_opt,conf.logDir+"_sgdtest");
 	}
 }

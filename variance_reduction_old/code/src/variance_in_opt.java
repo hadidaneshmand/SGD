@@ -30,7 +30,6 @@ import data.SparsePoint;
 public class variance_in_opt {
 	public static DataPoint[] data; 
 	public static DataPoint[] test_data = null; 
-	public static SAGA saga_opt; 
 	public static void readDataPointsFromFile(String filename, int startIndex, int data_size, boolean is_test) {
 		int pos = 0; 
 		int neg = 0; 
@@ -191,34 +190,55 @@ public class variance_in_opt {
 		lambdas[5] = 0.000001; 
 		double eta = 0.2/L;
 		System.out.println("step size:"+eta);
+		ArrayList<String> names = new ArrayList<String>(); 
+		names.add("suboptimality"); 
+		names.add("distance2optimal");
+		names.add("variance");
+		names.add("steps");
+		Result result = new Result(names);
+		SAGA[] saga_opts = new SAGA[lambdas.length]; 
+		Loss_static_efficient[] losses = new Loss_static_efficient[lambdas.length]; 
 		for(int i=0;i<lambdas.length;i++){
-			double lambda_n = lambdas[i];
 			
-			double eta_n = 0.3/(L+lambda_n*n); 
-			Loss_static_efficient loss = new Logistic_Loss_efficient(data, d);
-			loss.setLambda(lambda_n);
-			if(conf.lossType ==  opt.config.Config.LossType.REGRESSION){
-				loss = new LeastSquares_efficient(data,d); 
-			}
-			saga_opt = new SAGA(loss,eta_n); 
-			saga_opt.Iterate((int) (10*n*Math.log(n)));//TODO
-			SGD sgd = new SGD(loss); 
-			sgd.setLearning_rate(eta);
-			sgd.setConstant_step_size(true);
-			sgd.Iterate(n*50);
-			List<DataPoint> grads = loss.getAllStochasticGradients(saga_opt.getParam()); 
-			double grad_var = 0; 
-			for(int j=0;j<grads.size();j++){ 
-				grad_var += grads.get(j).squaredNorm(); 
-			}
-			grad_var = grad_var/grads.size(); 
-			double dist2opt = loss.getLoss(sgd.getParam())- loss.getLoss(saga_opt.getParam()); 
-			System.out.println("lambda:"+lambda_n+",variance:"+grad_var+",suboptimality:"+dist2opt);
-			System.out.println("opt_empirical:"+loss.getLoss(saga_opt.getParam())+",pow(norm_2,2):"+saga_opt.getParam().squaredNorm()+",loss_sum:"+(loss.getLoss(saga_opt.getParam())-0.5*lambda_n*saga_opt.getParam().squaredNorm()));
-			if(test_loss!=null ){ 
-				System.out.println("opt_test:"+test_loss.getLoss(saga_opt.getParam()));
-			}
-			System.out.println("-----------------------");
+			losses[i] = new Logistic_Loss_efficient(data, d);
+			losses[i].set_lambda(lambdas[i]);
+			double eta_n = 0.3/(L+lambdas[i]*n); 
+			saga_opts[i] = new SAGA(losses[i], eta_n);
+			saga_opts[i].Iterate((int) (10*n*Math.log(n)));
+			System.out.println("saga["+i+"]: optimized!!"); 
 		}
+		for(int k=0;k<10;k++){
+			ArrayList<Double> lambdas_arr = new ArrayList<Double>(); 
+			ArrayList<Double> subopts = new ArrayList<Double>();
+			ArrayList<Double> dist2opts = new ArrayList<Double>(); 
+			ArrayList<Double> variances = new ArrayList<Double>(); 
+			for(int i=0;i<lambdas.length;i++){
+				double lambda_n = lambdas[i];
+				lambdas_arr.add(1.0/lambda_n); 
+				
+				SGD sgd = new SGD(losses[i]); 
+				sgd.setLearning_rate(eta);
+				sgd.setConstant_step_size(true);
+				sgd.Iterate(n*50);
+				List<DataPoint> grads = losses[i].getAllStochasticGradients(saga_opts[i].getParam()); 
+				double grad_var = 0; 
+				for(int j=0;j<grads.size();j++){ 
+					grad_var += grads.get(j).squaredNorm(); 
+				}
+				grad_var = grad_var/grads.size(); 
+				double dist2opt = sgd.getParam().squaredNormOfDifferenceTo(saga_opts[i].getParam()); 
+				dist2opts.add(dist2opt);
+				double subopt = losses[i].getLoss(sgd.getParam())-losses[i].getLoss(saga_opts[i].getParam()); 
+				subopts.add(subopt);
+				variances.add(grad_var); 
+				System.out.println("lambda:"+lambda_n+",variance:"+grad_var+",suboptimality:"+subopt+",dist2opt:"+dist2opt);
+				System.out.println("-----------------------");
+			}
+			result.addresult("steps", lambdas_arr);
+			result.addresult("variance", variances);
+			result.addresult("suboptimality",subopts);
+			result.addresult("distance2optimal",dist2opts);
+		}
+		result.write2File(conf.logDir+"_sgd_constant");
 	}
 }

@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.StringTokenizer;
 
 import opt.Adapt_Strategy;
+import opt.Adapt_Strategy_Alpha;
 import opt.Adapt_Strategy_iid;
 import opt.config.Config;
 import opt.firstorder.FirstOrderOpt;
@@ -201,7 +202,7 @@ public class saga_iid {
 			loss = new LeastSquares_efficient(data,d); 
 		}
 		loss.setLambda(lambda_n);
-		First_Order_Factory_efficient.methods_in = new FirstOrderOpt[2];
+		First_Order_Factory_efficient.methods_in = new FirstOrderOpt[4];
 		
 		
 		double loss_opt = 0; 
@@ -230,11 +231,17 @@ public class saga_iid {
 		System.out.println("loss_opt:"+loss_opt);
 		System.out.println("test_opt:"+test_opt);
 		Adapt_Strategy as = new Adapt_Strategy(n, (int) (L/lambda_n), false);
+		Adapt_Strategy as_alpha = new Adapt_Strategy_Alpha(n, (int) (L/lambda_n), false,0.5);
+		Adapt_Strategy as_alpha_2 = new Adapt_Strategy_Alpha(n, (int) (L/lambda_n), false,0.25);
+		SAGA_Adapt saga_alpha = new SAGA_Adapt(loss, as_alpha, lambda_n, L);
+		SAGA_Adapt saga_alpha_2 = new SAGA_Adapt(loss, as_alpha_2, lambda_n, L); 
 		SAGA_Adapt saga_a = new SAGA_Adapt(loss.clone_loss(), as,lambda_n,L);
 		First_Order_Factory_efficient.methods_in[0] = saga_a;
 		Adapt_Strategy_iid as_iid = new Adapt_Strategy_iid(n, (int) (L/lambda_n), false);
 		SAGA_Adapt saga_b = new SAGA_Adapt(loss.clone_loss(), as_iid, lambda_n, L);
 		First_Order_Factory_efficient.methods_in[1] = saga_b;
-		First_Order_Factory_efficient.RunExperiment(numrep,loss, MaxItr, nSamplesPerPass, loss_opt,test_loss,test_opt,conf.logDir+"_IIDTest_");
+		First_Order_Factory_efficient.methods_in[2] = saga_alpha; 
+		First_Order_Factory_efficient.methods_in[3] = saga_alpha_2; 
+		First_Order_Factory_efficient.RunExperiment(numrep,loss, MaxItr, nSamplesPerPass, loss_opt,test_loss,test_opt,conf.logDir+"_strategy");
 	}
 }

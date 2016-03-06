@@ -2,6 +2,7 @@ package opt.firstorder;
 
 
 import opt.Adapt_Strategy;
+import opt.Adapt_Strategy_Alpha;
 import opt.Adapt_Strategy_iid;
 import opt.loss.Loss;
 import data.DataPoint;
@@ -15,12 +16,15 @@ public class SAGA_Adapt extends SAGA {
     @Override
     public String getName() {
     	if(as.isDoubling()){
-    		return "ADAPTDoubling";
+    		return "dyna-alternating";
     	}
     	if(as instanceof Adapt_Strategy_iid){ 
-    		return "ADAPTIID";
+    		return "dyna-linear";
     	}
-    	return "ADAPTSAGA";
+    	if(as instanceof Adapt_Strategy_Alpha){
+    		return "dyna-"+((Adapt_Strategy_Alpha)as).getAlpha();   
+    	}
+    	return "dyna-SAGA";
     }
 	public SAGA_Adapt(Loss loss,Adapt_Strategy as, double mu, double L) {
 		super(loss, as.getSubsamplesi());

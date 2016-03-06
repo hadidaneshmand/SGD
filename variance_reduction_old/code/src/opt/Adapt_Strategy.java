@@ -5,7 +5,7 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Random;
 
-public class Adapt_Strategy {
+public class Adapt_Strategy implements SampleSizeStrategy{
 	
 	protected int subsamplesi = 0; 
 	protected ArrayList<Integer> indices; 
@@ -71,6 +71,10 @@ public class Adapt_Strategy {
 	}
 	public void setDoubling(boolean doubling) {
 		this.doubling = doubling;
+	}
+	@Override
+	public String getName() {
+		return "alternating";
 	}
 	
 

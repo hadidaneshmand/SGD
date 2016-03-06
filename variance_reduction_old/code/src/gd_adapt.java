@@ -5,24 +5,24 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.StringTokenizer;
 
-import opt.Adapt_Strategy;
-import opt.Adapt_Strategy_iid;
+import opt.Adapt_Strategy_Double_Full;
+import opt.Adapt_Strategy_GD;
 import opt.config.Config;
 import opt.firstorder.FirstOrderOpt;
-import opt.firstorder.First_Order_Factory_efficient;
+import opt.firstorder.GD;
+import opt.firstorder.GD_Adapt;
+import opt.firstorder.LBFGS;
 import opt.firstorder.SAGA;
-import opt.firstorder.SAGA_Adapt;
-import opt.firstorder.SGD;
-import opt.firstorder.SVRG_Streaming;
-import opt.firstorder.SVRG_Streaming_Main;
+import opt.loss.Adaptss_loss_efficient;
 import opt.loss.LeastSquares_efficient;
 import opt.loss.Logistic_Loss_efficient;
 import opt.loss.Loss_static_efficient;
 import data.DataPoint;
+import data.Result;
 import data.SparsePoint;
 
 
-public class sgd_saga_adapt_efficient {
+public class gd_adapt {
 	public static DataPoint[] data; 
 	public static DataPoint[] test_data = null; 
 	public static SAGA saga_opt; 
@@ -91,15 +91,6 @@ public class sgd_saga_adapt_efficient {
 		}
 		opt.config.Config conf = new opt.config.Config();
 		conf.parseFile(configFilename);
-
-//		conf.doubling = false; 
-//		conf.agressive_step = false; 
-//		conf.nPasses = 100; 
-//		conf.nSamplesPerPass = 100; 
-//		conf.c0 = 1000; 
-//		conf.dataPath = "data/covtype"; 
-//		conf.featureDim = 54; 
-//		conf.logDir = "outs/test"; 
 		System.out.println("Total memory (bytes): " + 
 				  Runtime.getRuntime().totalMemory());
 		System.out.println("agressive step size for saga: " + conf.agressive_step);
@@ -153,9 +144,6 @@ public class sgd_saga_adapt_efficient {
 			test_loss.setLambda(0);
 		}
 		
-		int numrep = conf.nTrials;
-		int nSamplesPerPass = conf.nSamplesPerPass; 
-	    int MaxItr = conf.nPasses; 
 	    int d = conf.featureDim; 
 	    System.out.println("dim:"+d);
 	    int n = data.length;
@@ -183,7 +171,7 @@ public class sgd_saga_adapt_efficient {
 		} 
 		else if(conf.lambdaType == Config.LambdaType.MEDIUM){ 
 			lambda_n = Math.pow(1.0/n, 2.0/3);
-			conf.logDir+="_medium";
+			conf.logDir+="_large";
 		}
 			
 		System.out.println("lambda:"+lambda_n);
@@ -196,17 +184,14 @@ public class sgd_saga_adapt_efficient {
 			loss = new LeastSquares_efficient(data,d); 
 		}
 		loss.setLambda(lambda_n);
-		SGD sgd = new SGD(loss);
-		sgd.setLearning_rate(lambda_n);
-		First_Order_Factory_efficient.methods_in = new FirstOrderOpt[10];
-		
-		First_Order_Factory_efficient.methods_in[0] = sgd;
-		First_Order_Factory_efficient.methods_in[1] = new SAGA(loss,eta_n);
+		double learning_rate = 0.8/L;
 		double loss_opt = 0; 
 		double test_opt = 0; 
 		if(conf.opt_train == -1){
 			saga_opt = new SAGA(loss,eta_n); 
-			saga_opt.Iterate((int) (2*n*Math.log(n)));//TODO 
+			saga_opt.setLearning_rate(learning_rate);
+			saga_opt.Iterate((int) (n*Math.log(n)*5));
+			
 //			opt.Iterate(1000);
 			System.out.println("After SAGA: Free memory (bytes): " + 
 					  Runtime.getRuntime().freeMemory()+ ",Total memory (bytes): " + 
@@ -215,8 +200,7 @@ public class sgd_saga_adapt_efficient {
 			if(test_loss!=null){
 				test_opt = test_loss.getLoss(saga_opt.getParam()); 
 			}
-			saga_opt = null; 
-			System.gc(); 
+			
 //			System.out.println("After calling GC: Free memory (bytes): " + 
 //					  Runtime.getRuntime().freeMemory()+ ",Total memory (bytes): " + 
 //							  Runtime.getRuntime().totalMemory());
@@ -227,54 +211,60 @@ public class sgd_saga_adapt_efficient {
 		}
 		System.out.println("loss_opt:"+loss_opt);
 		System.out.println("test_opt:"+test_opt);
-		Adapt_Strategy as = new Adapt_Strategy(n, (int) (L/lambda_n), false);
-		System.out.println("After Strategy: Free memory (bytes): " + 
-				  Runtime.getRuntime().freeMemory()+ ",Total memory (bytes): " + 
-						  Runtime.getRuntime().totalMemory());
-		SAGA_Adapt saga_a = new SAGA_Adapt(loss.clone_loss(), as,lambda_n,L);
-		System.out.println("After saga_a: Free memory (bytes): " + 
-				  Runtime.getRuntime().freeMemory()+ ",Total memory (bytes): " + 
-						  Runtime.getRuntime().totalMemory());
-		Adapt_Strategy as_doubl = new Adapt_Strategy(n, (int) (L/lambda_n), true);
-		First_Order_Factory_efficient.methods_in[2] = saga_a;
-		First_Order_Factory_efficient.methods_in[3] = new SAGA_Adapt(loss.clone_loss(), as_doubl, lambda_n, L);
-		int b = 3; 
-		int p = 2; 
-		double kappa = L/lambda_n; 
-		System.out.println("kapa:"+kappa);
-		
-		double eta = 1.0/(5*Math.pow(b, p+1));
-		if(n>= 100000){
-			eta = 1.0/(10*Math.pow(b, p+1)); 
+		FirstOrderOpt[] methods = new FirstOrderOpt[4];
+		GD gd = new GD(loss.clone_loss()); 
+		gd.setLearning_rate(learning_rate);
+		methods[0] = gd; 
+		Adapt_Strategy_GD as_gd = new Adapt_Strategy_GD(n,1.0*L/lambda_n);
+		Adaptss_loss_efficient adapt_loss = new Adaptss_loss_efficient(loss.clone_loss(), as_gd);
+		GD_Adapt gd_large = new GD_Adapt(adapt_loss,as_gd);
+		gd_large.setLearning_rate(learning_rate);
+		methods[1] = gd_large; 
+	    int m_lbfgs = 20; 
+		LBFGS lbfgs = new LBFGS(loss.clone_loss(),m_lbfgs); 
+		lbfgs.setLearning_rate(learning_rate);
+		methods[2] = lbfgs;
+		double kappa = (L/lambda_n);
+		System.out.println("kappa:"+kappa);
+		Adaptss_loss_efficient adaptloss = new Adaptss_loss_efficient(loss, new Adapt_Strategy_Double_Full(n, 2*d, 2));
+		LBFGS lbfgs_adapt = new LBFGS(adaptloss, m_lbfgs); 
+		lbfgs_adapt.setLearning_rate(learning_rate);
+		methods[3] = lbfgs_adapt; 
+		ArrayList<String> names = new ArrayList<String>(); 
+		names.add("gd");names.add("gd_steps");names.add("dyna-sgd");names.add("dyna-sgd_steps");names.add("lbfgs");names.add("lbfgs_steps"); names.add("dyna-lbfgs");names.add("dyna-lbfgs_steps"); 
+		Result result = new Result(names); 
+		for(int i=0;i<conf.nTrials;i++){ 
+			ArrayList<ArrayList<Double>> arr_results = new ArrayList<ArrayList<Double>>(); 
+			for(int j=0;j<names.size();j++){
+				arr_results.add(j, new ArrayList<Double>());
+				if(j%2==0){
+					FirstOrderOpt method = methods[(int)(j/2.0)]; 
+					arr_results.get(j).add(loss.getLoss(method.getParam())-loss_opt); 
+				}
+				else{
+					arr_results.get(j).add(0.0); 
+				}
+			}
+			for(int j=0;j<methods.length;j++){ 
+				FirstOrderOpt method = methods[j].clone_method(); 
+				int past_cg = 0; 
+				while((method.getNum_computed_gradients()/(1.0*n)) < conf.nPasses){ 
+					int new_cg = (int) (method.getNum_computed_gradients()/(0.5*n)) ;
+					System.out.println("======= "+names.get(2*j)+" =======");
+					method.Iterate(1);
+					if(new_cg!=past_cg){ 
+						double error = loss.getLoss(method.getParam())-loss_opt; 
+						System.out.println("loss["+method.getNum_computed_gradients()+"]="+error);
+						arr_results.get(j*2).add(error); 
+						arr_results.get(j*2+1).add(method.getNum_computed_gradients()/(1.0*n)); 
+					}
+				   past_cg = new_cg; 
+				}
+			}
+			for(int j=0;j<names.size();j++){ 
+				result.addresult(names.get(j), arr_results.get(j));
+			}
 		}
-		System.out.println("eta:"+eta);
-		int k_0 = (int) kappa;
-		System.out.println("k_0:"+k_0);
-		int m = (int) (kappa/(eta)); 
-//		if(conf.lambdaType == Config.LambdaType.MEDIUM){
-//			eta = eta*2.0;
-//			m = (int) (m/3.0); 
-//		}
-//		if(conf.lambdaType == Config.LambdaType.SMALL){
-//			eta = eta*4.0; 
-//			m = (int) (m/6.0); 
-//		}
-		System.out.println("m:"+m);
-		SVRG_Streaming_Main svrg = new SVRG_Streaming_Main(loss.clone_loss(),eta, k_0, b,(int) (m/5.0)); 
-		First_Order_Factory_efficient.methods_in[4] = svrg; 
-		SGD const_sgd = new SGD(loss.clone_loss()); 
-		const_sgd.setLearning_rate(0.05);
-		const_sgd.setConstant_step_size(true);
-		First_Order_Factory_efficient.methods_in[5] = const_sgd; 
-		SGD const_sgd_small = new SGD(loss.clone_loss());
-		const_sgd_small.setLearning_rate(0.005);
-		const_sgd_small.setConstant_step_size(true);
-		First_Order_Factory_efficient.methods_in[6] = const_sgd_small; 
-		SVRG_Streaming svrg2 = new SVRG_Streaming(loss.clone_loss(),eta, k_0, b,m); 
-		First_Order_Factory_efficient.methods_in[7] = svrg2;
-		Adapt_Strategy_iid as_iid = new Adapt_Strategy_iid(n, (int) (L/lambda_n), false);
-		First_Order_Factory_efficient.methods_in[8] = new SAGA_Adapt(loss.clone_loss(), as_iid, lambda_n, L);
-		First_Order_Factory_efficient.methods_in[9] = new SAGA_Adapt(loss.clone_loss(), new Adapt_Strategy(n, (int) (n/(1.0*Math.log(n))), false), lambda_n, L);
-		First_Order_Factory_efficient.RunExperiment(numrep,loss, MaxItr, nSamplesPerPass, loss_opt,test_loss,test_opt,conf.logDir+"_iid_included");
+		result.write2File(conf.logDir+"_lbfgs");
 	}
 }
