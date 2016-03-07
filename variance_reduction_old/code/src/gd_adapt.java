@@ -272,7 +272,7 @@ public class gd_adapt {
 						arr_results.get(j*2).add(error); 
 						arr_results.get(j*2+1).add(method.getNum_computed_gradients()/(1.0*n)); 
 						if(test_loss!=null){
-							double error_test = test_loss.getLoss(method.getParam())-test_opt; 
+							double error_test = test_loss.getLoss(method.getParam()); 
 							System.out.println("test_loss["+(method.getNum_computed_gradients()/(1.0*n))+"]="+error_test);
 							arr_test.get(j*2).add(error_test); 
 							arr_test.get(j*2+1).add(method.getNum_computed_gradients()/(1.0*n));
