@@ -186,10 +186,8 @@ public class gd_adapt {
 		loss.setLambda(lambda_n);
 		double learning_rate = 0.8/L;
 		double loss_opt = 0; 
-		double test_opt = 0; 
 		if(conf.opt_train == -1){
 			saga_opt = new SAGA(loss,eta_n); 
-			saga_opt.setLearning_rate(learning_rate);
 			saga_opt.Iterate((int) (n*Math.log(n)*5));
 			
 //			opt.Iterate(1000);
@@ -197,9 +195,6 @@ public class gd_adapt {
 					  Runtime.getRuntime().freeMemory()+ ",Total memory (bytes): " + 
 							  Runtime.getRuntime().totalMemory());
 			loss_opt = loss.getLoss(saga_opt.getParam()); 
-			if(test_loss!=null){
-				test_opt = test_loss.getLoss(saga_opt.getParam()); 
-			}
 			
 //			System.out.println("After calling GC: Free memory (bytes): " + 
 //					  Runtime.getRuntime().freeMemory()+ ",Total memory (bytes): " + 
@@ -207,17 +202,15 @@ public class gd_adapt {
 		} 
 		else{ 
 			loss_opt = conf.opt_train; 
-			test_opt = conf.opt_test;
 		}
 		System.out.println("loss_opt:"+loss_opt);
-		System.out.println("test_opt:"+test_opt);
 		FirstOrderOpt[] methods = new FirstOrderOpt[4];
 		GD gd = new GD(loss.clone_loss()); 
 		gd.setLearning_rate(learning_rate);
 		methods[0] = gd; 
 		Adapt_Strategy_GD as_gd = new Adapt_Strategy_GD(n,1.0*L/lambda_n);
 		Adaptss_loss_efficient adapt_loss = new Adaptss_loss_efficient(loss.clone_loss(), as_gd);
-		GD_Adapt gd_large = new GD_Adapt(adapt_loss,as_gd);
+		GD gd_large = new GD(adapt_loss);
 		gd_large.setLearning_rate(learning_rate);
 		methods[1] = gd_large; 
 	    int m_lbfgs = 20; 
@@ -252,7 +245,7 @@ public class gd_adapt {
 					arr_test.add(j,new ArrayList<Double>()); 
 					if(j%2 ==0){
 						FirstOrderOpt method = methods[(int)(j/2.0)]; 
-						arr_test.get(j).add(test_loss.getLoss(method.getParam())-test_opt); 
+						arr_test.get(j).add(test_loss.getLoss(method.getParam())); 
 					}
 					else{
 						arr_test.get(j).add(0.0);
@@ -262,7 +255,7 @@ public class gd_adapt {
 			for(int j=0;j<methods.length;j++){ 
 				FirstOrderOpt method = methods[j].clone_method(); 
 				int past_cg = 0; 
-				while((method.getNum_computed_gradients()/(1.0*n)) < conf.nPasses){ 
+				while((method.getNum_computed_gradients()/(1.0*n)) < 5){  
 					int new_cg = (int) (method.getNum_computed_gradients()/(0.5*n)) ;
 					method.Iterate(1);
 					if(new_cg!=past_cg){ 

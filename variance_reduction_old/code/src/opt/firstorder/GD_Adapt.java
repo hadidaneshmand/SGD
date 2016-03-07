@@ -22,7 +22,7 @@ public class GD_Adapt extends GD {
 	    		ArrayList<Integer> indices = (ArrayList<Integer>) as.getSubInd();
 	    		num_computed_gradients+=indices.size();
 	    		DataPoint g = loss.getStochasticGradient(indices, w);
-	    		System.out.println("size:"+indices.size());
+//	    		System.out.println("size:"+indices.size());
 	    		w = (DataPoint) w.subtract(g.multiply(learning_rate));
 	    }
 		  

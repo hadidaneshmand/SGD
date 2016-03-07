@@ -11,7 +11,7 @@
 % datasizes = [49990,20242,581012,49749,5*10^6,32561,72309];
 filenames = {'a9a_iid_included'};
 outfilenames = {'a9a_iid_included'}; 
-datasizes = [3*10^4];
+datasizes = [32561];
 for ii=1:length(filenames)
     for kk =1:2
     if(kk ==1)
@@ -42,8 +42,13 @@ for ii=1:length(filenames)
     types = {'v-','^-','o-','+-','s-','d-','+-','->','<-','--'};
     t = res{length(res)}; 
     t = mean(t,1); 
+    t = t./datasize;
     fig = figure();
-    inds = 2:length(t); 
+    if(kk==1)
+     inds = 1:length(t);
+    else 
+     inds = 2:length(t);
+    end
     if(length(t)>40 && length(t)<60)
       inds = (rem(inds,2) == 1)
     end
@@ -81,14 +86,15 @@ for ii=1:length(filenames)
        end
        series = res{i};
        mean_s = mean(series,1);
-       min_t = min(mean_s); 
-       max_t = max(mean_s); 
+       min_t = min(mean_s(inds)); 
+       max_t = max(mean_s(inds)); 
        if(min_t<min_e)
           min_e = min_t;
        end
        if(max_t>max_e)
           max_e = max_t;
        end
+       
        if(kk == 1)
         p = plot(t(inds),mean_s(inds),types{i},'Color',colors{i},'LineWidth',1.2,'MarkerSize',6);  
         %set(gca,'YScale','log2');
@@ -102,10 +108,10 @@ for ii=1:length(filenames)
     %set(gca, 'visible', 'off');
     if(kk==1)
      vertical_y = min_e-0.5:0.01:max_e+0.5; 
-     vertical_x = ones(size(vertical_y))*datasize;
+     vertical_x = ones(size(vertical_y));
     else  
-     vertical_y = min_e-0.05:0.001:max_e+0.05;
-     vertical_x = ones(size(vertical_y))*datasize;
+     vertical_y = min_e-0.01:0.001:max_e+0.01;
+     vertical_x = ones(size(vertical_y));
     end
     p = plot(vertical_x,vertical_y,'--','Color',[.7 .5 0],'LineWidth',1.2);
     % set(p, 'visible', 'off');
