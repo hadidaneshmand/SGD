@@ -9,9 +9,9 @@
 % filenames = {'ijcnn_iid_included','rcv1_iid_included','covtype_iid_included','w8a_iid_included','SUSY_iid_included','a9a_IIDTest_','rsim_iid_included'};
 % outfilenames = {'ijcnn1_iid','rcv1_iid','covtype_iid','w8a_iid','susy_iid','a9a_iid','rsim_iid'}; 
 % datasizes = [49990,20242,581012,49749,5*10^6,32561,72309];
-filenames = {'covtype_iid_included'};
-outfilenames = {'covtype_iid_included'}; 
-datasizes = [5*10^5];
+filenames = {'a9a_iid_included'};
+outfilenames = {'a9a_iid_included'}; 
+datasizes = [3*10^4];
 for ii=1:length(filenames)
     for kk =1:2
     if(kk ==1)
@@ -43,7 +43,7 @@ for ii=1:length(filenames)
     t = res{length(res)}; 
     t = mean(t,1); 
     fig = figure();
-    inds = 1:length(t); 
+    inds = 2:length(t); 
     if(length(t)>40 && length(t)<60)
       inds = (rem(inds,2) == 1)
     end
@@ -89,14 +89,25 @@ for ii=1:length(filenames)
        if(max_t>max_e)
           max_e = max_t;
        end
-       p = plot(t(inds),mean_s(inds),types{i},'Color',colors{i},'LineWidth',1.2,'MarkerSize',6);  
+       if(kk == 1)
+        p = plot(t(inds),mean_s(inds),types{i},'Color',colors{i},'LineWidth',1.2,'MarkerSize',6);  
+        %set(gca,'YScale','log2');
+       else
+        p = plot(t(inds),mean_s(inds),types{i},'Color',colors{i},'LineWidth',1.2,'MarkerSize',6);  
+        %set(gca,'YScale','log2');
+       end
        hold on; 
      %  set(p, 'visible', 'off');
     end
     %set(gca, 'visible', 'off');
-    vertical_y = min_e-0.5:0.01:max_e+0.5; 
-    vertical_x = ones(size(vertical_y))*datasize;
-    p = plot(vertical_x,vertical_y,'--','Color',[.7 .5 0],'LineWidth',1.2)
+    if(kk==1)
+     vertical_y = min_e-0.5:0.01:max_e+0.5; 
+     vertical_x = ones(size(vertical_y))*datasize;
+    else  
+     vertical_y = min_e-0.05:0.001:max_e+0.05;
+     vertical_x = ones(size(vertical_y))*datasize;
+    end
+    p = plot(vertical_x,vertical_y,'--','Color',[.7 .5 0],'LineWidth',1.2);
     % set(p, 'visible', 'off');
     names_1 = names(inds_name>0);
     legend(names_1,'fontsize',12,'Location','northeast');

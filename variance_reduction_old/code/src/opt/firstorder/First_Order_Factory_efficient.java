@@ -47,8 +47,7 @@ public class First_Order_Factory_efficient {
 				}
 				
 				for(int i=0;i<methods_in.length;i++){ 
-					double error = Math.abs(test_loss.getLoss(DensePoint.zero(test_loss.getDimension()))- loss_test_opt); 
-					error = Math.log(error)/Math.log(2); 
+					double error = (test_loss.getLoss(DensePoint.zero(test_loss.getDimension()))); 
 					convs_test.get(i).add(error);
 				}
 				System.out.println("test:"+test_loss.getLoss(DensePoint.zero(loss.getDimension())));
