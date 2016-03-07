@@ -64,14 +64,13 @@ public class First_Order_Factory_efficient {
 						System.out.println("method name:"+method.getName());
 						method.Iterate(step);
 						System.out.println("finished iterations");
-						double error = Math.abs(loss.getLoss(method.getParam())-opt_value); 
+						double error = (loss.getLoss(method.getParam())-opt_value); 
 						System.out.println("error:"+error);
 						error = Math.log(error)/Math.log(2); 
 						convs.get(i).add(error); 
 						System.out.println("-------------------");
 						if(test_loss!= null){ 
-							double test_error =Math.abs(test_loss.getLoss(method.getParam())-loss_test_opt);
-							test_error = Math.log(test_error)/Math.log(2); 
+							double test_error =(test_loss.getLoss(method.getParam()));
 							System.out.println("test_error:"+test_error);
 							convs_test.get(i).add(test_error);
 						}
