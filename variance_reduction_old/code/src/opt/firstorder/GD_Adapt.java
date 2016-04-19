@@ -12,7 +12,7 @@ public class GD_Adapt extends GD {
 	public GD_Adapt(Loss loss, SampleSizeStrategy as) {
 		super(loss);
 		this.as = as;
-		setLearning_rate(0.1);
+		setStepSize(0.1);
 	}
 	
 	@Override
@@ -21,18 +21,18 @@ public class GD_Adapt extends GD {
 	    	    as.Tack(); 
 	    		ArrayList<Integer> indices = (ArrayList<Integer>) as.getSubInd();
 	    		num_computed_gradients+=indices.size();
-	    		DataPoint g = loss.getStochasticGradient(indices, w);
+	    		DataPoint g = getLoss().getStochasticGradient(indices, w);
 //	    		System.out.println("size:"+indices.size());
-	    		w = (DataPoint) w.subtract(g.multiply(learning_rate));
+	    		w = (DataPoint) w.subtract(g.multiply(step_size));
 	    }
 		  
 
 	}
 	@Override
 	public FirstOrderOpt clone_method() {
-		GD_Adapt out = new GD_Adapt(loss.clone_loss(), as.clone_strategy());
-		out.setParam(this.cloneParam());
-		out.setLearning_rate(this.learning_rate);
+		GD_Adapt out = new GD_Adapt(getLoss().clone_loss(), as.clone_strategy());
+		out.setParam(this.clone_w());
+		out.setStepSize(this.step_size);
 		out.num_computed_gradients = this.num_computed_gradients; 
 		return out;
 	}

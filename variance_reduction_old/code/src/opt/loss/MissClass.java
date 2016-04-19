@@ -10,7 +10,7 @@ public class MissClass extends Logistic_Loss {
 		super(data, dimension);
 	}
 	@Override
-	public double getLoss(DataPoint w) {
+	public double computeLoss(DataPoint w) {
 		double out = 0.0; 
 		for(int i=0;i<data.size();i++){ 
 			DataPoint di = data.get(i);

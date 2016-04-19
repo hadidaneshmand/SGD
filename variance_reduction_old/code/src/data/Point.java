@@ -1,5 +1,7 @@
 package data;
 
+import org.ejml.simple.SimpleMatrix;
+
 /**
  * Abstract class for everything we need to do with a geometric point.
  * Every point should be iterable on its index set of non-zero features.
@@ -27,6 +29,10 @@ public abstract class Point implements Iterable<Double> {
 	}	
 	
 	public abstract Matrix crossProduct(Point b, int featureDim);
+	public SimpleMatrix crossProduct_sm(Point b, int featureDim){
+		Matrix m = crossProduct(b, featureDim); 
+		return m.m;
+	}
 	
 	public abstract SparseMatrix crossProduct_sparse(Point b, int featureDim);
 	

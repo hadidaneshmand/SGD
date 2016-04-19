@@ -169,11 +169,12 @@ public class Matrix {
         System.out.println("n="+n);
         for (int i = 0; i < this.N; i++)  { // go over columns first
         	int dp = 0;
-        	System.out.println("i="+i);
-        	for (int j = 0; j < n; ++j) { // go over rows next
-        		System.out.println(A.get(i,j));
+//        	System.out.println("i="+i);
+        	for (int j = 0; j < n; j++) { // go over rows next
+//        		System.out.println("p["+j+"]="+p.get(j));
         		dp += A.get(i,j)*p.get(j);
         	}
+//        	System.out.println("d["+i+"]"+dp);
         	output.set(i, dp);
         }
         return output;

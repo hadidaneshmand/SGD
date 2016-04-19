@@ -44,5 +44,6 @@ public class Adapt_Strategy_GD extends IndexStrategy {
 		return "agd";
 	}
 	
+	
 
 }

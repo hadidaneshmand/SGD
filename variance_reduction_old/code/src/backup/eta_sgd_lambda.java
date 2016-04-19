@@ -20,7 +20,7 @@ import opt.firstorder.SVRG_Streaming_Main;
 import opt.loss.LeastSquares_efficient;
 import opt.loss.Logistic_Loss_efficient;
 import opt.loss.Loss;
-import opt.loss.Loss_static_efficient;
+import opt.loss.FirstOrderEfficient;
 import opt.loss.MissClass_efficient;
 import data.DataPoint;
 import data.Result;
@@ -127,7 +127,7 @@ public class eta_sgd_lambda {
 		}
 		data = new DataPoint[conf.c0]; 
 		readDataPointsFromFile( conf.dataPath, 1,conf.c0,false);
-		Loss_static_efficient test_loss = null; 
+		FirstOrderEfficient test_loss = null; 
 		
 		if(conf.testFile != null && !conf.testFile.isEmpty() ){ 
 			test_data = new DataPoint[conf.ntest]; 
@@ -187,22 +187,22 @@ public class eta_sgd_lambda {
 		if(conf.agressive_step){ 
 			eta_n = 1.0/(3*L);
 		}
-		Loss_static_efficient loss = new Logistic_Loss_efficient(data, d);
+		FirstOrderEfficient loss = new Logistic_Loss_efficient(data, d);
 		if(conf.lossType ==  opt.config.Config.LossType.REGRESSION){
 			loss = new LeastSquares_efficient(data,d); 
 		}
 		loss.setLambda(lambda_n);
 		SGD sgd = new SGD(loss);
-		sgd.setLearning_rate(lambda_n);
+		sgd.setStepSize(lambda_n);
 		First_Order_Factory_efficient.methods_in = new FirstOrderOpt[4];
 		
 		First_Order_Factory_efficient.methods_in[0] = sgd;
 		SGD sgd_2 = new SGD(loss);
-		sgd_2.setLearning_rate(lambda_n);
+		sgd_2.setStepSize(lambda_n);
 		SGD sgd_3 = new SGD(loss); 
-		sgd_3.setLearning_rate(lambda_n);
+		sgd_3.setStepSize(lambda_n);
 		SGD sgd_4 = new SGD(loss); 
-		sgd_4.setLearning_rate(lambda_n);
+		sgd_4.setStepSize(lambda_n);
 		sgd_2.setEta(1.0);
 		sgd_3.setEta(2.0);
 		sgd_4.setEta(10.0);
@@ -220,9 +220,9 @@ public class eta_sgd_lambda {
 			System.out.println("After SAGA: Free memory (bytes): " + 
 					  Runtime.getRuntime().freeMemory()+ ",Total memory (bytes): " + 
 							  Runtime.getRuntime().totalMemory());
-			loss_opt = loss.getLoss(saga_opt.getParam()); 
+			loss_opt = loss.computeLoss(saga_opt.getParam()); 
 			if(test_loss!=null){
-				test_opt = test_loss.getLoss(saga_opt.getParam()); 
+				test_opt = test_loss.computeLoss(saga_opt.getParam()); 
 			}
 			saga_opt = null; 
 			System.gc(); 
@@ -236,7 +236,6 @@ public class eta_sgd_lambda {
 		}
 		System.out.println("loss_opt:"+loss_opt);
 		System.out.println("test_opt:"+test_opt);
-		
-		First_Order_Factory_efficient.RunExperiment(numrep,loss, MaxItr, nSamplesPerPass, loss_opt,test_loss,test_opt,conf.logDir+"_sgd_tuning");
+		First_Order_Factory_efficient.run_experiment(numrep,loss, MaxItr, nSamplesPerPass, loss_opt,test_loss,conf.logDir+"_sgd_tuning",L);
 	}
 }

@@ -11,9 +11,9 @@ public class SAGA extends VarianceReducedSG{
 	protected int nGradients;
 	public SAGA(Loss loss, double learning_rate) {
 		super(loss,learning_rate);
-		this.setLearning_rate(learning_rate); 
+		this.setStepSize(learning_rate); 
 		// allocate memory to store one gradient per datapoint
-		phi = new DensePoint[loss.getDataSize()];
+		phi = new DataPoint[loss.getDataSize()];
 	    nGradients	 = 0; //number of gradients stored so far
 		// average gradient
 		avg_phi = new DensePoint_efficient(loss.getDimension());
@@ -49,31 +49,35 @@ public class SAGA extends VarianceReducedSG{
 		// update average phi gradient
 		avg_phi = (DensePoint_efficient) avg_phi.add(stochasticGradient);
 		// store gradient in table phi
+//		System.out.println("phi:"+phi+",index:"+index+",datasize:"+loss.getDataSize());
 		phi[index] = stochasticGradient;
 		
 	}
 
 
 	@Override
-	public String getName() {
-		return "SAGA";
+	public void setName() {
+		name = "saga"; 
 	}
 
 
 	@Override
 	public FirstOrderOpt clone_method() {
-		SAGA out = new SAGA(loss.clone_loss(), getLearning_rate());
-		out.phi = new DensePoint[loss.getDataSize()];
-		for(int i=0;i<loss.getDataSize();i++){
+		SAGA out = new SAGA(getLoss().clone_loss(), getStepSize());
+		out.phi = new DataPoint[getLoss().getDataSize()];
+		for(int i=0;i<getLoss().getDataSize();i++){
 			out.phi[i] = phi[i];
 		}
-		out.avg_phi = new DensePoint_efficient(loss.getDimension());
-		for(int i=0;i<loss.getDimension();i++){ 
+		out.avg_phi = new DensePoint_efficient(getLoss().getDimension());
+		for(int i=0;i<getLoss().getDimension();i++){ 
 			out.avg_phi.set(i, avg_phi.get(i));
 		}
-		out.w = cloneParam(); 
+		out.w = clone_w(); 
 		
 		return out;
 	}
+
+
+	
 	
 }

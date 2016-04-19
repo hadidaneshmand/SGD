@@ -58,7 +58,7 @@ public class Hinge_loss extends Loss_static{
 	}
 
 	@Override
-	public double getLoss(DataPoint w) {
+	public double computeLoss(DataPoint w) {
 		double loss = 0; 
 		for(int i=0;i<getDataSize();i++){
 			DataPoint p = data.get(i); 

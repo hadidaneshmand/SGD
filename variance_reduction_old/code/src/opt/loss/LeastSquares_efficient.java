@@ -2,9 +2,13 @@ package opt.loss;
 
 import java.util.Iterator;
 
-import data.DataPoint;
+import org.ejml.data.Matrix64F;
+import org.ejml.simple.SimpleMatrix;
 
-public class LeastSquares_efficient extends Loss_static_efficient {
+import data.DataPoint;
+import data.Matrix;
+
+public class LeastSquares_efficient extends SecondOrderEfficientLoss {
 
 	public LeastSquares_efficient(DataPoint[] data, int dimension) {
 		super(data, dimension);
@@ -12,7 +16,7 @@ public class LeastSquares_efficient extends Loss_static_efficient {
 
 	@Override
 	public Loss clone_loss() {
-		LeastSquares_efficient out = new LeastSquares_efficient(data, getDimension()); 
+		LeastSquares_efficient out = new LeastSquares_efficient(getData(), getDimension()); 
 		out.setLambda(lambda);
 		return out;
 	}
@@ -20,30 +24,53 @@ public class LeastSquares_efficient extends Loss_static_efficient {
 	@Override
 	public DataPoint getStochasticGradient(int index, DataPoint w) {
 		// use squared loss: (w^T*x - y)^2 + (lambda/2 * ||w||^2)
-		DataPoint p = data[index]; 
-		DataPoint g = null;
+		DataPoint p = getData()[index]; 
 		double y = p.getLabel();
-		g = (DataPoint) p.multiply(2 * (w.scalarProduct(p) - y));
-		g = (DataPoint) g.add(w.multiply(lambda)); // add regularizer			
+		DataPoint g = (DataPoint) p.multiply(2 * (w.scalarProduct(p) - y));
+//		System.out.println("least_norm:"+w.getNorm());
+		g = (DataPoint) g.add(w.multiply(lambda)); // add regularizer		
+		
 		return g;
 	}
 
 	@Override
-	public double getLoss(DataPoint w) {
+	public double computeLoss(DataPoint w) {
 		double loss = 0;
-		if(data == null) {
+		if(getData() == null) {
 			return -1;
 		}
 		// use squared loss: (1/n) * (w^T*x - y)^2
-		for (int i=0;i<data.length;i++) {
-			DataPoint p = data[i]; 
+		for (int i=0;i<getData().length;i++) {
+			DataPoint p = getData()[i]; 
 			double y = p.getLabel();
 			double t = (w.scalarProduct(p) - y);
 			loss += t*t;
 		}
-		loss /= data.length;
+		loss /= getData().length;
 		loss += (lambda/2.0)*w.squaredNorm();
 		return loss;
+	}
+
+//	@Override
+//	public SimpleMatrix getHessian(DataPoint w) {
+//		SimpleMatrix A = new SimpleMatrix(getDataSize(),getDimension()); 
+//		for(int i=0;i<getDataSize();i++){
+//			for(int j=0;j<getDimension();j++){ 
+//				A.set(i, j, getData()[i].get(j));
+//			}
+//		}
+//		SimpleMatrix out = A.transpose().mult(A);
+//		out = out.scale(2.0/getDataSize()); 
+//		
+//		SimpleMatrix I = SimpleMatrix.identity(getDimension());
+//		out = out.plus(I.scale(lambda)); 
+//		return out;
+//	}
+
+	@Override
+	public SimpleMatrix getHessian_exlusive_regularizer(DataPoint w, int ind) {
+		DataPoint p = getData()[ind]; 
+		return  p.crossProduct_sm(p, getDimension()).scale(2.0); 
 	}
 
 }

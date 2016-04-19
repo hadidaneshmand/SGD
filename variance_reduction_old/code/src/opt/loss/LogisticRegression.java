@@ -28,7 +28,7 @@ public class LogisticRegression extends Logistic_Loss{
 	}
 
 	@Override
-	public double getLoss(DataPoint w) {
+	public double computeLoss(DataPoint w) {
 		double loss = 0;
 		if(getData() == null) {
 			return -1;

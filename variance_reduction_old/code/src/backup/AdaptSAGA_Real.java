@@ -47,14 +47,14 @@ public class AdaptSAGA_Real {
 		Loss_static loss = new LeastSquares(data, d);
 		loss.setLambda(lambda_n);
 		SGD sgd = new SGD(loss);
-		sgd.setLearning_rate(0.1);
+		sgd.setStepSize(0.1);
 		sgd.setConstant_step_size(true);
 		FirstOrderOpt[] methods = new FirstOrderOpt[5];
 		SAGA opt = new SAGA(loss,eta_n); 
 		opt.Iterate((int) (2*n*Math.log(n)));
 		methods[0] = sgd;
 		methods[1] = new SAGA(loss,eta_n);
-		double loss_opt = loss.getLoss(opt.getParam()); 
+		double loss_opt = loss.computeLoss(opt.getParam()); 
 		System.out.println("loss_opt:"+loss_opt);
 		Adapt_Strategy as = new Adapt_Strategy(n, (int) (L/lambda_n), false);
 		SAGA_Adapt saga_a = new SAGA_Adapt(loss.clone_loss(), as,lambda_n,L);

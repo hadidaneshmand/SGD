@@ -28,7 +28,7 @@ public class SVRG_Streaming extends FirstOrderOpt{
 	}
 	public SVRG_Streaming(Loss loss,double learning_rate,int samplesize, int b,int m) {
 		super(loss);
-		setLearning_rate(learning_rate);
+		setStepSize(learning_rate);
 		this.samplesize = samplesize;
 		avg = DensePoint.zero(loss.getDimension());
 		phi = new DataPoint[loss.getDataSize()];
@@ -38,11 +38,11 @@ public class SVRG_Streaming extends FirstOrderOpt{
 		this.m = m; 
 	}
 	public void computeAvg(int size){ 
-		avg = DensePoint.zero(loss.getDimension());
-		phi = new DataPoint[loss.getDataSize()];
+		avg = DensePoint.zero(getLoss().getDimension());
+		phi = new DataPoint[getLoss().getDataSize()];
 		for(int i=0;i<size;i++){ 
-			int rind = utils.getInstance().getGenerator().nextInt(loss.getDataSize()); 
-			DataPoint p = loss.getStochasticGradient(rind, w); 
+			int rind = utils.getInstance().getGenerator().nextInt(getLoss().getDataSize()); 
+			DataPoint p = getLoss().getStochasticGradient(rind, w); 
 			phi[rind] = p; 
 			avg = (DataPoint) avg.add(p);
 		}
@@ -56,18 +56,18 @@ public class SVRG_Streaming extends FirstOrderOpt{
 			if(state == 0 && T+1 == samplesize){ 
 				computeAvg(samplesize);
 				m_hat = utils.getInstance().getGenerator().nextInt(m);
-				samplesize = Math.min(b*samplesize,loss.getDataSize()); 
+				samplesize = Math.min(b*samplesize,getLoss().getDataSize()); 
 				updatestate();
 			}
             else if(state == 1 && T <= m_hat){ 
-            	int rind = utils.getInstance().getGenerator().nextInt(loss.getDataSize()); 
+            	int rind = utils.getInstance().getGenerator().nextInt(getLoss().getDataSize()); 
 //            	rind = indecis.get(rind);
-            	DataPoint p = loss.getStochasticGradient(rind, w); 
+            	DataPoint p = getLoss().getStochasticGradient(rind, w); 
     			if(phi[rind]!=null){
     				p = (DataPoint) p.subtract(phi[rind]);
     				p = (DataPoint) p.add(avg);
     			}
-    			p = (DataPoint) p.multiply(-1.0*getLearning_rate());
+    			p = (DataPoint) p.multiply(-1.0*getStepSize());
     			w = (DataPoint) w.add(p); 
 			}
 			if(state == 1 && T == m_hat){
@@ -79,22 +79,22 @@ public class SVRG_Streaming extends FirstOrderOpt{
 	
 
 	@Override
-	public String getName() {
-		return "StreamingSVRG";
-	}
+	public void setName() {
+		name = "StreamingSVRG"; 
+	}	
 
 	@Override
 	public FirstOrderOpt clone_method() {
-		SVRG_Streaming out = new SVRG_Streaming(loss.clone_loss(), getLearning_rate(), samplesize, b, m); 
-		out.phi = new DensePoint[loss.getDataSize()];
-		for(int i=0;i<loss.getDataSize();i++){
+		SVRG_Streaming out = new SVRG_Streaming(getLoss().clone_loss(), getStepSize(), samplesize, b, m); 
+		out.phi = new DensePoint[getLoss().getDataSize()];
+		for(int i=0;i<getLoss().getDataSize();i++){
 			out.phi[i] = phi[i];
 		}
-		out.avg = new DensePoint(loss.getDimension());
-		for(int i=0;i<loss.getDimension();i++){ 
+		out.avg = new DensePoint(getLoss().getDimension());
+		for(int i=0;i<getLoss().getDimension();i++){ 
 			out.avg.set(i, avg.get(i));
 		}
-		out.w = cloneParam();
+		out.w = clone_w();
 		out.state = state; 
 		out.T = T; 
 		out.m = m; 

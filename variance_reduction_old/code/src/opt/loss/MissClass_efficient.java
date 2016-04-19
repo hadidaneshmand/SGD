@@ -8,17 +8,17 @@ public class MissClass_efficient extends Logistic_Loss_efficient{
 		super(data, dimension);
 	}
 	@Override
-	public double getLoss(DataPoint w) {
+	public double computeLoss(DataPoint w) {
 		double out = 0.0; 
-		for(int i=0;i<data.length;i++){ 
-			DataPoint di = data[i];
+		for(int i=0;i<getData().length;i++){ 
+			DataPoint di = getData()[i];
 			double y = di.getLabel(); 
 			double prod = di.scalarProduct(w);
 			if(y*prod<0){ 
 				out++; 
 			}
 		}
-		return out/data.length;
+		return out/getData().length;
 	}
 
 }

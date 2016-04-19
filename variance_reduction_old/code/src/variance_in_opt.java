@@ -20,7 +20,7 @@ import opt.firstorder.SVRG_Streaming_Main;
 import opt.loss.LeastSquares_efficient;
 import opt.loss.Logistic_Loss_efficient;
 import opt.loss.Loss;
-import opt.loss.Loss_static_efficient;
+import opt.loss.FirstOrderEfficient;
 import opt.loss.MissClass_efficient;
 import data.DataPoint;
 import data.Result;
@@ -126,7 +126,7 @@ public class variance_in_opt {
 		}
 		data = new DataPoint[conf.c0]; 
 		readDataPointsFromFile( conf.dataPath, 1,conf.c0,false);
-		Loss_static_efficient test_loss = null; 
+		FirstOrderEfficient test_loss = null; 
 		
 		if(conf.testFile != null && !conf.testFile.isEmpty() ){ 
 			test_data = new DataPoint[conf.ntest]; 
@@ -181,14 +181,14 @@ public class variance_in_opt {
 			L = 1.5;
 		}
 		
-		double[] lambdas = new double[6]; 
+		double[] lambdas = new double[5]; 
 		lambdas[0] = 0.1; 
 		lambdas[1] = 0.01; 
 		lambdas[2] = 0.001; 
 		lambdas[3] = 0.0001;
 		lambdas[4] = 0.00001; 
-		lambdas[5] = 0.000001; 
-		double eta = 0.2/L;
+//		lambdas[5] = 0.000001; 
+		double eta = 0.005;
 		System.out.println("step size:"+eta);
 		ArrayList<String> names = new ArrayList<String>(); 
 		names.add("suboptimality"); 
@@ -197,14 +197,14 @@ public class variance_in_opt {
 		names.add("steps");
 		Result result = new Result(names);
 		SAGA[] saga_opts = new SAGA[lambdas.length]; 
-		Loss_static_efficient[] losses = new Loss_static_efficient[lambdas.length]; 
+		FirstOrderEfficient[] losses = new FirstOrderEfficient[lambdas.length]; 
 		for(int i=0;i<lambdas.length;i++){
 			
 			losses[i] = new Logistic_Loss_efficient(data, d);
 			losses[i].set_lambda(lambdas[i]);
 			double eta_n = 0.3/(L+lambdas[i]*n); 
 			saga_opts[i] = new SAGA(losses[i], eta_n);
-			saga_opts[i].Iterate((int) (10*n*Math.log(n)));
+			saga_opts[i].Iterate((int) (7*n*Math.log(n)));
 			System.out.println("saga["+i+"]: optimized!!"); 
 		}
 		for(int k=0;k<10;k++){
@@ -215,9 +215,8 @@ public class variance_in_opt {
 			for(int i=0;i<lambdas.length;i++){
 				double lambda_n = lambdas[i];
 				lambdas_arr.add(1.0/lambda_n); 
-				
 				SGD sgd = new SGD(losses[i]); 
-				sgd.setLearning_rate(eta);
+				sgd.setStepSize(eta);
 				sgd.setConstant_step_size(true);
 				sgd.Iterate(n*50);
 				List<DataPoint> grads = losses[i].getAllStochasticGradients(saga_opts[i].getParam()); 
@@ -228,7 +227,7 @@ public class variance_in_opt {
 				grad_var = grad_var/grads.size(); 
 				double dist2opt = sgd.getParam().squaredNormOfDifferenceTo(saga_opts[i].getParam()); 
 				dist2opts.add(dist2opt);
-				double subopt = losses[i].getLoss(sgd.getParam())-losses[i].getLoss(saga_opts[i].getParam()); 
+				double subopt = losses[i].computeLoss(sgd.getParam())-losses[i].computeLoss(saga_opts[i].getParam()); 
 				subopts.add(subopt);
 				variances.add(grad_var); 
 				System.out.println("lambda:"+lambda_n+",variance:"+grad_var+",suboptimality:"+subopt+",dist2opt:"+dist2opt);
@@ -239,6 +238,6 @@ public class variance_in_opt {
 			result.addresult("suboptimality",subopts);
 			result.addresult("distance2optimal",dist2opts);
 		}
-		result.write2File(conf.logDir+"_sgd_constant");
+		result.write2File(conf.logDir+"_sgd_constant_2");
 	}
 }

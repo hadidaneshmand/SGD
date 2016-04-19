@@ -77,5 +77,6 @@ public class Adapt_Strategy implements SampleSizeStrategy{
 		return "alternating";
 	}
 	
+	
 
 }

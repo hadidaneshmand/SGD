@@ -16,8 +16,8 @@ public class Pegasos extends FirstOrderOpt {
 	public void Iterate(int stepNum) {
 		for(int i=0;i<stepNum;i++){ 
 			setT(getT() + 1); 
-			double eta_t = 0.1/(0.1+loss.getLambda()*getLearning_rate());
-			w = (DataPoint) w.multiply(1-eta_t*loss.getLambda()).add(loss.getStochasticGradient(w).multiply(-1*eta_t));
+			double eta_t = 0.1/(0.1+getLoss().getLambda()*getStepSize());
+			w = (DataPoint) w.multiply(1-eta_t*getLoss().getLambda()).add(getLoss().getStochasticGradient(w).multiply(-1*eta_t));
 		}
 	}
 
@@ -38,16 +38,16 @@ public class Pegasos extends FirstOrderOpt {
 	}
 
 	@Override
-	public String getName() {
-		return "Pegasos";
+	public void setName() {
+		name = "pegasos"; 
 	}
 
 	@Override
 	public FirstOrderOpt clone_method() {
-		Pegasos pout = new Pegasos(loss.clone_loss()); 
+		Pegasos pout = new Pegasos(getLoss().clone_loss()); 
 		pout.setL(L);
 		pout.setT(T);
-		pout.setParam(this.cloneParam());
+		pout.setParam(this.clone_w());
 		return pout;
 	}
 

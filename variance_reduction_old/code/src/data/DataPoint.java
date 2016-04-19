@@ -1,6 +1,8 @@
 
 package data;
 
+import org.ejml.simple.SimpleMatrix;
+
 public abstract class DataPoint extends Point {
 	
 	private double label = 0; // a possible label of the point, any double value
@@ -13,4 +15,7 @@ public abstract class DataPoint extends Point {
 		//	System.out.println("binaryLabel should only be set to 1 or -1, other values are not permitted.");
 		this.label = label;
 	}
+	public abstract int getDimension(); 
+	public abstract DataPoint times(SimpleMatrix p); 
+	public abstract DataPoint clone_data(); 
 }

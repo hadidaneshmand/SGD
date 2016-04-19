@@ -42,7 +42,7 @@ public class sgd_saga_const {
 		Loss_static loss = new LeastSquares(data, d);
 		loss.setLambda(0);
 		SGD sgd = new SGD(loss.clone_loss());
-		sgd.setLearning_rate(eta_n);
+		sgd.setStepSize(eta_n);
 		sgd.setConstant_step_size(true);
 		SAGA saga = new SAGA( loss.clone_loss() , eta_n);
 		Adapt_Strategy as = new Adapt_Strategy(n, 100, false); 
@@ -64,7 +64,7 @@ public class sgd_saga_const {
 		methods[2] = svrg;
 		methods[3] = saga_adapt; 
 		DataPoint b_n_start = AdaptSAGA_SYN.regression(data, d); 
-		Result res = First_Order_Factory.RunExperiment(4, loss.clone_loss(), methods, 50, 1000, loss.getLoss(b_n_start));
+		Result res = First_Order_Factory.RunExperiment(4, loss.clone_loss(), methods, 50, 1000, loss.computeLoss(b_n_start));
 		res.write2File("outs/saga_sgd_const");
 	}
 }

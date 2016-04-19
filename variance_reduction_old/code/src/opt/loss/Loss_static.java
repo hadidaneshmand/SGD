@@ -53,7 +53,7 @@ public abstract class Loss_static implements Loss {
 		}
 		return gds;
 	}
-	public abstract double getLoss(DataPoint w);
+	public abstract double computeLoss(DataPoint w);
 	public void set_lambda(double lambda){ 
 		this.lambda = lambda;
 	}
@@ -81,6 +81,23 @@ public abstract class Loss_static implements Loss {
 
 	public void setDimension(int dimension) {
 		this.dimension = dimension;
+	}
+	@Override
+	public String getType() {
+		return "static";
+	}
+	double LL = -1; 
+	@Override
+	public double getMaxNorm() {
+		if(LL == -1){ 
+			for(int i=0;i<getDataSize();i++){ 
+				double dnorm = data.get(i).getNorm(); 
+				if(LL< dnorm ){ 
+					LL = dnorm; 
+				}
+			}
+		}
+		return LL;
 	}
 	
 }

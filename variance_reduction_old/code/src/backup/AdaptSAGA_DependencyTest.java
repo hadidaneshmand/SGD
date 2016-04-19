@@ -63,7 +63,7 @@ public class AdaptSAGA_DependencyTest {
 				Adapt_Strategy as = new Adapt_Strategy(n, (int)Math.floor(Math.pow(n, condfactor)), false);
 				SAGA_Adapt saga_adapt = new SAGA_Adapt(loss, as,1./Math.floor(Math.pow(n, condfactor)),1.5); 
 				saga_adapt.Iterate(n);
-				double error = Math.log(Math.abs(loss.getLoss(b_n_star)-loss.getLoss(saga_adapt.getParam()))); 
+				double error = Math.log(Math.abs(loss.computeLoss(b_n_star)-loss.computeLoss(saga_adapt.getParam()))); 
 				errors.add(error);
 			}
 			result.addresult(names.get(1), errors);

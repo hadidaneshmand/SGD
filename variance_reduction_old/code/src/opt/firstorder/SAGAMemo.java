@@ -24,7 +24,7 @@ public class SAGAMemo extends SAGA {
 			g = (DataPoint) g.subtract(phi[index]);
 			// subtract average over phi_j
 		}
-		g = (DataPoint) g.add(avg_phi.multiply(1.0/loss.getDataSize()));
+		g = (DataPoint) g.add(avg_phi.multiply(1.0/getLoss().getDataSize()));
 		return g;
 	}
 	
@@ -54,22 +54,22 @@ public class SAGAMemo extends SAGA {
 
 
 	@Override
-	public String getName() {
-		return "SAGAMEMO";
+	public void setName() {
+		name = "SAGAMEMO"; 
 	}
 	
 	@Override
 	public FirstOrderOpt clone_method() {
-		SAGAMemo out = new SAGAMemo(loss.clone_loss(), getLearning_rate(),memosize);
-		out.phi = new DensePoint[loss.getDataSize()];
-		for(int i=0;i<loss.getDataSize();i++){
+		SAGAMemo out = new SAGAMemo(getLoss().clone_loss(), getStepSize(),memosize);
+		out.phi = new DensePoint[getLoss().getDataSize()];
+		for(int i=0;i<getLoss().getDataSize();i++){
 			out.phi[i] = phi[i];
 		}
-		out.avg_phi = new DensePoint_efficient(loss.getDimension());
-		for(int i=0;i<loss.getDimension();i++){ 
+		out.avg_phi = new DensePoint_efficient(getLoss().getDimension());
+		for(int i=0;i<getLoss().getDimension();i++){ 
 			out.avg_phi.set(i, avg_phi.get(i));
 		}
-		out.w = cloneParam(); 
+		out.w = clone_w(); 
 		out.memoinds = (LinkedList<Integer>) memoinds.clone();
 		return out;
 	}

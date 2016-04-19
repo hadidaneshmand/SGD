@@ -21,7 +21,7 @@ import opt.firstorder.SVRG_Streaming_Main;
 import opt.loss.LeastSquares_efficient;
 import opt.loss.Logistic_Loss_efficient;
 import opt.loss.Loss;
-import opt.loss.Loss_static_efficient;
+import opt.loss.FirstOrderEfficient;
 import opt.loss.MissClass_efficient;
 import data.DataPoint;
 import data.Result;
@@ -128,7 +128,7 @@ public class saga_iid {
 		}
 		data = new DataPoint[conf.c0]; 
 		readDataPointsFromFile( conf.dataPath, 1,conf.c0,false);
-		Loss_static_efficient test_loss = null; 
+		FirstOrderEfficient test_loss = null; 
 		
 		if(conf.testFile != null && !conf.testFile.isEmpty() ){ 
 			test_data = new DataPoint[conf.ntest]; 
@@ -197,7 +197,7 @@ public class saga_iid {
 		if(conf.agressive_step){ 
 			eta_n = 1.0/(3*L);
 		}
-		Loss_static_efficient loss = new Logistic_Loss_efficient(data, d);
+		FirstOrderEfficient loss = new Logistic_Loss_efficient(data, d);
 		if(conf.lossType ==  opt.config.Config.LossType.REGRESSION){
 			loss = new LeastSquares_efficient(data,d); 
 		}
@@ -214,9 +214,9 @@ public class saga_iid {
 			System.out.println("After SAGA: Free memory (bytes): " + 
 					  Runtime.getRuntime().freeMemory()+ ",Total memory (bytes): " + 
 							  Runtime.getRuntime().totalMemory());
-			loss_opt = loss.getLoss(saga_opt.getParam()); 
+			loss_opt = loss.computeLoss(saga_opt.getParam()); 
 			if(test_loss!=null){
-				test_opt = test_loss.getLoss(saga_opt.getParam()); 
+				test_opt = test_loss.computeLoss(saga_opt.getParam()); 
 			}
 			saga_opt = null; 
 			System.gc(); 
@@ -242,6 +242,6 @@ public class saga_iid {
 		First_Order_Factory_efficient.methods_in[1] = saga_b;
 		First_Order_Factory_efficient.methods_in[2] = saga_alpha; 
 		First_Order_Factory_efficient.methods_in[3] = saga_alpha_2; 
-		First_Order_Factory_efficient.RunExperiment(numrep,loss, MaxItr, nSamplesPerPass, loss_opt,test_loss,test_opt,conf.logDir+"_strategy");
+		First_Order_Factory_efficient.run_experiment(numrep,loss, MaxItr, nSamplesPerPass, loss_opt,test_loss,conf.logDir+"_strategy",L);
 	}
 }

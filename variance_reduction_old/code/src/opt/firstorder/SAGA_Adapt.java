@@ -14,18 +14,19 @@ public class SAGA_Adapt extends SAGA {
     protected double mu; 
     protected double L; 
     @Override
-    public String getName() {
+    public void setName() {
     	if(as.isDoubling()){
-    		return "dyna-alternating";
+    		name = "dyna-alternating";
     	}
     	if(as instanceof Adapt_Strategy_iid){ 
-    		return "dyna-linear";
+    		name = "dyna-linear";
     	}
     	if(as instanceof Adapt_Strategy_Alpha){
-    		return "dyna-"+((Adapt_Strategy_Alpha)as).getAlpha();   
+    		name = "dyna-"+((Adapt_Strategy_Alpha)as).getAlpha();   
     	}
-    	return "dyna-SAGA";
+    	name = "dyna-SAGA";
     }
+   
 	public SAGA_Adapt(Loss loss,Adapt_Strategy as, double mu, double L) {
 		super(loss, as.getSubsamplesi());
 		this.as = as; 
@@ -37,14 +38,14 @@ public class SAGA_Adapt extends SAGA {
 		for (int i = 0; i < stepNum; ++i) {
 			int index = as.Tack();
 //			System.out.println("samplesize:"+as.getSubsamplesi()+",index:"+index);
-			setLearning_rate(0.3/(L+as.getSubsamplesi()*mu));
+			setStepSize(0.3/(L+as.getSubsamplesi()*mu));
 			// Compute stochastic gradient for p
-			DataPoint gp = loss.getStochasticGradient(index, w);
+			DataPoint gp = getLoss().getStochasticGradient(index, w);
 			// Compute SAGA gradient
 			DataPoint g = VarianceCorrection( index, gp);
 			updateMemory(gp, index);
 			// gradient step
-			w = (DataPoint) w.subtract(g.multiply(getLearning_rate()));
+			w = (DataPoint) w.subtract(g.multiply(getStepSize()));
 							
 		}
 
@@ -64,16 +65,16 @@ public class SAGA_Adapt extends SAGA {
 	
 	@Override
 	public FirstOrderOpt clone_method() {
-		SAGA_Adapt out = new SAGA_Adapt(loss.clone_loss(), as.clone_strategy(),mu,L);
-		out.phi = new DensePoint[loss.getDataSize()];
-		for(int i=0;i<loss.getDataSize();i++){
+		SAGA_Adapt out = new SAGA_Adapt(getLoss().clone_loss(), as.clone_strategy(),mu,L);
+		out.phi = new DensePoint[getLoss().getDataSize()];
+		for(int i=0;i<getLoss().getDataSize();i++){
 			out.phi[i] = phi[i];
 		}
-		out.avg_phi = new DensePoint_efficient(loss.getDimension());
-		for(int i=0;i<loss.getDimension();i++){ 
+		out.avg_phi = new DensePoint_efficient(getLoss().getDimension());
+		for(int i=0;i<getLoss().getDimension();i++){ 
 			out.avg_phi.set(i, avg_phi.get(i));
 		}
-		out.w = cloneParam();
+		out.w = clone_w();
 		return out;
 	}
 	

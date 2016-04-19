@@ -11,6 +11,10 @@ import java.util.List;
 import java.util.Random;
 import java.util.Vector;
 
+import javax.management.RuntimeErrorException;
+
+import org.ejml.simple.SimpleMatrix;
+
 /**
  * Implementation of a dense point (using a Java Vector of Double values)
  * 
@@ -404,6 +408,36 @@ public class DensePoint extends DataPoint {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
+	@Override
+	public int getDimension() {
+		return point.size();
+	}
+	@Override
+	public DataPoint times(SimpleMatrix p) {
+		int d = getDimension();
+		DataPoint out = new DensePoint(d);
+		if(d!=p.numCols()){ 
+			throw new RuntimeException("dimensions miss-match!!!");
+		}
+		for(int i=0;i<getDimension();i++){ 
+			double s = 0; 
+			for(int j=0;j<p.numCols();j++){
+				s+= p.get(i, j)*this.get(j); 
+			}
+			out.set(i, s);
+		}
+		return out;
+	}
+	@Override
+	public DataPoint clone_data() {
+		int d = getDimension(); 
+		DensePoint out = new DensePoint(d);
+		out.setLabel(getLabel());
+		for(int i=0;i<d;d++){ 
+			out.set(i, this.get(i));
+		}
+		return out;
 	}
 	
 }

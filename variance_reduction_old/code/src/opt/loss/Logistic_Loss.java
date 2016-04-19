@@ -27,7 +27,7 @@ public class Logistic_Loss extends Loss_static{
 	}
 
 	@Override
-	public double getLoss(DataPoint w) {
+	public double computeLoss(DataPoint w) {
 		double loss = 0;
 		for (Iterator<DataPoint> iter = data.iterator(); iter.hasNext();) {
 			DataPoint p = (DataPoint) iter.next();

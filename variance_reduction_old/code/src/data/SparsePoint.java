@@ -11,6 +11,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
+import org.ejml.simple.SimpleMatrix;
+
 /**
  * Implementation of a sparse point (using a Java HashMap to Double values)
  * 
@@ -20,7 +22,7 @@ import java.util.TreeMap;
 public class SparsePoint extends DataPoint {
 	
 	private Map<Integer,Double> point;
-
+	int d = 0; 
 	public SparsePoint() {
 		point = new HashMap<Integer, Double>();
 	}
@@ -212,6 +214,7 @@ public class SparsePoint extends DataPoint {
 	
 	@Override
 	public void set(int i, double value) {
+		d++; 
 		point.put(i, value);
 	}
 
@@ -325,6 +328,35 @@ public class SparsePoint extends DataPoint {
 			}
 		}
 		return output;
+	}
+
+	@Override
+	public int getDimension() {
+		return d;
+	}
+
+	@Override
+	public DataPoint times(SimpleMatrix p) {
+		DataPoint output = new SparsePoint();
+		for(int j=0;j<d;j++){ 
+			double s = 0; 
+			for (int i : point.keySet()) {
+				s+= p.get(j, i)*point.get(i);
+			}
+			output.set(j, s);
+		}
+		return output;
+	}
+
+	@Override
+	public DataPoint clone_data() {
+		SparsePoint out = new SparsePoint(); 
+		out.d = this.d; 
+		for (int i : point.keySet()) {
+			out.set(i, (point.get(i)));
+		}
+		out.setLabel(getLabel());
+		return out;
 	}	
 	
 }

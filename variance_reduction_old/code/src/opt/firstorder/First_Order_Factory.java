@@ -30,7 +30,7 @@ public class First_Order_Factory {
 					System.out.println("method name:"+methods[i].getName());
 					methods[i].Iterate(step);
 					System.out.println("finished iterations");
-					double error = Math.abs(loss.getLoss(methods[i].getParam())-opt_value); 
+					double error = Math.abs(loss.computeLoss(methods[i].getParam())-opt_value); 
 					System.out.println("error computed");
 					error = Math.log(error)/Math.log(2); 
 					convs.get(i).add(error); 

@@ -117,7 +117,7 @@ public class AdaptSAGA_SYN {
 		SAGA_Adapt saga_adapt = new SAGA_Adapt(new LeastSquares(data, d), as_saga,mu,L);
 		SAGA_Adapt_WithoutMemory saga_memofree = new SAGA_Adapt_WithoutMemory(new LeastSquares(data, d), as_saga_fr,mu,L);
 		SGD sgd = new SGD(new LeastSquares(data, d));
-		sgd.setLearning_rate(mu);
+		sgd.setStepSize(mu);
 //		sgd.setConstant_step_size(true);
 		SAGA_Adapt ad_new = new SAGA_Adapt(new LeastSquares(data, d), as_new,mu,L);
 		Loss loss = new LeastSquares(data, d); 
@@ -131,9 +131,9 @@ public class AdaptSAGA_SYN {
 		for(int i=0;i<opt_meth.length;i++){ 
 			convs.add(new ArrayList<Double>());
 		}
-		double loss_star = loss.getLoss(b);
+		double loss_star = loss.computeLoss(b);
 		DataPoint b_n = regression(data, d);
-		double loss_n_star = loss.getLoss(b_n);
+		double loss_n_star = loss.computeLoss(b_n);
 		System.out.println("opt_loss"+Math.log(Math.abs(loss_n_star-loss_star))/Math.log(2));
 		List<Double> bound = new ArrayList<Double>();
 		double eps = Double.MIN_VALUE; 
@@ -141,7 +141,7 @@ public class AdaptSAGA_SYN {
 			
 			for(int j=0;j<opt_meth.length;j++){ 
 				opt_meth[j].Iterate(nSamplesPerPass);
-				convs.get(j).add(Math.log(eps+Math.abs(loss.getLoss(opt_meth[j].getParam())-loss_n_star))/Math.log(2));
+				convs.get(j).add(Math.log(eps+Math.abs(loss.computeLoss(opt_meth[j].getParam())-loss_n_star))/Math.log(2));
 			}
 		}
 		for(int i=0;i<opt_meth.length;i++){ 

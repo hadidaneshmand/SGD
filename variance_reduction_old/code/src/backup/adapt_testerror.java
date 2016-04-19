@@ -49,7 +49,7 @@ public class adapt_testerror {
 		Loss_static loss = new Logistic_Loss(data, d);
 		loss.setLambda(lambda_n);
 		SGD sgd = new SGD(loss);
-		sgd.setLearning_rate(0.05);
+		sgd.setStepSize(0.05);
 		sgd.setConstant_step_size(true);
 		FirstOrderOpt[] methods = new FirstOrderOpt[4];
 		methods[0] = sgd;

@@ -14,24 +14,24 @@ public class SAGA_Adapt_Lambda extends SAGA_Adapt {
 		for (int i = 0; i < stepNum; ++i) {
 			int index = as.Tack();
 //			System.out.println("samplesize:"+as.getSubsamplesi()+",index:"+index);
-			loss.set_lambda(1.0/as.getSubsamplesi());
-			setLearning_rate(0.3/(L+1));
+			getLoss().set_lambda(1.0/as.getSubsamplesi());
+			setStepSize(0.3/(L+1));
 			
 			// Compute stochastic gradient for p
-			DataPoint gp = loss.getStochasticGradient(index, w);
+			DataPoint gp = getLoss().getStochasticGradient(index, w);
 			// Compute SAGA gradient
 			DataPoint g = VarianceCorrection( index, gp);
 			updateMemory(gp, index);
 			// gradient step
-			w = (DataPoint) w.subtract(g.multiply(getLearning_rate()));
+			w = (DataPoint) w.subtract(g.multiply(getStepSize()));
 							
 		}
 
 	}
 	
 	@Override
-	public String getName() {
-		return "AdaptLambda";
+	public void setName() {
+		name = "AdaptLambda"; 
 	}
 	
 	

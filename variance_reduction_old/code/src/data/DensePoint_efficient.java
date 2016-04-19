@@ -13,6 +13,8 @@ import java.util.Vector;
 
 import javax.management.RuntimeErrorException;
 
+import org.ejml.simple.SimpleMatrix;
+
 /**
  * Implementation of a dense point (using a Java Vector of Double values)
  * 
@@ -28,6 +30,14 @@ public class DensePoint_efficient extends DataPoint {
 		DensePoint_efficient out = new DensePoint_efficient(dim); 
 		for(int i=0;i<dim;i++){ 
 			out.set(i, 0.0);
+		}
+		 
+		return out;
+	}
+	public static DensePoint_efficient one(int dim){ 
+		DensePoint_efficient out = new DensePoint_efficient(dim); 
+		for(int i=0;i<dim;i++){ 
+			out.set(i, 1.0);
 		}
 		 
 		return out;
@@ -388,6 +398,40 @@ public class DensePoint_efficient extends DataPoint {
 	@Override
 	public Iterator<Double> iterator() {
 		throw new RuntimeErrorException(null, "Efficient dataPoint doesn't have an iterator"); 
+	}
+
+	@Override
+	public int getDimension() {
+		return point.length;
+	}
+
+	@Override
+	public DataPoint times(SimpleMatrix p) {
+		int d = getDimension();
+		DataPoint out = new DensePoint_efficient(d);
+		if(d!=p.numCols()){ 
+			throw new RuntimeException("dimensions miss-match!!!");
+		}
+		for(int i=0;i<getDimension();i++){ 
+			double s = 0; 
+			for(int j=0;j<p.numCols();j++){
+				s+= p.get(i, j)*point[j]; 
+			}
+			out.set(i, s);
+		}
+		return out;
+	}
+	@Override
+	public DataPoint clone_data() {
+		int d = getDimension(); 
+		DensePoint_efficient out = new DensePoint_efficient(d); 
+		out.n = this.n; 
+		out.setLabel(getLabel());
+		out.point = new double[d]; 
+		for(int i = 0 ;i<d;i++){
+			out.point[i] = point[i];  
+		}
+		return out;
 	}
 	
 }
