@@ -10,7 +10,8 @@ import java.util.StringTokenizer;
 public class Config {
 	public boolean agressive_step ;
 	public boolean doubling;
-	public double train_ratio = -1 ; 
+	public double train_ratio = -1; 
+	
 	public Config() {
 		// Exists only to defeat instantiation.
 		
@@ -330,6 +331,8 @@ public class Config {
 		OBJ_CLASSIFICATION_ERROR,
 		OBJ_DIST_TO_OPTIMUM
 	}
+	
+	
 	
 	public  int c0 = 0;
 

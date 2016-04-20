@@ -56,7 +56,7 @@ public class lambda_in_obj {
 //				losses[i].setData(data);
 				double eta_n = 0.3/(Input.L+lambda_i*subsi); 
 				saga_opts[i] = new SAGA(losses[i], eta_n);
-				saga_opts[i].Iterate((int) (8*n*Math.log(n)));
+				saga_opts[i].Iterate((int) (10*n*Math.log(n)));
 				if(i>-1){
 					ls.add((double) subsi);
 					System.out.println("loss["+i+"]:"+saga_opts[i].getLoss().computeLoss(saga_opts[i].getParam()));

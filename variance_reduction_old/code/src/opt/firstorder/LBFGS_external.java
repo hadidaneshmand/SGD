@@ -5,6 +5,7 @@ import data.DensePoint_efficient;
 import opt.externalcodes.LBFGS;
 import opt.externalcodes.LBFGS.ExceptionWithIflag;
 import opt.loss.Loss;
+import opt.loss.adaptive_loss;
 
 public class LBFGS_external extends FirstOrderOpt{
 	int m;
@@ -29,7 +30,7 @@ public class LBFGS_external extends FirstOrderOpt{
 
 	@Override
 	public void setName() {
-		this.name = "lbfgs-external"; 
+		this.name = "lbfgs-"+loss.getType(); 
 	}
 
 	@Override
@@ -59,6 +60,9 @@ public class LBFGS_external extends FirstOrderOpt{
 		}
 		for(int i=0;i<d;i++){ 
 			w.set(i, wx[i]);
+		}
+		if(loss instanceof adaptive_loss){ 
+			((adaptive_loss) loss).tack();
 		}
 	}
 

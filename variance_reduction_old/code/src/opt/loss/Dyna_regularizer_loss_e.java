@@ -12,12 +12,6 @@ public class Dyna_regularizer_loss_e extends Dyna_samplesize_loss_e {
 		super(loss, as);
 		set_lambda(1.0/as.getSubsamplesi());
 	}
-	@Override
-	public DataPoint getAverageGradient(DataPoint w) {
-		DataPoint out = super.getAverageGradient(w);
-		loss.set_lambda(1.0/as.getSubsamplesi());
-		return out;
-	}
 	
 	@Override
 	public Loss clone_loss() {
@@ -25,25 +19,18 @@ public class Dyna_regularizer_loss_e extends Dyna_samplesize_loss_e {
 		return out;
 	}
 	@Override
-	public DataPoint getStochasticGradient(DataPoint w) {
-		DataPoint out = super.getStochasticGradient(w);
+	public void tack() {
+		// TODO Auto-generated method stub
+		super.tack();
 		loss.set_lambda(1.0/as.getSubsamplesi());
-		return out;
 	}
-	@Override
-	public SimpleMatrix getHessian(DataPoint w) {
-		as.Tack(); 
-		return super.getHessian(w);
-	}
-	@Override
-	public SimpleMatrix getHessian(DataPoint w, ArrayList<Integer> inds) {
-		as.Tack();
-		return super.getHessian(w, inds);
-	}
+	
+
 	@Override
 	public String getType() {
 		return "dyna-reg";
 	}
+	
 	
 
 }

@@ -1,11 +1,15 @@
 package opt.firstorder;
 
 
+import javax.swing.text.html.HTMLDocument.HTMLReader.IsindexAction;
+
 import data.DataPoint;
 import opt.loss.SecondOrderLoss;
+import opt.loss.adaptive_loss;
 
 public class Newton extends FirstOrderOpt{
     boolean first_itr = true;
+   
 	public Newton(SecondOrderLoss loss) {
 		super(loss);
 		setStepSize(0.5);
@@ -41,6 +45,9 @@ public class Newton extends FirstOrderOpt{
 //		double step_size = exact_line_search(delta); 
 //		double step_size = 0.01;
 		w = (DataPoint) w.add(delta.multiply(step_size));
+		if(loss instanceof adaptive_loss){ 
+			((adaptive_loss)loss).tack(); 
+		}
 	}
 
 	@Override

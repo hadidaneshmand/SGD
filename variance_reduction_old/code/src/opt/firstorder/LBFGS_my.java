@@ -6,6 +6,7 @@ import data.DataPoint;
 import opt.Adapt_Strategy;
 import opt.loss.Dyna_samplesize_loss_e;
 import opt.loss.Loss;
+import opt.loss.adaptive_loss;
 import sun.awt.image.ImageWatched.Link;
 import sun.swing.BakedArrayList;
 
@@ -78,6 +79,9 @@ public class LBFGS_my extends FirstOrderOpt {
 			rhos.pollFirst(); 
 		}
 		w = w_new;
+		if(loss instanceof adaptive_loss){ 
+			((adaptive_loss) loss).tack(); 
+		}
 	}
 	@Override
 	public void Iterate(int stepNum) {

@@ -1,9 +1,12 @@
 import data.DataPoint;
 import data.DensePoint_efficient;
 import opt.Adapt_Strategy_Double_Full;
+import opt.SampleSizeStrategy;
+import opt.externalcodes.LBFGS;
 import opt.firstorder.FirstOrderOpt;
 import opt.firstorder.First_Order_Factory_efficient;
 import opt.firstorder.LBFGS_external;
+import opt.firstorder.LBFGS_my;
 import opt.firstorder.Newton;
 import opt.loss.Dyna_regularizer_loss_e;
 import opt.loss.Dyna_samplesize_loss_e;
@@ -17,16 +20,21 @@ public class newton_test{
 		Loss loss = Input.loss_train.clone_loss(); 
 		int n = loss.getDataSize();
 		int d = loss.getDimension(); 
+		int m = 100; 
 		loss.set_lambda(1.0/n);
 		DataPoint initParam = (DataPoint) DensePoint_efficient.one(Input.loss_train.getDimension()).multiply(3.0); 
-		FirstOrderOpt[] methods_in = new FirstOrderOpt[2]; 
-		Dyna_samplesize_loss_e adapt_reg_loss = new Dyna_regularizer_loss_e(loss.clone_loss(), new Adapt_Strategy_Double_Full(loss.getDataSize(), 3*d, 1, 12));
-		methods_in[1] = new Newton((SecondOrderLoss) loss.clone_loss()); 
-		methods_in[0] = new Newton((SecondOrderLoss) adapt_reg_loss);
+		FirstOrderOpt[] methods_in = new FirstOrderOpt[4]; 
+		SampleSizeStrategy strategy = new Adapt_Strategy_Double_Full(loss.getDataSize(), 3*d, 1, 12);
+		Dyna_regularizer_loss_e adapt_reg_loss = new Dyna_regularizer_loss_e(loss.clone_loss(), strategy.clone_strategy());
+		Dyna_regularizer_loss_e ssreg_loss_for_lbfg = new Dyna_regularizer_loss_e(loss.clone_loss(),strategy.clone_strategy()); 
+		methods_in[3] = new Newton((SecondOrderLoss) loss.clone_loss()); 
+		methods_in[2] = new Newton((SecondOrderLoss) adapt_reg_loss);
+		methods_in[1] = new LBFGS_my(loss.clone_loss(), m); 
+		methods_in[0] = new LBFGS_my(ssreg_loss_for_lbfg, m); 
 		for(int i=0;i<methods_in.length;i++){
 			methods_in[i].setParam(initParam);
 		}
 		First_Order_Factory_efficient.methods_in = methods_in; 
-		First_Order_Factory_efficient.experiment_with_iterations_complexity(1, loss.clone_loss(), 15, -1, Input.loss_test, Input.config.logDir+"_newton", Input.L, false,n);
+		First_Order_Factory_efficient.experiment_with_iterations_complexity(1, loss.clone_loss(), 20, -1, Input.loss_test, Input.config.logDir+"_newton", Input.L, false,n);
 	}
 }

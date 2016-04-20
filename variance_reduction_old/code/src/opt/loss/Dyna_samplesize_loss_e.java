@@ -7,15 +7,18 @@ import org.ejml.simple.SimpleMatrix;
 
 import opt.Adapt_Strategy;
 import opt.SampleSizeStrategy;
+import opt.utils;
 import data.DataPoint;
 
-public class Dyna_samplesize_loss_e implements Loss, SecondOrderLoss {
+public class Dyna_samplesize_loss_e implements adaptive_loss, SecondOrderLoss {
 	protected Loss loss; 
 	protected SampleSizeStrategy as; 
 	protected int computed_sgd; 
 	protected int computed_gd; 
 	protected int computed_hessian; 
 	protected int computed_subHessian; 
+	
+	
 	public Dyna_samplesize_loss_e(Loss loss, SampleSizeStrategy as) {
 		this.loss = loss; 
 		this.as = as; 
@@ -27,7 +30,8 @@ public class Dyna_samplesize_loss_e implements Loss, SecondOrderLoss {
 	@Override
 	public DataPoint getStochasticGradient(DataPoint w) {
 		computed_sgd++;
-		return loss.getStochasticGradient(as.Tack(),w); //TODO
+		int randInd = as.getSubInd().get(utils.getInstance().getGenerator().nextInt(as.getSubsamplesi())); 
+		return loss.getStochasticGradient(randInd,w); //TODO
 	}
 	@Override
 	public double computeLoss(DataPoint w) {
@@ -95,6 +99,10 @@ public class Dyna_samplesize_loss_e implements Loss, SecondOrderLoss {
 	@Override
 	public double getMaxNorm() {
 		return loss.getMaxNorm();
+	}
+	@Override
+	public void tack() {
+		as.Tack(); 
 	}
 	
 }
