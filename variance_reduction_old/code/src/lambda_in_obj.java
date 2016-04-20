@@ -2,13 +2,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import opt.utils;
 import opt.firstorder.FirstOrderOpt;
 import opt.firstorder.SAGA;
-import opt.firstorder.SGD;
+import opt.loss.FirstOrderEfficient;
 import opt.loss.Logistic_Loss_efficient;
 import opt.loss.Loss;
-import opt.loss.FirstOrderEfficient;
 import data.DataPoint;
 import data.Result;
 
