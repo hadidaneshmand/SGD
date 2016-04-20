@@ -2,13 +2,9 @@ package opt.firstorder;
 
 import java.util.LinkedList;
 
-import data.DataPoint;
-import opt.Adapt_Strategy;
-import opt.loss.Dyna_samplesize_loss_e;
 import opt.loss.Loss;
 import opt.loss.adaptive_loss;
-import sun.awt.image.ImageWatched.Link;
-import sun.swing.BakedArrayList;
+import data.DataPoint;
 
 public class LBFGS_my extends FirstOrderOpt {
 	

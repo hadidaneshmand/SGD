@@ -1,7 +1,6 @@
 package opt.firstorder;
 
 import data.DataPoint;
-import data.DensePoint_efficient;
 import opt.externalcodes.LBFGS;
 import opt.externalcodes.LBFGS.ExceptionWithIflag;
 import opt.loss.Loss;
