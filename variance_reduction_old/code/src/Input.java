@@ -160,7 +160,7 @@ public class Input {
 			}
 		}
 		System.out.println("L:"+L);
-		if(L>9.0){
+		if(L>40.0){
 			for(int i=0;i<data.length;i++){ 
 				data[i]=(DataPoint)data[i].normalize(); 
 			}
