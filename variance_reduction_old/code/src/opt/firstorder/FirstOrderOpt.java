@@ -28,7 +28,7 @@ public abstract class FirstOrderOpt {
 		for (int i =0;i<loss.getDimension();i++) {
 			w.set(i, 0.0);
 		}
-		setName(); 
+//		setName(); 
 	}
 	public double exact_line_search(DataPoint p_k){ 
 		double alpha = 0.1; 
@@ -100,6 +100,9 @@ public abstract class FirstOrderOpt {
 	
 	public abstract void Iterate(int stepNum);
 	public String getName(){
+		if(name == null){
+			setName();
+		}
 		return name; 
 	}
 	public void setParam(DataPoint w){ 

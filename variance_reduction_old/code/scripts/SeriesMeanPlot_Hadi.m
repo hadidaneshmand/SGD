@@ -10,8 +10,8 @@
 % outfilenames = {'ijcnn1_iid','rcv1_iid','covtype_iid','w8a_iid','susy_iid','a9a_iid','rsim_iid'}; 
 % datasizes = [49990,20242,581012,49749,5*10^6,32561,72309];
 
- filenames = {'a9a_lambdas_dist'};
- outfilenames = {'a9a_lambdas_dist'}; 
+ filenames = {'a9a_newparm_lss'};
+ outfilenames = {'a9a_newparm_lss'}; 
  datasizes = [30000];
 for ii=1:length(filenames)
     
@@ -102,8 +102,9 @@ for ii=1:length(filenames)
        end
        series = res{i};
        mean_s = mean(series,1);
+      
       % if(kk ==2)
-          %  mean_s = log2(mean_s);
+            mean_s = log2(mean_s);
       % end
        min_t = min(mean_s(inds)); 
        max_t = max(mean_s(inds)); 

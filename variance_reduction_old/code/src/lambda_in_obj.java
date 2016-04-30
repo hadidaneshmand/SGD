@@ -16,17 +16,21 @@ public class lambda_in_obj {
 		Input.initialize(args);
 		int n = Input.loss_train.getDataSize();
 		double pivot_l = 1.0/n;
-		int num_lambda_update = 7; 
+		int num_lambda_update = 20; 
 		
 		ArrayList<String> names = new ArrayList<String>(); 
-		names.add("suboptimality"); 
-		names.add("steps");
+		names.add("loss"); 
+		names.add("omega"); 
+		names.add("distances"); 
+		names.add("lambda");
 		Result result = new Result(names);
 		SAGA[] saga_opts = new SAGA[num_lambda_update]; 
 		FirstOrderEfficient[] losses = new FirstOrderEfficient[num_lambda_update]; 
 		
 		
 		Loss pivot_loss = Input.loss_train.clone_loss(); 
+		Loss reg_free = Input.loss_train.clone_loss(); 
+		reg_free.set_lambda(0.0);
 		pivot_loss.set_lambda(pivot_l);
 		FirstOrderOpt saga = new SAGA(pivot_loss, 0.3/(Input.L+n*pivot_l)); 
 		saga.Iterate((int) (10*n*Math.log(n)));
@@ -36,39 +40,41 @@ public class lambda_in_obj {
 			inds.add(i); 
 		}
 		DataPoint[] fulldata = ((FirstOrderEfficient) Input.loss_train.clone_loss()).getData(); 
-		for(int k=0;k<4;k++){
+		for(int k=0;k<1;k++){
 			Collections.shuffle(inds);
-			List<Double> ls = new ArrayList<Double>(); 
-			List<Double> opt = new ArrayList<Double>(); 
+			List<Double> lambda = new ArrayList<Double>(); 
+			List<Double> loss = new ArrayList<Double>(); 
+			List<Double> omega = new ArrayList<Double>();
+			List<Double> distances = new ArrayList<Double>();
 			for(int i=0;i<num_lambda_update;i++){
-				double coeff = Math.pow(1.5, i);
-				int subsi = (int) ((int) 2000*coeff);
-				System.out.println("sample size:"+subsi);
-				DataPoint[] data = new DataPoint[subsi]; 
-				for(int j=0;j<subsi;j++){ 
-					data[j] = fulldata[inds.get(j)]; 
-				}
-				double lambda_i = 1.0/subsi;
+				double mu =1.0/(500*(i+1));
+				int subsi = n; 
+				DataPoint[] data = Input.data;
+				double lambda_i = mu;
 				losses[i] = new Logistic_Loss_efficient(data, Input.d);
 				losses[i].set_lambda(lambda_i);
-//				losses[i].setData(data);
 				double eta_n = 0.3/(Input.L+lambda_i*subsi); 
 				saga_opts[i] = new SAGA(losses[i], eta_n);
 				saga_opts[i].Iterate((int) (10*subsi*Math.log(subsi)));
 				if(i>-1){
-					ls.add((double) subsi);
-					System.out.println("loss["+i+"]:"+saga_opts[i].getLoss().computeLoss(saga_opts[i].getParam()));
-					double loss_opt = pivot_loss.computeLoss(saga_opts[i].getParam())-pivot_val;
-					System.out.println("saga["+i+"]:"+loss_opt); 
-					System.out.println("norm2:"+saga_opts[i].getParam().squaredNorm());
-					System.out.println("distances:"+saga_opts[i].getParam().squaredNormOfDifferenceTo(saga.getParam()));
-					opt.add(loss_opt); 
+					System.out.println("lambda["+i+"]:"+lambda_i);
+					lambda.add((double) mu);
+					double loss_i = reg_free.computeLoss(saga_opts[i].getParam());
+					System.out.println("loss["+i+"]:"+loss_i);
+					loss.add(loss_i); 
+					double omega_i = saga_opts[i].getParam().squaredNorm(); 
+					System.out.println("omega["+i+"]:"+omega_i);
+					omega.add(omega_i); 
+					double distance_i = saga_opts[i].getParam().squaredNormOfDifferenceTo(saga.getParam()); 
+					System.out.println("distances["+i+"]:"+distance_i);
+					distances.add(distance_i); 
 				}
 			}
-			result.addresult(names.get(0), opt);
-			result.addresult(names.get(1),ls);
+			result.addresult(names.get(0), loss);
+			result.addresult(names.get(1),omega);
+			result.addresult(names.get(2),distances);
+			result.addresult(names.get(3),lambda);
 		}
-		
-		result.write2File(Input.config.logDir+"_dyna_lambda");
+		result.write2File(Input.config.logDir+"_pareto");
 	}
 }
