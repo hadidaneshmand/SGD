@@ -406,15 +406,15 @@ public class DensePoint_efficient extends DataPoint {
 	}
 
 	@Override
-	public DataPoint times(SimpleMatrix p) {
+	public DataPoint times(Jama.Matrix p) {
 		int d = getDimension();
 		DataPoint out = new DensePoint_efficient(d);
-		if(d!=p.numCols()){ 
+		if(d!=p.getColumnDimension()){ 
 			throw new RuntimeException("dimensions miss-match!!!");
 		}
 		for(int i=0;i<getDimension();i++){ 
 			double s = 0; 
-			for(int j=0;j<p.numCols();j++){
+			for(int j=0;j<p.getColumnDimension();j++){
 				s+= p.get(i, j)*point[j]; 
 			}
 			out.set(i, s);

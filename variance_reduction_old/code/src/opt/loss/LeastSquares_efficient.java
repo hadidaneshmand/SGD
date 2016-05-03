@@ -1,12 +1,8 @@
 package opt.loss;
 
-import java.util.Iterator;
 
-import org.ejml.data.Matrix64F;
-import org.ejml.simple.SimpleMatrix;
-
+import Jama.Matrix;
 import data.DataPoint;
-import data.Matrix;
 
 public class LeastSquares_efficient extends SecondOrderEfficientLoss {
 
@@ -68,9 +64,9 @@ public class LeastSquares_efficient extends SecondOrderEfficientLoss {
 //	}
 
 	@Override
-	public SimpleMatrix getHessian_exlusive_regularizer(DataPoint w, int ind) {
+	public Matrix getHessian_exlusive_regularizer(DataPoint w, int ind) {
 		DataPoint p = getData()[ind]; 
-		return  p.crossProduct_sm(p, getDimension()).scale(2.0); 
+		return  p.crossProduct_sm(p, getDimension()).times(2.0);
 	}
 
 }

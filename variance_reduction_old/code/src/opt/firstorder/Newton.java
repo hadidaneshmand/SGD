@@ -38,7 +38,7 @@ public class Newton extends FirstOrderOpt{
 //			}
 //			return; 
 //		}
-		DataPoint delta = loss.getAverageGradient(w).times(((SecondOrderLoss)loss).getHessian(w).invert()); 
+		DataPoint delta = loss.getAverageGradient(w).times(((SecondOrderLoss)loss).getHessian(w).inverse()); 
 		delta = (DataPoint) delta.multiply(-1.0); 
 		double step_size = backtracking_line_search(delta); 
 //		double  step_size = 1; 

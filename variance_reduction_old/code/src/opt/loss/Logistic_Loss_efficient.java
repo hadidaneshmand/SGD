@@ -1,10 +1,7 @@
 package opt.loss;
 
-
-import org.ejml.simple.SimpleMatrix;
-
+import Jama.Matrix;
 import data.DataPoint;
-import data.Matrix;
 
 public class Logistic_Loss_efficient extends SecondOrderEfficientLoss {
 	public Logistic_Loss_efficient(DataPoint[] data, int dimension) {
@@ -71,13 +68,12 @@ public class Logistic_Loss_efficient extends SecondOrderEfficientLoss {
 //		return out;
 //	}
 
-	@Override
-	public SimpleMatrix getHessian_exlusive_regularizer(DataPoint w, int ind) {
+	public Matrix getHessian_exlusive_regularizer(DataPoint w, int ind) {
 		DataPoint di = getData()[ind];
-		SimpleMatrix hi = (di).crossProduct_sm(di, getDimension()); 
+		Matrix hi = (di).crossProduct_sm(di, getDimension()); 
 		double prod = -1*di.scalarProduct(w)*di.getLabel(); 
 		double g = Math.exp(prod)/(Math.pow(1+Math.exp(prod),2)); 
-		hi = hi.scale(g);
+		hi = hi.times(g);
 		return hi;
 	}
 

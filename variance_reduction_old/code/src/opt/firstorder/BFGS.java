@@ -1,13 +1,13 @@
 package opt.firstorder;
 
-import org.ejml.simple.SimpleMatrix;
 
+import Jama.Matrix;
 import data.DataPoint;
 import opt.loss.Loss;
 
 public class BFGS extends FirstOrderOpt{
 	
-	SimpleMatrix H_k = null;
+	Matrix H_k = null;
 	DataPoint s_k ; // x_{k+1} - x_{k} 
 	DataPoint y_k; // f'_{k+1} - f'_{k} 
 	public BFGS(Loss loss) {
@@ -29,19 +29,19 @@ public class BFGS extends FirstOrderOpt{
 	public void IterateOnce(){ 
 		int d = loss.getDimension();
 		if(H_k == null){ 
-			H_k = SimpleMatrix.identity(loss.getDimension()); 
+			H_k = Matrix.identity(loss.getDimension(),loss.getDimension()); 
 		}
 		else{ 
 			double rho_k = 1.0/y_k.scalarProduct(s_k); 
 			System.out.println("rho:"+rho_k);
-			System.out.println("max_h_k:"+H_k.elementMaxAbs());
-			SimpleMatrix sy = s_k.crossProduct_sm(y_k, d); 
-			SimpleMatrix I = SimpleMatrix.identity(d); 
-			SimpleMatrix left = I.plus(sy.scale(-1.0*rho_k)); 
-			SimpleMatrix right = I.plus(sy.transpose().scale(-1.0*rho_k)); 
-			SimpleMatrix ss = s_k.crossProduct_sm(s_k, d); 
-			H_k = left.mult(H_k).mult(right); 
-			H_k = H_k.plus(ss.scale(rho_k)); 
+//			System.out.println("max_h_k:"+H_k.get);
+			Matrix sy = s_k.crossProduct_sm(y_k, d); 
+			Matrix I = Matrix.identity(d,d); 
+			Matrix left = I.plus(sy.times(-1.0*rho_k)); 
+			Matrix right = I.plus(sy.transpose().times(-1.0*rho_k)); 
+			Matrix ss = s_k.crossProduct_sm(s_k, d); 
+			H_k = left.times(H_k).times(right); 
+			H_k = H_k.plus(ss.times(rho_k)); 
 			System.out.println("secant check:"+ s_k.squaredNormOfDifferenceTo(y_k.times(H_k)));
 		}
 		DataPoint gradient = loss.getAverageGradient(w); 
@@ -61,7 +61,7 @@ public class BFGS extends FirstOrderOpt{
 		if(H_k!=null){ 
 			out.s_k = this.s_k.clone_data(); 
 			out.y_k = this.y_k.clone_data(); 
-			out.H_k = H_k.scale(1.0);
+			out.H_k = H_k.times(1.0);
 		}
 		return out;
 	}

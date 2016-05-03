@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.ejml.simple.SimpleMatrix;
 
+import Jama.Matrix;
 import opt.Adapt_Strategy;
 import opt.SampleSizeStrategy;
 import opt.utils;
@@ -80,20 +81,20 @@ public class Dyna_samplesize_loss_e implements adaptive_loss, SecondOrderLoss {
 		return "dyna";
 	}
 	@Override
-	public SimpleMatrix getHessian(DataPoint w) {
+	public Matrix getHessian(DataPoint w) {
 		computed_hessian++; 
 		computed_subHessian+=loss.getDataSize();
 		return ((SecondOrderLoss) loss).getHessian(w);
 	}
 
 	@Override
-	public SimpleMatrix getHessian(DataPoint w, ArrayList<Integer> inds) {
+	public Matrix getHessian(DataPoint w, ArrayList<Integer> inds) {
 		computed_subHessian++; 
 		return ((SecondOrderLoss) loss).getHessian(w,inds);
 	}
 
 	@Override
-	public SimpleMatrix getHessian_exlusive_regularizer(DataPoint w, int ind) {
+	public Matrix getHessian_exlusive_regularizer(DataPoint w, int ind) {
 		return ((SecondOrderLoss) loss).getHessian_exlusive_regularizer(w, ind);
 	}
 	@Override

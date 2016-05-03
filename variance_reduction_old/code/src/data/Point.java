@@ -29,9 +29,14 @@ public abstract class Point implements Iterable<Double> {
 	}	
 	
 	public abstract Matrix crossProduct(Point b, int featureDim);
-	public SimpleMatrix crossProduct_sm(Point b, int featureDim){
-		Matrix m = crossProduct(b, featureDim); 
-		return m.m;
+	public Jama.Matrix crossProduct_sm(Point b, int featureDim){
+		double[][] mat = new double[featureDim][featureDim]; 
+		for(int i=0;i<featureDim;i++){ 
+			for(int j=0;j<featureDim;j++){ 
+				mat[i][j] = b.get(i)*b.get(j); 
+			}
+		}
+		return new Jama.Matrix(mat);
 	}
 	
 	public abstract SparseMatrix crossProduct_sparse(Point b, int featureDim);

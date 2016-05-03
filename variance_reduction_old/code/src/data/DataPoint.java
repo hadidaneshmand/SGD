@@ -1,7 +1,6 @@
 
 package data;
 
-import org.ejml.simple.SimpleMatrix;
 
 public abstract class DataPoint extends Point {
 	
@@ -16,6 +15,6 @@ public abstract class DataPoint extends Point {
 		this.label = label;
 	}
 	public abstract int getDimension(); 
-	public abstract DataPoint times(SimpleMatrix p); 
+	public abstract DataPoint times(Jama.Matrix p); 
 	public abstract DataPoint clone_data(); 
 }

@@ -11,7 +11,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
-import org.ejml.simple.SimpleMatrix;
 
 /**
  * Implementation of a sparse point (using a Java HashMap to Double values)
@@ -336,7 +335,7 @@ public class SparsePoint extends DataPoint {
 	}
 
 	@Override
-	public DataPoint times(SimpleMatrix p) {
+	public DataPoint times(Jama.Matrix p) {
 		DataPoint output = new SparsePoint();
 		for(int j=0;j<d;j++){ 
 			double s = 0; 

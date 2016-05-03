@@ -3,12 +3,11 @@ package opt.loss;
 
 import java.util.ArrayList;
 
-import org.ejml.simple.SimpleMatrix;
-
+import Jama.Matrix;
 import data.DataPoint;
 
 public interface SecondOrderLoss extends Loss{
-	public SimpleMatrix getHessian(DataPoint w); 
-	public SimpleMatrix getHessian(DataPoint w, ArrayList<Integer> inds); 
-	public SimpleMatrix getHessian_exlusive_regularizer(DataPoint w, int ind); 
+	public Matrix getHessian(DataPoint w); 
+	public Matrix getHessian(DataPoint w, ArrayList<Integer> inds); 
+	public Matrix getHessian_exlusive_regularizer(DataPoint w, int ind); 
 }
