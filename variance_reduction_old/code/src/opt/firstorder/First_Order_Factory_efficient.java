@@ -223,9 +223,7 @@ public class First_Order_Factory_efficient {
 					System.out.println("time:"+method.getTime());
 //					double error = loss.computeLoss(method.getParam())-loss_opt; 
 					double error = computeError(method.getParam(), loss, j, report_solutionspace); 
-					if(error<Math.pow(10, -14)){
-						break;
-					}
+					
 					double iter = method.getNum_computed_gradients()/(1.0*n);
 					System.out.println("loss["+iter+"]="+error);
 					arr_results.get(j*3).add(error); 
@@ -237,6 +235,9 @@ public class First_Order_Factory_efficient {
 						arr_test.get(j*3).add(error_test); 
 						arr_test.get(j*3+1).add(iter);
 						arr_test.get(j*3+2).add(iter); 
+					}
+					if(error<Math.pow(10, -14)){
+						break;
 					}
 				}
 			}
