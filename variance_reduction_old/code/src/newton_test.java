@@ -33,17 +33,17 @@ public class newton_test{
 		SampleSizeStrategy strategy = new Adapt_Strategy_Double_Full(loss.getDataSize(), 3*d, 1, 12);
 		Dyna_regularizer_loss_e adapt_reg_loss = new Dyna_regularizer_loss_e(loss.clone_loss(), strategy.clone_strategy());
 		Dyna_regularizer_loss_e ssreg_loss_for_lbfg = new Dyna_regularizer_loss_e(loss.clone_loss(),strategy.clone_strategy()); 
-		methods_in[0] = new Newton((SecondOrderLoss) loss.clone_loss()); 
+		methods_in[4] = new Newton((SecondOrderLoss) loss.clone_loss()); 
 		methods_in[5] = new Newton((SecondOrderLoss) adapt_reg_loss);
-		methods_in[2] = new LBFGS_my(loss.clone_loss(), m); 
+		methods_in[1] = new LBFGS_my(loss.clone_loss(), m); 
 		methods_in[3] = new LBFGS_my(ssreg_loss_for_lbfg, m); 
-		methods_in[4] = new SAGA(loss.clone_loss(), 0.3/(Input.L+1));
-		methods_in[1] = new Nesterov2(loss.clone_loss(),new GD(loss.clone_loss())); 
+		methods_in[0] = new SAGA(loss.clone_loss(), 0.3/(Input.L+1));
+		methods_in[2] = new Nesterov2(loss.clone_loss(),new GD(loss.clone_loss())); 
 		
 		for(int i=0;i<methods_in.length;i++){
 			methods_in[i].setParam(initParam);
 		}
 		First_Order_Factory_efficient.methods_in = methods_in; 
-		First_Order_Factory_efficient.experiment_with_iterations_complexity(1, loss.clone_loss(), 150, 0, Input.loss_test, Input.config.logDir+"_newton_time", Input.L, false,n);
+		First_Order_Factory_efficient.experiment_with_iterations_complexity(1, loss.clone_loss(), 60, 0, Input.loss_test, Input.config.logDir+"_newton_time", Input.L, false,n);
 	}
 }

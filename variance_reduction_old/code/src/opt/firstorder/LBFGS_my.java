@@ -80,12 +80,6 @@ public class LBFGS_my extends FirstOrderOpt {
 		}
 		
 	}
-	@Override
-	public void Iterate(int stepNum) {
-		for(int i=0;i<stepNum;i++){
-			iterate_once();
-		}
-	}
 
 	@Override
 	public void setName() {
