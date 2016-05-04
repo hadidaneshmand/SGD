@@ -15,22 +15,16 @@ public abstract class  VarianceReducedSG extends FirstOrderOpt implements Accela
 		this.setStepSize(learning_rate); 
 	}
 
+	
 	@Override
-	public void Iterate(int stepNum) {
-		int n = getLoss().getDataSize();
-		
-		for (int i = 0; i < stepNum; ++i) {
-			
-			// gradient step
-			w = (DataPoint) w.subtract(getGradient(w).multiply(getStepSize()));
-//			if(i % 20000 == 1){ 
-//				System.out.println("VR Iteration: "+i +", Free memory (bytes): " + 
-//				  Runtime.getRuntime().freeMemory()+ ", Total memory (bytes): " + 
-//						  Runtime.getRuntime().totalMemory());
-//			}
-		}
-
+	public void iterate_once() {
+		w = (DataPoint) w.subtract(getGradient(w).multiply(getStepSize()));
 	}
+	@Override
+	public void one_pass() {
+		Iterate(loss.getDataSize());;
+	}
+	
 	
 	public abstract DataPoint VarianceCorrection(int index, DataPoint gp);
 	public abstract void updateMemory(DataPoint stochasticGradient,int index);
@@ -52,5 +46,10 @@ public abstract class  VarianceReducedSG extends FirstOrderOpt implements Accela
 	@Override
 	public Accelarable clone_accelarable() {
 		return (Accelarable) clone_method();
+	}
+	@Override
+	public void update_iterations(double time) {
+		this.time += time; 
+		num_computed_gradients+=1; 
 	}
 }

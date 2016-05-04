@@ -27,7 +27,7 @@ public class Nesterov2 extends FirstOrderOpt {
 
 	}
 
-	public void iterateOnce(){ 
+	public void iterate_once(){ 
 		System.out.println("stepsize:"+step_size);
 //		DataPoint newx = (DataPoint) pastx.add(acc.getGradient(pastx).multiply(-1.0*step_size));
 		DataPoint newx = (DataPoint) pasty.add(acc.getGradient(pasty).multiply(-1.0*step_size));
@@ -48,14 +48,7 @@ public class Nesterov2 extends FirstOrderOpt {
 		pasty = newy.clone_data(); 
 	    pastalpha = newalpha;
 	}
-	@Override
-	public void Iterate(int stepNum) {
-		for(int i=0;i<stepNum;i++){ 
-			num_computed_gradients += acc.computationalComplexity(); 
-			iterateOnce(); 
-			System.out.println("newalpha:"+pastalpha);
-		}
-	}
+
 
 	@Override
 	public FirstOrderOpt clone_method() {

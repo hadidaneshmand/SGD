@@ -48,27 +48,24 @@ public class SVRG_Streaming_Main extends FirstOrderOpt{
 	}
 
 	@Override
-	public void Iterate(int stepNum) {
-		for(int i=0;i<stepNum;i++){ 
-			T++; 
-			if(state == 0 && T+1 == samplesize){ 
-				computeAvg(samplesize);
-				m_hat = utils.getInstance().getGenerator().nextInt(m);
-				samplesize = Math.min(b*samplesize,getLoss().getDataSize()); 
-				updatestate();
-			}
-            else if(state == 1 && T <= m_hat){ 
-            	int rind = utils.getInstance().getGenerator().nextInt(getLoss().getDataSize()); 
-            	DataPoint p = getLoss().getStochasticGradient(rind, w); 
-    			p = (DataPoint) p.subtract(getLoss().getStochasticGradient(rind,past_w));
-    			p = (DataPoint) p.add(avg);
-    			p = (DataPoint) p.multiply(-1.0*getStepSize());
-    			w = (DataPoint) w.add(p); 
-			}
-			if(state == 1 && T == m_hat){
-				updatestate();
-			}
-			
+	public void iterate_once() {
+		T++; 
+		if(state == 0 && T+1 == samplesize){ 
+			computeAvg(samplesize);
+			m_hat = utils.getInstance().getGenerator().nextInt(m);
+			samplesize = Math.min(b*samplesize,getLoss().getDataSize()); 
+			updatestate();
+		}
+        else if(state == 1 && T <= m_hat){ 
+        	int rind = utils.getInstance().getGenerator().nextInt(getLoss().getDataSize()); 
+        	DataPoint p = getLoss().getStochasticGradient(rind, w); 
+			p = (DataPoint) p.subtract(getLoss().getStochasticGradient(rind,past_w));
+			p = (DataPoint) p.add(avg);
+			p = (DataPoint) p.multiply(-1.0*getStepSize());
+			w = (DataPoint) w.add(p); 
+		}
+		if(state == 1 && T == m_hat){
+			updatestate();
 		}
 	}
 	

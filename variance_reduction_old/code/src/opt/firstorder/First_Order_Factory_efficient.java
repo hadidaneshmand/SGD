@@ -3,6 +3,9 @@ package opt.firstorder;
 import java.util.ArrayList;
 import java.util.List;
 
+import opt.Adapt_Strategy_Double_Full;
+import opt.SampleSizeStrategy;
+import opt.loss.Dyna_regularizer_loss_e;
 import opt.loss.Loss;
 import data.DataPoint;
 import data.Result;
@@ -24,9 +27,13 @@ public class First_Order_Factory_efficient {
 		double eta_n = 0.3/(L+lambda_n*n); 
 		double loss_opt = -1; 
 //		if(method_for_opt == null){ 
-		method_for_opt = new SAGA(loss,eta_n); 
+		SampleSizeStrategy strategy = new Adapt_Strategy_Double_Full(loss.getDataSize(), 3*loss.getDimension(), 1, 12);
+		Dyna_regularizer_loss_e adapt_reg_loss = new Dyna_regularizer_loss_e(loss.clone_loss(), strategy.clone_strategy());
+		method_for_opt = new Newton(adapt_reg_loss); 
 //		}
-		method_for_opt.Iterate((int) (n*Math.log(n)*10));
+		while(method_for_opt.getNum_computed_gradients()*1.0/loss.getDataSize()<20.0){
+			method_for_opt.Iterate(1);
+		}
 		loss_opt = loss.computeLoss(method_for_opt.getParam()); 
 		return loss_opt; 
 	}
@@ -163,13 +170,16 @@ public class First_Order_Factory_efficient {
 		    }
 		}
 		ArrayList<String> names = new ArrayList<String>(); 
-		for(int i=0;i<2*methods_in.length;i++){
-		    if( i % 2 == 0){
-		    	int j = i/2; 
+		for(int i=0;i<3*methods_in.length;i++){
+		    if( i % 3 == 0){
+		    	int j = i/3; 
 		    	names.add(methods_in[j].getName()); 
 		    }
-		    else{
+		    else if (i % 3 == 1){ 
 		    	names.add("steps"+i); 
+		    }
+		    else{
+		    	names.add("time"+i); 
 		    }
 		}
 		Result result = new Result(names); 
@@ -178,8 +188,8 @@ public class First_Order_Factory_efficient {
 			ArrayList<ArrayList<Double>> arr_results = new ArrayList<ArrayList<Double>>(); 
 			for(int j=0;j<names.size();j++){
 				arr_results.add(j, new ArrayList<Double>());
-				if(j%2==0){
-					int method_ind = (int)(j/2.0); 
+				if(j%3==0){
+					int method_ind = (int)(j/3.0); 
 					FirstOrderOpt method = methods_in[method_ind]; 
 					System.out.println("methodparam:"+method.getParam().getNorm());
 					arr_results.get(j).add(computeError(method.getParam(), loss, method_ind, report_solutionspace)); 
@@ -192,8 +202,8 @@ public class First_Order_Factory_efficient {
 			if(test_loss != null){ 
 				for(int j=0;j<names.size();j++){
 					arr_test.add(j,new ArrayList<Double>()); 
-					if(j%2 ==0){
-						FirstOrderOpt method = methods_in[(int)(j/2.0)]; 
+					if(j%3 ==0){
+						FirstOrderOpt method = methods_in[(int)(j/3.0)]; 
 						arr_test.get(j).add(test_loss.computeLoss(method.getParam())); 
 					}
 					else{
@@ -203,21 +213,27 @@ public class First_Order_Factory_efficient {
 			}
 			for(int j=0;j<methods_in.length;j++){ 
 				FirstOrderOpt method = methods_in[j].clone_method(); 
-				while((method.getNum_computed_gradients()/(1.0*n)) <= maxItr){  
-					System.out.println("======= "+names.get(2*j)+" =======");
+				
+				while(method.getTime()<= maxItr){  
+					System.out.println("======= "+names.get(3*j)+" =======");
 					System.out.println("datasetsize:"+method.getLoss().getDataSize());
 					System.out.println("lambda:"+method.getLoss().getLambda());
-					method.Iterate(1);
+					method.one_pass();
+					
+					System.out.println("time:"+method.getTime());
 //					double error = loss.computeLoss(method.getParam())-loss_opt; 
-					double error = computeError(method.getParam(), loss, j, report_solutionspace);  
-					System.out.println("loss["+(method.getNum_computed_gradients()/(1.0*n))+"]="+error);
-					arr_results.get(j*2).add(error); 
-					arr_results.get(j*2+1).add(method.getNum_computed_gradients()/(1.0*n)); 
+					double error = computeError(method.getParam(), loss, j, report_solutionspace); 
+					double iter = method.getTime();
+					System.out.println("loss["+iter+"]="+error);
+					arr_results.get(j*3).add(error); 
+					arr_results.get(j*3+1).add(method.getNum_computed_gradients()/(1.0*n)); 
+					arr_results.get(j*3+2).add(method.getTime()); 
 					if(test_loss!=null){
 						double error_test = test_loss.computeLoss(method.getParam()); 
-						System.out.println("test_loss["+(method.getNum_computed_gradients()/(1.0*n))+"]="+error_test);
-						arr_test.get(j*2).add(error_test); 
-						arr_test.get(j*2+1).add(method.getNum_computed_gradients()/(1.0*n));
+						System.out.println("test_loss["+iter+"]="+error_test);
+						arr_test.get(j*3).add(error_test); 
+						arr_test.get(j*3+1).add(iter);
+						arr_test.get(j*3+2).add(iter); 
 					}
 				}
 			}

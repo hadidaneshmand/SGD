@@ -1,8 +1,6 @@
 package opt.firstorder;
 
 
-import javax.swing.text.html.HTMLDocument.HTMLReader.IsindexAction;
-
 import data.DataPoint;
 import opt.loss.SecondOrderLoss;
 import opt.loss.adaptive_loss;
@@ -20,15 +18,9 @@ public class Newton extends FirstOrderOpt{
 		this.name = "newton-"+loss.getType(); 
 	}
 
-	@Override
-	public void Iterate(int stepNum) {
-		for(int i=0;i<stepNum;i++){ 
-			num_computed_gradients+=loss.getDataSize(); 
-			Iterate_once();
-		}
-	}
 	int c = 0; 
-	public void Iterate_once(){ 
+	int initialSample = -1; 
+	public void iterate_once(){ 
 //		if(first_itr){ 
 //			System.out.println("stepsize"+getStepSize());
 //			w = (DataPoint) w.add(loss.getAverageGradient(w).multiply(-1*getStepSize()));
@@ -38,9 +30,15 @@ public class Newton extends FirstOrderOpt{
 //			}
 //			return; 
 //		}
+		if(initialSample == -1){ 
+			initialSample = loss.getDataSize(); 
+		}
 		DataPoint delta = loss.getAverageGradient(w).times(((SecondOrderLoss)loss).getHessian(w).inverse()); 
-		delta = (DataPoint) delta.multiply(-1.0); 
-		double step_size = backtracking_line_search(delta); 
+		delta = (DataPoint) delta.multiply(-1.0);
+		double step_size = 1.0;
+		if(loss.getDataSize()<=initialSample){
+			step_size = backtracking_line_search(delta); 
+		}
 //		double  step_size = 1; 
 //		double step_size = exact_line_search(delta); 
 //		double step_size = 0.01;

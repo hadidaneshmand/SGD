@@ -9,6 +9,7 @@ public abstract class FirstOrderOpt {
 	protected DataPoint w; 
 	protected double step_size = 0.8; 
 	protected double num_computed_gradients = 0;
+	protected double time;
 	protected String name; 
 	public abstract void setName();
 	protected double c_1 = 0.0001;
@@ -18,9 +19,13 @@ public abstract class FirstOrderOpt {
 	protected double stepSize_LineSearch = 0.001; 
 	protected int numb_iter_linesearch = 10; 
 	protected double alpha_line_search = 0.1; 
-	
 	public void setName(String name){
 		this.name = name; 
+	}
+	public abstract void iterate_once();
+	
+	public void one_pass(){
+	   Iterate(1);
 	}
 	public FirstOrderOpt(Loss loss) {
 		this.setLoss(loss);
@@ -98,7 +103,17 @@ public abstract class FirstOrderOpt {
 		return out; 
 	}
 	
-	public abstract void Iterate(int stepNum);
+	
+	public void Iterate(int stepNum){
+		for(int i=0;i<stepNum;i++){ 
+			long startT = System.currentTimeMillis(); 
+			iterate_once();
+			long endT = System.currentTimeMillis(); 
+			long detlaM = (endT-startT); 
+			double deltaT = detlaM/1000.0; 
+			update_iterations(deltaT);
+		}
+	}
 	public String getName(){
 		if(name == null){
 			setName();
@@ -118,6 +133,7 @@ public abstract class FirstOrderOpt {
 		this.step_size = step_size;
 	}
 	public abstract FirstOrderOpt clone_method();
+	
 	public DataPoint clone_w(){ 
 		DataPoint w_past = new DensePoint(getLoss().getDimension());
 		for(int i=0;i<getLoss().getDimension();i++){ 
@@ -164,6 +180,17 @@ public abstract class FirstOrderOpt {
 	}
 	public void setMax_itr(int max_itr) {
 		this.max_itr = max_itr;
+	}
+	
+	public void update_iterations(double time){
+		this.time+= time;
+		num_computed_gradients+= getLoss().getDataSize(); 
+	}
+	public double getTime() {
+		return time;
+	}
+	public void setTime(double time) {
+		this.time = time;
 	}
 	
 }

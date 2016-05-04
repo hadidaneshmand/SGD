@@ -19,14 +19,8 @@ public class BFGS extends FirstOrderOpt{
 		this.name = "bfgs-"+loss.getType(); 
 	}
 
-	@Override
-	public void Iterate(int stepNum) {
-		for(int i=0;i<stepNum;i++){ 
-			this.num_computed_gradients+=loss.getDataSize(); 
-			IterateOnce();
-		}
-	}
-	public void IterateOnce(){ 
+	
+	public void iterate_once(){ 
 		int d = loss.getDimension();
 		if(H_k == null){ 
 			H_k = Matrix.identity(loss.getDimension(),loss.getDimension()); 

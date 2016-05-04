@@ -3,7 +3,6 @@ package opt.loss;
 import java.util.Iterator;
 import java.util.List;
 
-import sun.security.jca.GetInstance.Instance;
 import data.DataPoint;
 
 public class LogisticRegression extends Logistic_Loss{

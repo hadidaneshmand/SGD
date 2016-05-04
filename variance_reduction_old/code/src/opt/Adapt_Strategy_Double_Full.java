@@ -58,7 +58,6 @@ public class Adapt_Strategy_Double_Full implements SampleSizeStrategy {
 
 	@Override
 	public int Tack() {
-		System.out.println("Tack:"+numbIter);
 		T++; 
 		numbIter++; 
 		if(isInitialSS){ 

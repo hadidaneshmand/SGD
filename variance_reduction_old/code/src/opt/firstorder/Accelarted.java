@@ -22,14 +22,8 @@ public class Accelarted extends FirstOrderOpt {
 		this.name = "accelarted_method"; 
 	}
 	
-	@Override
-	public void Iterate(int stepNum) {
-		for(int i=0;i<stepNum;i++){ 
-			num_computed_gradients+=acc.computationalComplexity();  
-			iterateOnce(); 
-		}
-	}
-	public void iterateOnce(){ 
+	
+	public void iterate_once(){ 
 		System.out.println("L:"+L);
 		DataPoint curx = (DataPoint) pasty.add(loss.getAverageGradient(pasty).multiply(-1.0/L)); 
 		double sq = Math.sqrt(L/loss.getLambda()); 
@@ -55,6 +49,8 @@ public class Accelarted extends FirstOrderOpt {
 	public DataPoint getParam() {
 		return pastx;
 	}
+
+	
 	
 	
 

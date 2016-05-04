@@ -32,7 +32,7 @@ public class Dyna_samplesize_loss_e implements adaptive_loss, SecondOrderLoss {
 	public DataPoint getStochasticGradient(DataPoint w) {
 		computed_sgd++;
 		int randInd = as.getSubInd().get(utils.getInstance().getGenerator().nextInt(as.getSubsamplesi())); 
-		return loss.getStochasticGradient(randInd,w); //TODO
+		return loss.getStochasticGradient(randInd,w); 
 	}
 	@Override
 	public double computeLoss(DataPoint w) {
@@ -84,7 +84,7 @@ public class Dyna_samplesize_loss_e implements adaptive_loss, SecondOrderLoss {
 	public Matrix getHessian(DataPoint w) {
 		computed_hessian++; 
 		computed_subHessian+=loss.getDataSize();
-		return ((SecondOrderLoss) loss).getHessian(w);
+		return ((SecondOrderLoss) loss).getHessian(w,(ArrayList<Integer>) as.getSubInd());
 	}
 
 	@Override

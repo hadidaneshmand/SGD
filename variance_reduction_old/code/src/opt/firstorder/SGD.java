@@ -18,14 +18,12 @@ public class SGD extends FirstOrderOpt {
 		this.total_iterations = 0;
 		setConstant_step_size(false);
 	}
-
+	
 	@Override
-	public void Iterate(int stepNum) {
-		for (int k = 0; k < stepNum; ++k) {
-			iterate_once();
-		}
+	public void one_pass() {
+		Iterate(loss.getDataSize());
 	}
-
+	
 	public void iterate_once(){ 
 		total_iterations++;
 		DataPoint mu = null; 
@@ -53,11 +51,11 @@ public class SGD extends FirstOrderOpt {
 		this.constant_step_size = constant_step_size;
 	}
 	
-	public String getName() {
-		if(isConstant_step_size()){ 
-			return name+":"+getStepSize(); 
-		}
-		return name;
+	
+	@Override
+	public void update_iterations(double time) {
+			this.time+= time;
+			num_computed_gradients+= 1; 
 	}
 	
 	@Override

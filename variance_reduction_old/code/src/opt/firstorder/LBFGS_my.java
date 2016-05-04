@@ -13,8 +13,8 @@ public class LBFGS_my extends FirstOrderOpt {
 	LinkedList<Double> rhos; 
 	int m; 
 	int em; 
-	
     boolean finished = false; 
+    
 	public LBFGS_my(Loss loss,int m) {
 		super(loss);
 		this.m = m; 
@@ -27,7 +27,7 @@ public class LBFGS_my extends FirstOrderOpt {
 	public void iterate_once(){
 //		L-BFGS two-loop recursion: check numerical optimization page 178-179
 		System.out.println("datasize:"+getLoss().getDataSize());
-		num_computed_gradients+= getLoss().getDataSize(); 
+		
 		if(finished){ 
 			return;
 		}
@@ -78,6 +78,7 @@ public class LBFGS_my extends FirstOrderOpt {
 		if(loss instanceof adaptive_loss){ 
 			((adaptive_loss) loss).tack(); 
 		}
+		
 	}
 	@Override
 	public void Iterate(int stepNum) {

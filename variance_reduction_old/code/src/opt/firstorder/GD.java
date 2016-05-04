@@ -9,15 +9,6 @@ public class GD extends FirstOrderOpt implements Accelarable{
 		super(loss);
 	}
 
-	@Override
-	public void Iterate(int stepNum) {
-		for(int i=0;i<stepNum;i++){ 
-			    DataPoint g = getLoss().getAverageGradient(w);
-			    num_computed_gradients+=getLoss().getDataSize();
-				w = (DataPoint) w.add(g.multiply(-1*step_size));
-		}
-	}
-
 	
 
 	@Override
@@ -49,6 +40,13 @@ public class GD extends FirstOrderOpt implements Accelarable{
 	@Override
 	public Accelarable clone_accelarable() {
 		return (Accelarable) clone_method();
+	}
+
+	@Override
+	public void iterate_once() {
+		DataPoint g = getLoss().getAverageGradient(w);
+	    num_computed_gradients+=getLoss().getDataSize();
+		w = (DataPoint) w.add(g.multiply(-1*step_size));
 	}
 
 

@@ -11,14 +11,15 @@ public class Pegasos extends FirstOrderOpt {
 		setT(0); 
 		L = 1; 
 	}
-
 	@Override
-	public void Iterate(int stepNum) {
-		for(int i=0;i<stepNum;i++){ 
-			setT(getT() + 1); 
-			double eta_t = 0.1/(0.1+getLoss().getLambda()*getStepSize());
-			w = (DataPoint) w.multiply(1-eta_t*getLoss().getLambda()).add(getLoss().getStochasticGradient(w).multiply(-1*eta_t));
-		}
+	public void one_pass() {
+		Iterate(loss.getDataSize());
+	}
+	@Override
+	public void iterate_once() {
+		setT(getT() + 1); 
+		double eta_t = 0.1/(0.1+getLoss().getLambda()*getStepSize());
+		w = (DataPoint) w.multiply(1-eta_t*getLoss().getLambda()).add(getLoss().getStochasticGradient(w).multiply(-1*eta_t));
 	}
 
 	public int getT() {

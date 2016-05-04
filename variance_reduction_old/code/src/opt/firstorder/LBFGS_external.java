@@ -32,15 +32,8 @@ public class LBFGS_external extends FirstOrderOpt{
 		this.name = "lbfgs-"+loss.getType(); 
 	}
 
-	@Override
-	public void Iterate(int stepNum) {
-		for(int i=0;i<stepNum;i++){ 
-			num_computed_gradients += loss.getDataSize(); 
-			Iterate_once();
-		}
-	}
 	
-	public void Iterate_once(){ 
+	public void iterate_once(){ 
 		int d = loss.getDimension(); 
 		double[] wx = new double[d]; 
 		double[] gx = new double[d]; 

@@ -4,8 +4,17 @@ import Jama.Matrix;
 import data.DataPoint;
 
 public class Logistic_Loss_efficient extends SecondOrderEfficientLoss {
+	public static Matrix[] Hs;
 	public Logistic_Loss_efficient(DataPoint[] data, int dimension) {
 		super(data, dimension);
+	}
+	public static void buildHessians(DataPoint[] datas, int dim){ 
+		Hs = new Matrix[datas.length]; 
+		for(int i=0;i<datas.length;i++){
+			DataPoint di = datas[i];
+			System.out.println("i:"+i);
+			Hs[i] = (di).crossProduct_sm(di, dim);
+		}
 	}
 
 	@Override
@@ -70,7 +79,7 @@ public class Logistic_Loss_efficient extends SecondOrderEfficientLoss {
 
 	public Matrix getHessian_exlusive_regularizer(DataPoint w, int ind) {
 		DataPoint di = getData()[ind];
-		Matrix hi = (di).crossProduct_sm(di, getDimension()); 
+		Matrix hi = Hs[ind];  
 		double prod = -1*di.scalarProduct(w)*di.getLabel(); 
 		double g = Math.exp(prod)/(Math.pow(1+Math.exp(prod),2)); 
 		hi = hi.times(g);
