@@ -226,7 +226,7 @@ public class First_Order_Factory_efficient {
 					if(error<Math.pow(10, -14)){
 						break;
 					}
-					double iter = method.getTime();
+					double iter = method.getNum_computed_gradients()/(1.0*n);
 					System.out.println("loss["+iter+"]="+error);
 					arr_results.get(j*3).add(error); 
 					arr_results.get(j*3+1).add(method.getNum_computed_gradients()/(1.0*n)); 
