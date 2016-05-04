@@ -214,7 +214,7 @@ public class First_Order_Factory_efficient {
 			for(int j=0;j<methods_in.length;j++){ 
 				FirstOrderOpt method = methods_in[j].clone_method(); 
 				
-				while(method.getTime()<= maxItr){  
+				while(method.getNum_computed_gradients()/(1.0*n)<= maxItr){  
 					System.out.println("======= "+names.get(3*j)+" =======");
 					System.out.println("datasetsize:"+method.getLoss().getDataSize());
 					System.out.println("lambda:"+method.getLoss().getLambda());
@@ -223,6 +223,9 @@ public class First_Order_Factory_efficient {
 					System.out.println("time:"+method.getTime());
 //					double error = loss.computeLoss(method.getParam())-loss_opt; 
 					double error = computeError(method.getParam(), loss, j, report_solutionspace); 
+					if(error<Math.pow(10, -14)){
+						break;
+					}
 					double iter = method.getTime();
 					System.out.println("loss["+iter+"]="+error);
 					arr_results.get(j*3).add(error); 
