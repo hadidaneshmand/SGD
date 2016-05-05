@@ -22,28 +22,22 @@ public class LeastSquares extends Loss_static{
 		return g;
 	}
 
-	@Override
-	public double computeLoss(DataPoint w) {
-		double loss = 0;
-		if(getData() == null) {
-			return -1;
-		}
-		// use squared loss: (1/n) * (w^T*x - y)^2
-		for (Iterator<DataPoint> iter = getData().iterator(); iter.hasNext();) {
-			DataPoint p = (DataPoint) iter.next();
-			double y = p.getLabel();
-			double t = (w.scalarProduct(p) - y);
-			loss += t*t;
-		}
-		loss /= getData().size();
-		loss += (lambda/2.0)*w.squaredNorm();
-		return loss;
-	}
 	
 	public Loss clone_loss(){ 
 		LeastSquares out = new LeastSquares(data, getDimension());
 		out.setLambda(getLambda());
 		return out;
+	}
+
+	@Override
+	public double computeLoss(int index, DataPoint w) {
+		if(getData() == null) {
+			return -1;
+		}
+		DataPoint p = data.get(index);
+		double y = p.getLabel();
+		double t = (w.scalarProduct(p) - y);
+		return t*t;
 	}
 
 	

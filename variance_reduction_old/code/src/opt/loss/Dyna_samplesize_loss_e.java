@@ -34,10 +34,7 @@ public class Dyna_samplesize_loss_e implements adaptive_loss, SecondOrderLoss {
 		int randInd = as.getSubInd().get(utils.getInstance().getGenerator().nextInt(as.getSubsamplesi())); 
 		return loss.getStochasticGradient(randInd,w); 
 	}
-	@Override
-	public double computeLoss(DataPoint w) {
-		return loss.computeLoss(w);
-	}
+	
 	
 	@Override
 	public int getDimension() {
@@ -104,6 +101,18 @@ public class Dyna_samplesize_loss_e implements adaptive_loss, SecondOrderLoss {
 	@Override
 	public void tack() {
 		as.Tack(); 
+	}
+	@Override
+	public double computeLoss( DataPoint w) {
+		return loss.computeLoss(as.getSubInd(), w);
+	}
+	@Override
+	public double computeLoss(int index, DataPoint w) {
+		return loss.computeLoss(index, w);
+	}
+	@Override
+	public double computeLoss(List<Integer> indices, DataPoint w) {
+		return loss.computeLoss(indices, w);
 	}
 	
 }

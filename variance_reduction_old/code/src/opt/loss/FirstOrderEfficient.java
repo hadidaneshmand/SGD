@@ -14,6 +14,16 @@ public abstract class FirstOrderEfficient implements Loss{
 	protected double lambda;
 	private int dimension;
 	
+	@Override
+	public double computeLoss(List<Integer> indices, DataPoint w) {
+		double out = 0.0; 
+		for(int i=0;i<indices.size();i++){ 
+			out += computeLoss(i, w); 
+		}
+		out/=indices.size(); 
+		out += 0.5*lambda*w.squaredNorm(); 
+		return out;
+	}
 	
 	public FirstOrderEfficient(DataPoint[] data,int dimension) {
 		this.setDimension(dimension); 
@@ -55,7 +65,15 @@ public abstract class FirstOrderEfficient implements Loss{
 		}
 		return gds;
 	}
-	public abstract double computeLoss(DataPoint w);
+	public double computeLoss(DataPoint w){
+		double out = 0.0; 
+		for(int i=0;i<data.length;i++){
+			out+= computeLoss(i, w); 
+		}
+		out/=data.length; 
+		out+=0.5*lambda*w.squaredNorm(); 
+		return out; 
+	}
 	public double getLambda() {
 		return lambda;
 	}

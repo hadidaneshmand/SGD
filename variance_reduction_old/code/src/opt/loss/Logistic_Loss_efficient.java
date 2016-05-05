@@ -12,7 +12,6 @@ public class Logistic_Loss_efficient extends SecondOrderEfficientLoss {
 		Hs = new Matrix[datas.length]; 
 		for(int i=0;i<datas.length;i++){
 			DataPoint di = datas[i];
-			System.out.println("i:"+i);
 			Hs[i] = (di).crossProduct_sm(di, dim);
 		}
 	}
@@ -34,23 +33,10 @@ public class Logistic_Loss_efficient extends SecondOrderEfficientLoss {
 		prod = Math.exp(-1*prod *y);
 		g = (DataPoint) p.multiply(-1*y);
 		g = (DataPoint) g.multiply(prod/(1+prod));
-		g = (DataPoint) g.add(w.multiply(lambda)); // add regularization term lambda*w (cost function is n*lambda*|w|^2) TODO ask about this !!!!
+		g = (DataPoint) g.add(w.multiply(lambda));
 		return g; 	
 	}
 
-	@Override
-	public double computeLoss(DataPoint w) {
-		double loss = 0;
-		for (int i=0;i<getData().length;i++) {
-			DataPoint p = getData()[i];
-			int y = (int) p.getLabel();
-			loss += Math.log(1 + Math.exp(-1*y*p.scalarProduct(w)))/getDataSize(); 
-			
-		}
-//		loss /= getData().length;
-		loss += w.squaredNorm()*lambda/2;
-		return loss;
-	}
 
 //	@Override
 //	public SimpleMatrix getHessian(DataPoint w) {
@@ -79,11 +65,23 @@ public class Logistic_Loss_efficient extends SecondOrderEfficientLoss {
 
 	public Matrix getHessian_exlusive_regularizer(DataPoint w, int ind) {
 		DataPoint di = getData()[ind];
-		Matrix hi = Hs[ind];  
+		Matrix hi = null; 
+		if(Hs!=null){
+			hi = Hs[ind];  
+		}
+		else { 
+			hi =  (di).crossProduct_sm(di, this.getDimension());
+		}
 		double prod = -1*di.scalarProduct(w)*di.getLabel(); 
 		double g = Math.exp(prod)/(Math.pow(1+Math.exp(prod),2)); 
 		hi = hi.times(g);
 		return hi;
+	}
+	@Override
+	public double computeLoss(int index, DataPoint w) {
+		DataPoint p = getData()[index];
+		int y = (int) p.getLabel();
+		return Math.log(1 + Math.exp(-1*y*p.scalarProduct(w)));
 	}
 
 }

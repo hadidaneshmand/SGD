@@ -1,6 +1,5 @@
 package opt.loss;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import data.DataPoint;
@@ -8,7 +7,9 @@ import data.DataPoint;
 public interface Loss {
 	public DataPoint getStochasticGradient(int index,DataPoint w);
 	public DataPoint getStochasticGradient(DataPoint w);
-	public abstract double computeLoss(DataPoint w);
+	public  double computeLoss(DataPoint w);
+	public  double computeLoss(List<Integer> indices,DataPoint w);
+	public  double computeLoss(int index,DataPoint w);
 	public int getDimension();
 	public int getDataSize();
 	public double getLambda();

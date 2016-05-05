@@ -29,23 +29,6 @@ public class LeastSquares_efficient extends SecondOrderEfficientLoss {
 		return g;
 	}
 
-	@Override
-	public double computeLoss(DataPoint w) {
-		double loss = 0;
-		if(getData() == null) {
-			return -1;
-		}
-		// use squared loss: (1/n) * (w^T*x - y)^2
-		for (int i=0;i<getData().length;i++) {
-			DataPoint p = getData()[i]; 
-			double y = p.getLabel();
-			double t = (w.scalarProduct(p) - y);
-			loss += t*t;
-		}
-		loss /= getData().length;
-		loss += (lambda/2.0)*w.squaredNorm();
-		return loss;
-	}
 
 //	@Override
 //	public SimpleMatrix getHessian(DataPoint w) {
@@ -67,6 +50,17 @@ public class LeastSquares_efficient extends SecondOrderEfficientLoss {
 	public Matrix getHessian_exlusive_regularizer(DataPoint w, int ind) {
 		DataPoint p = getData()[ind]; 
 		return  p.crossProduct_sm(p, getDimension()).times(2.0);
+	}
+
+	@Override
+	public double computeLoss(int index, DataPoint w) {
+		if(getData() == null) {
+			return -1;
+		}
+		DataPoint p = getData()[index]; 
+		double y = p.getLabel();
+		double t = (w.scalarProduct(p) - y);
+		return t*t;
 	}
 
 }

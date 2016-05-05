@@ -1,6 +1,7 @@
 package opt.firstorder;
 
 
+import Jama.Matrix;
 import data.DataPoint;
 import opt.loss.SecondOrderLoss;
 import opt.loss.adaptive_loss;
@@ -20,6 +21,7 @@ public class Newton extends FirstOrderOpt{
 
 	int c = 0; 
 	int initialSample = -1; 
+	boolean firststep = true;
 	public void iterate_once(){ 
 //		if(first_itr){ 
 //			System.out.println("stepsize"+getStepSize());
@@ -33,7 +35,9 @@ public class Newton extends FirstOrderOpt{
 		if(initialSample == -1){ 
 			initialSample = loss.getDataSize(); 
 		}
-		DataPoint delta = loss.getAverageGradient(w).times(((SecondOrderLoss)loss).getHessian(w).inverse()); 
+		Matrix H_inv = ((SecondOrderLoss)loss).getHessian(w).inverse();
+		DataPoint grad = loss.getAverageGradient(w);
+		DataPoint delta = grad.times(H_inv); 
 		delta = (DataPoint) delta.multiply(-1.0);
 		double step_size = 1.0;
 		if(loss.getDataSize()<=initialSample){
@@ -43,8 +47,20 @@ public class Newton extends FirstOrderOpt{
 //		double step_size = exact_line_search(delta); 
 //		double step_size = 0.01;
 		w = (DataPoint) w.add(delta.multiply(step_size));
+		
 		if(loss instanceof adaptive_loss){ 
-			((adaptive_loss)loss).tack(); 
+			if(firststep){
+				double localnorm = grad.scalarProduct(grad.times(H_inv));
+				if(localnorm<1.0/30){ 
+					((adaptive_loss)loss).tack(); 
+					firststep = false;
+				}
+				
+			}
+			else{
+				((adaptive_loss)loss).tack(); 
+			}
+			
 		}
 	}
 

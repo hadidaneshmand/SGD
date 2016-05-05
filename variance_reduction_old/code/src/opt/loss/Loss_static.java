@@ -19,6 +19,27 @@ public abstract class Loss_static implements Loss {
 		setLambda(0);
 	}
 	
+	@Override
+	public double computeLoss(DataPoint w) {
+		double loss = 0; 
+		for(int i =0;i<data.size();i++){
+			loss+=computeLoss(i, w); 
+		}
+		loss/=data.size(); 
+		loss+= w.squaredNorm()*lambda/2.0; 
+		return loss;
+	}
+	@Override
+	public double computeLoss(List<Integer> indices, DataPoint w) {
+		double loss = 0.0; 
+		for(int i =0;i<indices.size();i++){
+			loss+=computeLoss(indices.get(i), w); 
+		}
+		loss/=data.size(); 
+		loss+= w.squaredNorm()*lambda/2.0; 
+		return loss;
+	}
+	
 	public abstract DataPoint getStochasticGradient(int index,DataPoint w);
 	public DataPoint getStochasticGradient(DataPoint w){
 		return getStochasticGradient(utils.getInstance().getGenerator().nextInt(data.size()), w);
@@ -53,7 +74,6 @@ public abstract class Loss_static implements Loss {
 		}
 		return gds;
 	}
-	public abstract double computeLoss(DataPoint w);
 	public void set_lambda(double lambda){ 
 		this.lambda = lambda;
 	}

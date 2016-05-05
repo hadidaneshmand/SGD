@@ -30,9 +30,7 @@ public class Logistic_Loss extends Loss_static{
 	public double computeLoss(DataPoint w) {
 		double loss = 0;
 		for (Iterator<DataPoint> iter = data.iterator(); iter.hasNext();) {
-			DataPoint p = (DataPoint) iter.next();
-			int y = (int) p.getLabel();
-			loss += Math.log(1 + Math.exp(-1*y*p.scalarProduct(w))); 
+			
 		}
 		loss /= data.size();
 		loss += w.squaredNorm()*lambda/2;
@@ -45,6 +43,14 @@ public class Logistic_Loss extends Loss_static{
 		Logistic_Loss lg = new Logistic_Loss(data, getDimension()); 
 		lg.setLambda(getLambda());
 		return lg;
+	}
+
+
+	@Override
+	public double computeLoss(int index, DataPoint w) {
+		DataPoint p = data.get(index);
+		int y = (int) p.getLabel();
+		return Math.log(1 + Math.exp(-1*y*p.scalarProduct(w))); 
 	}
 
 }

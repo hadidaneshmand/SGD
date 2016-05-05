@@ -57,20 +57,19 @@ public class Hinge_loss extends Loss_static{
 		return g;
 	}
 
-	@Override
-	public double computeLoss(DataPoint w) {
-		double loss = 0; 
-		for(int i=0;i<getDataSize();i++){
-			DataPoint p = data.get(i); 
-			loss+=Math.max(0, 1-p.getLabel()*w.scalarProduct(p));
-		}
-		loss/=getDataSize(); 
-		loss+=w.squaredNorm()*lambda/2;
-		return loss;
-	}
+	
 	public Loss clone_loss(){ 
 		Loss out = null; 
 		return out;
 	}
+
+	
+	@Override
+	public double computeLoss(int index, DataPoint w) {
+		DataPoint p = data.get(index); 
+		return Math.max(0, 1-p.getLabel()*w.scalarProduct(p));
+	}
+
+	
 
 }
