@@ -50,9 +50,9 @@ public class Newton extends FirstOrderOpt{
 		w = (DataPoint) w.add(delta.multiply(step_size));
 		double localnorm = grad.scalarProduct(grad.times(H_inv));
 		lastLocalNorm = localnorm; 
+		System.out.println("local norm:"+lastLocalNorm);
 		if(loss instanceof adaptive_loss){ 
 			if(firststep){
-				
 				if(localnorm<1.0/30){ 
 					((adaptive_loss)loss).tack(); 
 					firststep = false;
