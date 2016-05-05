@@ -12,6 +12,7 @@ public class Newton extends FirstOrderOpt{
 	public Newton(SecondOrderLoss loss) {
 		super(loss);
 		setStepSize(0.5);
+		lastLocalNorm = Double.MAX_VALUE; 
 	}
 
 	@Override
@@ -71,6 +72,7 @@ public class Newton extends FirstOrderOpt{
 		method.w = clone_w(); 
 		method.num_computed_gradients = this.num_computed_gradients; 
 		method.name = this.name; 
+		method.lastLocalNorm = this.lastLocalNorm; 
 		return method;
 	}
 

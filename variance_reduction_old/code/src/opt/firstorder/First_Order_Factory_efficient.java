@@ -27,12 +27,15 @@ public class First_Order_Factory_efficient {
 		double eta_n = 0.3/(L+lambda_n*n); 
 		double loss_opt = -1; 
 //		if(method_for_opt == null){ 
-		SampleSizeStrategy strategy = new Adapt_Strategy_Double_Full(loss.getDataSize(), 3*loss.getDimension(), 1, 12);
+		SampleSizeStrategy strategy = new Adapt_Strategy_Double_Full(loss.getDataSize(), 3*loss.getDimension(), 1, 1);
 		Dyna_regularizer_loss_e adapt_reg_loss = new Dyna_regularizer_loss_e(loss.clone_loss(), strategy.clone_strategy());
 		method_for_opt = new Newton(adapt_reg_loss); 
 //		}
-		while(method_for_opt.getLastLocalNorm()<Math.pow(10, -15)){
+		System.out.println("######## Computing Pivot Optimal #########");
+		System.out.println("localnorm:"+method_for_opt.getLastLocalNorm());
+		while(method_for_opt.getLastLocalNorm()>Math.pow(10, -15)){
 			method_for_opt.Iterate(1);
+			System.out.println("localnorm:"+method_for_opt.getLastLocalNorm());
 		}
 		loss_opt = loss.computeLoss(method_for_opt.getParam()); 
 		return loss_opt; 
