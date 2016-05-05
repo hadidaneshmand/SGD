@@ -8,7 +8,7 @@ import opt.loss.adaptive_loss;
 
 public class Newton extends FirstOrderOpt{
     boolean first_itr = true;
-   
+    private double lastLocalNorm;
 	public Newton(SecondOrderLoss loss) {
 		super(loss);
 		setStepSize(0.5);
@@ -47,10 +47,11 @@ public class Newton extends FirstOrderOpt{
 //		double step_size = exact_line_search(delta); 
 //		double step_size = 0.01;
 		w = (DataPoint) w.add(delta.multiply(step_size));
-		
+		double localnorm = grad.scalarProduct(grad.times(H_inv));
+		lastLocalNorm = localnorm; 
 		if(loss instanceof adaptive_loss){ 
 			if(firststep){
-				double localnorm = grad.scalarProduct(grad.times(H_inv));
+				
 				if(localnorm<1.0/30){ 
 					((adaptive_loss)loss).tack(); 
 					firststep = false;
@@ -71,6 +72,14 @@ public class Newton extends FirstOrderOpt{
 		method.num_computed_gradients = this.num_computed_gradients; 
 		method.name = this.name; 
 		return method;
+	}
+
+	public double getLastLocalNorm() {
+		return lastLocalNorm;
+	}
+
+	public void setLastLocalNorm(double lastLocalNorm) {
+		this.lastLocalNorm = lastLocalNorm;
 	}
 
 }

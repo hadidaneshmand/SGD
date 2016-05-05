@@ -17,7 +17,7 @@ public class First_Order_Factory_efficient {
 	public static Result out_tes; 
 	public static double[] opt_values; 
 	public static DataPoint[] opt_params; 
-	public static FirstOrderOpt method_for_opt;
+	public static Newton method_for_opt;
 	public static int frequency_opt = -1; 
 	
 	public static double compute_opt_once(Loss loss,double L){
@@ -31,7 +31,7 @@ public class First_Order_Factory_efficient {
 		Dyna_regularizer_loss_e adapt_reg_loss = new Dyna_regularizer_loss_e(loss.clone_loss(), strategy.clone_strategy());
 		method_for_opt = new Newton(adapt_reg_loss); 
 //		}
-		while(method_for_opt.getNum_computed_gradients()*1.0/loss.getDataSize()<20.0){
+		while(method_for_opt.getLastLocalNorm()<Math.pow(10, -15)){
 			method_for_opt.Iterate(1);
 		}
 		loss_opt = loss.computeLoss(method_for_opt.getParam()); 
