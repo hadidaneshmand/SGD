@@ -1,0 +1,94 @@
+
+\documentclass{article}
+
+% use Times
+\usepackage{times}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{bm}
+\usepackage{natbib}
+\usepackage{tikz}
+\usepackage{tkz-euclide}
+\usetkzobj{all}
+\usepackage{chngcntr}
+\usepackage{verbatim}
+
+
+
+\newcommand{\methodname}{{\textsc{dynaSAGA}}}
+\newcommand{\x}{{\bm{x}}} % data point 
+\newcommand{\ts}{{\bm{t}}} % vector of iterations on each sample size
+\newcommand{\y}{{\bm{y}}} % data point as well, used in proof of Theorem 3
+\newcommand{\X}{\mathcal{X}} % sample space 
+\newcommand{\w}{{\bm{w}}} % solution or weight vector
+\newcommand{\risk}{{\cal R}} % risk funtional 
+\newcommand{\E}{{\mathbf{E}}} % expectation 
+\newcommand{\bound}{{\cal H}} % statistical accuracy bound 
+\renewcommand{\S}{{\cal S}} % sample set 
+\newcommand{\T}{{\cal T}} % sample set (sub sample)
+\newcommand{\Pdata}{{\mathcal P}} % data distribution
+\renewcommand{\Re}{{\mathbb R}} % reals 
+\newcommand{\fclass}{{\mathcal F}} % function class
+\newcommand{\bigO}{O} % big O
+\newcommand{\U}{{\mathbf U}} % upper bound
+\newcommand{\Ub}{{\bar \U}} % U(n,n)
+\newcommand{\initerror}{\xi}
+\newcommand{\G}{{\cal B}}
+\renewcommand{\a}{\bm{a}}
+
+\DeclareMathOperator*{\argmin}{\arg\min}
+\DeclareMathOperator*{\argmax}{\arg\max}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+
+\graphicspath{ {./images/} }
+
+\author{}
+
+\newcommand{\highlight}[1]{\textcolor{red}{#1}}
+\title{Stay in Local Neighbourhood: lbfgs with adaptive sample size}
+\begin{document}
+\maketitle
+
+
+\section{Introduction}
+Consider optimization problem on the regularized objective functions of the
+form:
+\begin{align}
+	\risk_{\S} (\w) = \sum_{\x \in \S} f_\x(\w) + \frac{\lambda}{2}\|\w\|^2
+\end{align}
+where all $f_\x(\w)$ are convex and $\gamma$-smooth with respect to $\w$, hence
+$\risk_{\S}$ is $\lambda$-strongly convex. Furthermore, we assume that the
+Hessian matrix of the above objective is $L$-Lipschitz. Here, the set $\S$ is
+the training set with size $n$. 
+\paragraph{Local neighbourhood challenge for lbfgs:} 
+We know that super-linear convergence rate of second order methods is
+gauranteed in just a  local neighbourhood of the solution.
+Unfortunately, convergence of these methods is sublinear out of the local
+region (or linear rate same as gradient methods at the best case).
+For example, classical analysis of Newton's method enjoys a super linear convergence as long as $\| \nabla \risk_n(\w) \| \leq c \frac{\lambda^2}{L}$, where $c$ is a constant indpedent of $n$, $\lambda$, and $L$ \cite{boyd04}. 
+For the self-concordant functions, one can
+define a local region with radius indepdent of $\lambda$ and $L$, which remedies
+the local neighbourhood issue. However, we couldn't find any generalization of
+self-concordant analysis for the Quasi-Newton methods \cite{pilanci2015newton}.
+It seems convergence towards the local region still is a challenge for the
+Quasi-Newton methods. In this project, we aim at convergence towards the
+local region using a constant number of passes over the training set.
+\paragraph{Idea sketch:}
+The idea is as follows; we start optimization on a subset of the data with a
+larger $\lambda$, that leads to a large local region. Since the size of the set
+is small and the radius of the local region is large, lbfgs efficiently
+convergences towards the local region. Then, we increase the sample size and
+decrease the regularizer and run bfgs on the enlarged set. The size of the
+larger set and the new regularizer should guarantee that we stay in local region
+of the enlarged set, which implies bfgs enjoys a super linear convergence on the
+larger set as well. 
+\paragraph{Local phase of Quasi-Newton Methods:}
+teststddddddddddd
+\bibliography{bibliography}
+\bibliographystyle{plain}
+\end{document}
