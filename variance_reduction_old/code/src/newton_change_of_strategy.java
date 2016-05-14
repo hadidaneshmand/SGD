@@ -18,10 +18,11 @@ public class newton_change_of_strategy {
 		int d = loss.getDimension(); 
 		loss.set_lambda(1.0/n);
 		DataPoint initParam = (DataPoint) DensePoint_efficient.one(Input.loss_train.getDimension()).multiply(3.0); 
-		int num_strategy = 4; 
+		int num_strategy = 5; 
+		int c0 = 4;
 		Dyna_regularizer_loss_e[] dyna_losses = new Dyna_regularizer_loss_e[num_strategy]; 
 		for(int i=0;i<num_strategy;i++){ 
-			double incrementFactor = 4 + 4*i; 
+			double incrementFactor = c0 + c0*i; 
 			Adapt_Strategy_Double_Full strategy = new Adapt_Strategy_Double_Full(loss.getDataSize(), d, 1, 1); 
 			strategy.setIncrement_factor(incrementFactor);
 			dyna_losses[i] = new Dyna_regularizer_loss_e(loss.clone_loss(),strategy );
@@ -30,10 +31,10 @@ public class newton_change_of_strategy {
 		for(int i = 0 ;i < num_strategy ; i++){ 
 			methods_in[i] = new Newton(dyna_losses[i]); 
 			methods_in[i].setParam(initParam);
-			methods_in[i].setName("c:"+(4 + 4*i));
+			methods_in[i].setName("c:"+(c0 + c0*i));
 		}
 		
 		First_Order_Factory_efficient.methods_in = methods_in; 
-		First_Order_Factory_efficient.experiment_with_iterations_complexity(3, loss.clone_loss(), 8, -1.0, Input.loss_test, Input.config.logDir+"_newton_strategy", Input.L, false,n);
+		First_Order_Factory_efficient.experiment_with_iterations_complexity(4, loss.clone_loss(), 8, -1.0, Input.loss_test, Input.config.logDir+"_newton_strategy", Input.L, false,n);
 	}
 }
