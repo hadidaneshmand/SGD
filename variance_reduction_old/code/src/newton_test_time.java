@@ -23,13 +23,13 @@ public class newton_test_time {
 		loss.set_lambda(1.0/n);
 		DataPoint initParam = (DataPoint) DensePoint_efficient.one(Input.loss_train.getDimension()).multiply(3.0); 
 		FirstOrderOpt[] methods_in = new FirstOrderOpt[3]; 
-		SampleSizeStrategy strategy = new Adapt_Strategy_Double_Full(loss.getDataSize(), 4*d, 1, 1);
+		SampleSizeStrategy strategy = new Adapt_Strategy_Double_Full(loss.getDataSize(), 3*d, 1, 1);
 		Adapt_Strategy_Double_Full non_doubling = new Adapt_Strategy_Double_Full(loss.getDataSize(), 3*d, 1, 1); 
 		non_doubling.setIncrement_factor(4);
 		Dyna_regularizer_loss_e adapt_reg_loss = new Dyna_regularizer_loss_e(loss.clone_loss(), non_doubling.clone_strategy());
 //		Dyna_regularizer_loss_e ssreg_loss_for_lbfg = new Dyna_regularizer_loss_e(loss.clone_loss(),non_doubling.clone_strategy());
 		Dyna_samplesize_loss_e adapt_ss_loss = new Dyna_samplesize_loss_e(loss.clone_loss(), strategy.clone_strategy());
-		Locality local = new Locality(loss.clone_loss(), strategy.clone_strategy(), 0.2); 
+		Locality local = new Locality(loss.clone_loss(), strategy.clone_strategy(), 0.5); 
 		methods_in[0] = new Newton((SecondOrderLoss) local); 
 		methods_in[2] = new Newton((SecondOrderLoss) adapt_ss_loss); 
 		Newton newton = new Newton((SecondOrderLoss) loss.clone_loss()); 

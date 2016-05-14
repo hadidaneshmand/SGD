@@ -24,23 +24,30 @@ public class Locality extends Dyna_samplesize_loss_e{
 
 	@Override
 	public void tack(DataPoint w) {
-		
 		int newss = as.getSubsamplesi(); 
+		if(newss == getDataSize()){ 
+			return;
+		}
 		System.out.println("sub_size:"+as.getSubInd().size());
-		DataPoint sum_grad = (DataPoint) loss_without_lambda.getStochasticGradient(as.getSubInd(), w);
+		DataPoint sum_grad = (DataPoint) loss_without_lambda.getSumOfGradient(as.getSubInd(), w);
+		sum_grad = (DataPoint) sum_grad.add(w);
 		System.out.println("gradient has been computed");
 		DataPoint grad = sum_grad.clone_data();
-		
-		sum_grad = (DataPoint) sum_grad;
+		grad = (DataPoint) grad.add(w);
+		grad = (DataPoint) grad.multiply(1.0/as.getSubsamplesi()); 
+		if(grad.squaredNorm() > 1.0/as.getSubsamplesi()){ 
+			return; 
+		}
+		sum_grad = (DataPoint) sum_grad.add(w);
 		System.out.println("tack starts!!");
-		sum_grad = (DataPoint) sum_grad.multiply(newss);
 		int incrementFactor = 0; 
 		double norm = grad.squaredNorm();
 		System.out.println("norm of gradient:"+norm+",samplesize:"+1.0/newss);
 		long t1 = System.currentTimeMillis();
-		for(int j=0;j<20;j++){ 
+		double cc = c; 
+		for(int j=0;j<10;j++){ 
 //			System.err.println("++++++++++++++++++++++++++++++");
-			incrementFactor = (int) (newss*c);
+			incrementFactor = (int) (newss*cc);
 //			System.out.println("increment factor:"+incrementFactor+",newss:"+newss);
 			int increasess = newss+incrementFactor; 
 			if(increasess >= loss.getDataSize()){
@@ -49,16 +56,26 @@ public class Locality extends Dyna_samplesize_loss_e{
 			DataPoint new_grad = loss_without_lambda.getSumOfGradient(inds.subList(newss, increasess), w);
 			sum_grad = (DataPoint) sum_grad.add(new_grad);
 //			System.out.println("norm of sum:"+sum_grad.getNorm());
-			grad = (DataPoint) ((DataPoint) sum_grad.multiply(1.0/increasess)).add(w.multiply(1.0/increasess)); 
+			grad = (DataPoint) ((DataPoint) sum_grad.multiply(1.0/increasess)); 
 			norm = grad.squaredNorm();
 //			System.out.println("norm:"+norm+",sample size:"+(1.0/increasess));
-			if(norm > 1.0/increasess || loss.getDataSize() ==increasess){ 
-				break; 
+			if(norm > 1.0/increasess){ 
+				if(j==0){
+					cc = cc*0.5; 
+					continue; 
+				}
+				else{ 
+					break; 	
+				}
+				
 			}
 			else{
 			   use_stored = true; 
 			   storedGrad = grad; 
-			   newss += incrementFactor;
+			   newss = increasess;
+			   if(newss==loss.getDataSize()){ 
+				  break; 
+			   }
 			}
 		}
 		long t2   = System.currentTimeMillis();
