@@ -34,6 +34,6 @@ public class newton_change_of_strategy {
 		}
 		
 		First_Order_Factory_efficient.methods_in = methods_in; 
-		First_Order_Factory_efficient.experiment_with_iterations_complexity(1, loss.clone_loss(), 8, -1.0, Input.loss_test, Input.config.logDir+"_newton_strategy", Input.L, false,n);
+		First_Order_Factory_efficient.experiment_with_iterations_complexity(3, loss.clone_loss(), 8, -1.0, Input.loss_test, Input.config.logDir+"_newton_strategy", Input.L, false,n);
 	}
 }
