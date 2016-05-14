@@ -33,7 +33,7 @@ public class First_Order_Factory_efficient {
 //		}
 		System.out.println("######## Computing Pivot Optimal #########");
 		System.out.println("localnorm:"+method_for_opt.getLastLocalNorm());
-		while(method_for_opt.getLastLocalNorm()>Math.pow(10, -15)){
+		while(method_for_opt.getLastLocalNorm() > Math.pow(10, -20)){
 			method_for_opt.Iterate(1);
 			System.out.println("localnorm:"+method_for_opt.getLastLocalNorm());
 		}
@@ -228,6 +228,9 @@ public class First_Order_Factory_efficient {
 					double error = computeError(method.getParam(), loss, j, report_solutionspace); 
 					
 					double iter = method.getNum_computed_gradients()/(1.0*n);
+					if(error < 0){ 
+						error = Math.pow(10, -14); 
+					}
 					System.out.println("loss["+iter+"]="+error);
 					arr_results.get(j*3).add(error); 
 					arr_results.get(j*3+1).add(method.getNum_computed_gradients()/(1.0*n)); 

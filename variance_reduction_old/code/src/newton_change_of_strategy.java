@@ -21,7 +21,7 @@ public class newton_change_of_strategy {
 		int num_strategy = 4; 
 		Dyna_regularizer_loss_e[] dyna_losses = new Dyna_regularizer_loss_e[num_strategy]; 
 		for(int i=0;i<num_strategy;i++){ 
-			double incrementFactor = 5 + 5*i; 
+			double incrementFactor = 2 + 2*i; 
 			Adapt_Strategy_Double_Full strategy = new Adapt_Strategy_Double_Full(loss.getDataSize(), d, 1, 1); 
 			strategy.setIncrement_factor(incrementFactor);
 			dyna_losses[i] = new Dyna_regularizer_loss_e(loss.clone_loss(),strategy );
@@ -30,7 +30,7 @@ public class newton_change_of_strategy {
 		for(int i = 0 ;i < num_strategy ; i++){ 
 			methods_in[i] = new Newton(dyna_losses[i]); 
 			methods_in[i].setParam(initParam);
-			methods_in[i].setName("c:"+(5 + 5*i));
+			methods_in[i].setName("c:"+(2 + 2*i));
 		}
 		
 		First_Order_Factory_efficient.methods_in = methods_in; 
