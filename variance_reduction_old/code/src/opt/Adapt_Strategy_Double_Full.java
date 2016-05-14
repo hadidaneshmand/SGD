@@ -2,6 +2,7 @@ package opt;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 public class Adapt_Strategy_Double_Full implements SampleSizeStrategy {
 	int ts;// total size 
@@ -23,6 +24,7 @@ public class Adapt_Strategy_Double_Full implements SampleSizeStrategy {
 		Collections.shuffle(indices);
 		this.initial_iteration = initial_iteration; 
 	}
+	private double increment_factor = 2; 
 	
 	@Override
 	public SampleSizeStrategy clone_strategy() {
@@ -35,6 +37,7 @@ public class Adapt_Strategy_Double_Full implements SampleSizeStrategy {
 		out.isInitialSS = this.isInitialSS; 
 		out.ts = this.ts; 
 		out.numbIter = this.numbIter; 
+		out.increment_factor = this.increment_factor; 
 		return out;
 	}
 	
@@ -63,19 +66,42 @@ public class Adapt_Strategy_Double_Full implements SampleSizeStrategy {
 		if(isInitialSS){ 
 			if(T>initial_iteration){ 
 				T = 0; 
-				ss += ss; 
+				ss = (int) (getIncrement_factor()*ss); 
 				isInitialSS = false;
 			}
 		}
 		else{
 			if(T>=it){
 				T = 0; 
-				ss += ss; 
+				ss = (int) (getIncrement_factor()*ss);
 			}
 		}
 		ss = Math.min(ss, ts);
 		return ss;
 	}
+
+
+	public double getIncrement_factor() {
+		return increment_factor;
+	}
+
+
+	public void setIncrement_factor(double increment_factor) {
+		this.increment_factor = increment_factor;
+	}
+
+
+	@Override
+	public List<Integer> getAllInds() {
+		return indices;
+	}
+
+
+	@Override
+	public void setSampleSize(int ss) {
+		this.ss = ss; 
+	}
+	
 	
 
 	

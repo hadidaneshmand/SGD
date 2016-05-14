@@ -1,5 +1,6 @@
 package opt.loss;
 
+import data.DataPoint;
 import opt.SampleSizeStrategy;
 
 public class Dyna_regularizer_loss_e extends Dyna_samplesize_loss_e {
@@ -14,8 +15,8 @@ public class Dyna_regularizer_loss_e extends Dyna_samplesize_loss_e {
 		return out;
 	}
 	@Override
-	public void tack() {
-		super.tack();
+	public void tack(DataPoint w) {
+		super.tack(w);
 		loss.set_lambda(1.0/as.getSubsamplesi());
 	}
 	

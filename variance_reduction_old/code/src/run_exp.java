@@ -17,6 +17,10 @@ public class run_exp {
 				System.out.println("############ newton ###############");
 				newton_test.main(args);
 				System.out.println("########### end of newton ############");
+			case "strategy":
+				System.out.println("############ strategy ###############");
+				newton_change_of_strategy.main(args);
+				System.out.println("########### end of strategy ############");
 			default:
 				break;
 			}

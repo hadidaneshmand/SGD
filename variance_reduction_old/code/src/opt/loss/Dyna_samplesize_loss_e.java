@@ -3,10 +3,8 @@ package opt.loss;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.ejml.simple.SimpleMatrix;
 
 import Jama.Matrix;
-import opt.Adapt_Strategy;
 import opt.SampleSizeStrategy;
 import opt.utils;
 import data.DataPoint;
@@ -14,11 +12,6 @@ import data.DataPoint;
 public class Dyna_samplesize_loss_e implements adaptive_loss, SecondOrderLoss {
 	protected Loss loss; 
 	protected SampleSizeStrategy as; 
-	protected int computed_sgd; 
-	protected int computed_gd; 
-	protected int computed_hessian; 
-	protected int computed_subHessian; 
-	
 	
 	public Dyna_samplesize_loss_e(Loss loss, SampleSizeStrategy as) {
 		this.loss = loss; 
@@ -30,7 +23,6 @@ public class Dyna_samplesize_loss_e implements adaptive_loss, SecondOrderLoss {
 	}
 	@Override
 	public DataPoint getStochasticGradient(DataPoint w) {
-		computed_sgd++;
 		int randInd = as.getSubInd().get(utils.getInstance().getGenerator().nextInt(as.getSubsamplesi())); 
 		return loss.getStochasticGradient(randInd,w); 
 	}
@@ -51,8 +43,6 @@ public class Dyna_samplesize_loss_e implements adaptive_loss, SecondOrderLoss {
 	}
 	@Override
 	public DataPoint getAverageGradient(DataPoint w) {
-		computed_gd++; 
-		computed_sgd+=as.getSubsamplesi(); 
 		return loss.getStochasticGradient(as.getSubInd(), w);
 	}
 	@Override
@@ -63,12 +53,10 @@ public class Dyna_samplesize_loss_e implements adaptive_loss, SecondOrderLoss {
 	@Override
 	public Loss clone_loss() {
 		Dyna_samplesize_loss_e out = new Dyna_samplesize_loss_e(loss.clone_loss(), as.clone_strategy());
-		computed_gd = this.computed_gd; 
-		computed_hessian = this.computed_hessian; 
-		computed_sgd = this.computed_sgd; 
-		computed_subHessian = this.computed_subHessian; 
 		return out;
 	}
+	
+	
 	@Override
 	public void set_lambda(double lambda) {
 		loss.set_lambda(lambda);
@@ -79,14 +67,12 @@ public class Dyna_samplesize_loss_e implements adaptive_loss, SecondOrderLoss {
 	}
 	@Override
 	public Matrix getHessian(DataPoint w) {
-		computed_hessian++; 
-		computed_subHessian+=loss.getDataSize();
+		System.out.println("hessian on:"+as.getSubsamplesi());
 		return ((SecondOrderLoss) loss).getHessian(w,(ArrayList<Integer>) as.getSubInd());
 	}
 
 	@Override
 	public Matrix getHessian(DataPoint w, ArrayList<Integer> inds) {
-		computed_subHessian++; 
 		return ((SecondOrderLoss) loss).getHessian(w,inds);
 	}
 
@@ -99,7 +85,7 @@ public class Dyna_samplesize_loss_e implements adaptive_loss, SecondOrderLoss {
 		return loss.getMaxNorm();
 	}
 	@Override
-	public void tack() {
+	public void tack(DataPoint w) {
 		as.Tack(); 
 	}
 	@Override
@@ -113,6 +99,10 @@ public class Dyna_samplesize_loss_e implements adaptive_loss, SecondOrderLoss {
 	@Override
 	public double computeLoss(List<Integer> indices, DataPoint w) {
 		return loss.computeLoss(indices, w);
+	}
+	@Override
+	public DataPoint getSumOfGradient(List<Integer> indices, DataPoint w) {
+		return loss.getSumOfGradient(indices, w);
 	}
 	
 }

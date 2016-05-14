@@ -40,7 +40,7 @@ public class EulerNewton extends Newton {
 		Matrix AT = new Matrix(d+1, d+1); 
 		AT.setMatrix(0, d, 0, d-1, A.transpose());
 		System.out.println("at:"+AT.get(2, d));
-		AT.set(d, d, loss.getLambda());
+		AT.set(d, d, 1.0);
 		QRDecomposition QR = new QRDecomposition(AT); 
 		Matrix Q = QR.getQ(); 
 		Matrix R = QR.getR();

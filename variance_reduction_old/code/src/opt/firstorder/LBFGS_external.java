@@ -54,7 +54,7 @@ public class LBFGS_external extends FirstOrderOpt{
 			w.set(i, wx[i]);
 		}
 		if(loss instanceof adaptive_loss){ 
-			((adaptive_loss) loss).tack();
+			((adaptive_loss) loss).tack(w);
 		}
 	}
 

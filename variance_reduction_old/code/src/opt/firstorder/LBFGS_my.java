@@ -76,7 +76,7 @@ public class LBFGS_my extends FirstOrderOpt {
 		}
 		w = w_new;
 		if(loss instanceof adaptive_loss){ 
-			((adaptive_loss) loss).tack(); 
+			((adaptive_loss) loss).tack(w); 
 		}
 		
 	}

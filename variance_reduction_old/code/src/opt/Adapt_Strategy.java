@@ -1,9 +1,9 @@
 package opt;
 
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Collections;
-import java.util.Random;
+import java.util.List;
+
 
 public class Adapt_Strategy implements SampleSizeStrategy{
 	
@@ -75,6 +75,14 @@ public class Adapt_Strategy implements SampleSizeStrategy{
 	@Override
 	public String getName() {
 		return "alternating";
+	}
+	@Override
+	public List<Integer> getAllInds() {
+		return indices;
+	}
+	@Override
+	public void setSampleSize(int ss) {
+		subsamplesi = ss; 
 	}
 	
 	

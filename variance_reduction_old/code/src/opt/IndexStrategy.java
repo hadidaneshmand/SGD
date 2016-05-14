@@ -29,5 +29,15 @@ public abstract class IndexStrategy implements SampleSizeStrategy{
      public int getSubsamplesi(){ 
     	 return ss; 
      }
+     
+     @Override
+    public List<Integer> getAllInds() {
+    	return inds;
+    }
+     
+    @Override
+    public void setSampleSize(int ss) {
+    	this.ss = ss; 
+    }
 	
 }

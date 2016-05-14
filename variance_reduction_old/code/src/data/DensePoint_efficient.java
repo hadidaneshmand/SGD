@@ -2,10 +2,6 @@
 package data;
 
 
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
@@ -13,7 +9,6 @@ import java.util.Vector;
 
 import javax.management.RuntimeErrorException;
 
-import org.ejml.simple.SimpleMatrix;
 
 /**
  * Implementation of a dense point (using a Java Vector of Double values)

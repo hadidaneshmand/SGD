@@ -1,6 +1,7 @@
 package opt;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class Adapt_Strategy_GD extends IndexStrategy {
 	double kappa;
@@ -43,7 +44,8 @@ public class Adapt_Strategy_GD extends IndexStrategy {
 	public String getName() {
 		return "agd";
 	}
-	
+
+
 	
 
 }

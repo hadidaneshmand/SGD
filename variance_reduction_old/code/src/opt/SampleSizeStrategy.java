@@ -8,4 +8,6 @@ public interface SampleSizeStrategy {
 	  public int getSubsamplesi();
 	  public SampleSizeStrategy clone_strategy();
 	  public String getName();
+	  public List<Integer> getAllInds(); 
+	  public void setSampleSize(int ss); 
 }

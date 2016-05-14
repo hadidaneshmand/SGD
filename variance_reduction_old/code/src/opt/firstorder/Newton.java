@@ -1,6 +1,7 @@
 package opt.firstorder;
 
 
+
 import Jama.Matrix;
 import data.DataPoint;
 import opt.loss.SecondOrderLoss;
@@ -9,6 +10,7 @@ import opt.loss.adaptive_loss;
 public class Newton extends FirstOrderOpt{
     boolean first_itr = true;
     private double lastLocalNorm;
+    
 	public Newton(SecondOrderLoss loss) {
 		super(loss);
 		setStepSize(0.5);
@@ -38,30 +40,32 @@ public class Newton extends FirstOrderOpt{
 		}
 		Matrix H_inv = ((SecondOrderLoss)loss).getHessian(w).inverse();
 		DataPoint grad = loss.getAverageGradient(w);
+		double localnorm = grad.scalarProduct(grad.times(H_inv));
 		DataPoint delta = grad.times(H_inv); 
 		delta = (DataPoint) delta.multiply(-1.0);
 		double step_size = 1.0;
-		if(loss.getDataSize()<=initialSample){
+		if(loss.getDataSize()<=initialSample && localnorm>0.25){
 			step_size = backtracking_line_search(delta); 
 		}
+			
 		System.out.println("step size:"+step_size);
 //		double  step_size = 1; 
 //		double step_size = exact_line_search(delta); 
 //		double step_size = 0.01;
 		w = (DataPoint) w.add(delta.multiply(step_size));
-		double localnorm = grad.scalarProduct(grad.times(H_inv));
 		lastLocalNorm = localnorm; 
 		System.out.println("local norm:"+lastLocalNorm);
 		if(loss instanceof adaptive_loss){ 
 			if(firststep){
-				if(localnorm<0.5){ 
-					((adaptive_loss)loss).tack(); 
+				if(localnorm<0.25){ 
+					System.out.println("------------------TACK---------------");
+					((adaptive_loss)loss).tack(w); 
 					firststep = false;
 				}
 				
 			}
 			else{
-				((adaptive_loss)loss).tack(); 
+				((adaptive_loss)loss).tack(w); 
 			}
 			
 		}

@@ -20,7 +20,7 @@ public class newton_test{
 		Input.initialize(args);
 		Input.loss_train.set_lambda(0.0001);
 		Loss loss = Input.loss_train.clone_loss(); 
-		Logistic_Loss_efficient.buildHessians(Input.data, Input.d);
+//		Logistic_Loss_efficient.buildHessians(Input.data, Input.d);
 		int n = loss.getDataSize();
 		int d = loss.getDimension(); 
 		int m = 100; 
@@ -40,6 +40,6 @@ public class newton_test{
 			methods_in[i].setParam(initParam);
 		}
 		First_Order_Factory_efficient.methods_in = methods_in; 
-		First_Order_Factory_efficient.experiment_with_iterations_complexity(1, loss.clone_loss(), 250, -1.0, Input.loss_test, Input.config.logDir+"_newton_time", Input.L, false,n);
+		First_Order_Factory_efficient.experiment_with_iterations_complexity(1, loss.clone_loss(), 250, 0, Input.loss_test, Input.config.logDir+"_newton_time", Input.L, false,n);
 	}
 }

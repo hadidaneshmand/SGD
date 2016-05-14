@@ -45,6 +45,12 @@ public abstract class Loss_static implements Loss {
 		return getStochasticGradient(utils.getInstance().getGenerator().nextInt(data.size()), w);
 	}
 	public DataPoint getStochasticGradient(List<Integer> indices, DataPoint w){
+		DataPoint g = getSumOfGradient(indices, w);
+		return (DataPoint) g.multiply(1.0/indices.size()); 
+	}
+	
+	@Override
+	public DataPoint getSumOfGradient(List<Integer> indices, DataPoint w) {
 		DataPoint g = new DensePoint(getDimension());
 		for(int i=0;i<dimension;i++){ 
 			g.set(i, 0);
@@ -53,7 +59,7 @@ public abstract class Loss_static implements Loss {
 			DataPoint gi = getStochasticGradient(indices.get(i),w);
 			g = (DataPoint) g.add(gi);
 		}
-		return (DataPoint) g.multiply(1.0/indices.size()); 
+		return g;
 	}
 	public DataPoint getAverageGradient(DataPoint w){
 		DataPoint g = new DensePoint(getDimension());
