@@ -61,6 +61,7 @@ public class Dyna_samplesize_loss_e implements adaptive_loss, SecondOrderLoss {
 	public void set_lambda(double lambda) {
 		loss.set_lambda(lambda);
 	}
+	
 	@Override
 	public String getType() {
 		return "dyna";

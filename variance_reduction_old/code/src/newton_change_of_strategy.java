@@ -3,6 +3,7 @@ import opt.firstorder.FirstOrderOpt;
 import opt.firstorder.First_Order_Factory_efficient;
 import opt.firstorder.Newton;
 import opt.loss.Dyna_regularizer_loss_e;
+import opt.loss.Locality;
 import opt.loss.Logistic_Loss_efficient;
 import opt.loss.Loss;
 import data.DataPoint;
@@ -18,22 +19,24 @@ public class newton_change_of_strategy {
 		int d = loss.getDimension(); 
 		loss.set_lambda(1.0/n);
 		DataPoint initParam = (DataPoint) DensePoint_efficient.one(Input.loss_train.getDimension()).multiply(3.0); 
-		int num_strategy = 5; 
-		int c0 = 4;
-		Dyna_regularizer_loss_e[] dyna_losses = new Dyna_regularizer_loss_e[num_strategy]; 
+		int num_strategy = 4; 
+		Dyna_regularizer_loss_e[] dyna_losses = new Dyna_regularizer_loss_e[num_strategy];
 		for(int i=0;i<num_strategy;i++){ 
-			double incrementFactor = c0 + c0*i; 
-			Adapt_Strategy_Double_Full strategy = new Adapt_Strategy_Double_Full(loss.getDataSize(), d, 1, 1); 
+			double incrementFactor = Math.pow(2, i+1); 
+			Adapt_Strategy_Double_Full strategy = new Adapt_Strategy_Double_Full(loss.getDataSize(), 2*d, 1, 1); 
 			strategy.setIncrement_factor(incrementFactor);
-			dyna_losses[i] = new Dyna_regularizer_loss_e(loss.clone_loss(),strategy );
+			dyna_losses[i] = new Dyna_regularizer_loss_e(loss.clone_loss(),strategy);
 		}
-		FirstOrderOpt[] methods_in = new FirstOrderOpt[num_strategy];
+		FirstOrderOpt[] methods_in = new FirstOrderOpt[num_strategy+1];
 		for(int i = 0 ;i < num_strategy ; i++){ 
 			methods_in[i] = new Newton(dyna_losses[i]); 
 			methods_in[i].setParam(initParam);
-			methods_in[i].setName("c:"+(c0 + c0*i));
+			methods_in[i].setName("c:"+(Math.pow(2, i+1)));
 		}
-		
+		Adapt_Strategy_Double_Full strategy = new Adapt_Strategy_Double_Full(loss.getDataSize(), 2*d, 1, 1); 
+		methods_in[num_strategy] = new Newton(new Locality(loss.clone_loss(), strategy, 0.1));
+		methods_in[num_strategy].setName("data-driven");
+		methods_in[num_strategy].setParam(initParam);
 		First_Order_Factory_efficient.methods_in = methods_in; 
 		First_Order_Factory_efficient.experiment_with_iterations_complexity(4, loss.clone_loss(), 8, -1.0, Input.loss_test, Input.config.logDir+"_newton_strategy", Input.L, false,n);
 	}

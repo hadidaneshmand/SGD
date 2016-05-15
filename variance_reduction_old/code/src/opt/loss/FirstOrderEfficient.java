@@ -5,7 +5,7 @@ import java.util.List;
 
 import opt.utils;
 import data.DataPoint;
-import data.DensePoint;
+import data.DensePoint_efficient;
 
 public abstract class FirstOrderEfficient implements Loss{
 	private DataPoint[] data;
@@ -40,10 +40,8 @@ public abstract class FirstOrderEfficient implements Loss{
 	
 	@Override
 	public DataPoint getSumOfGradient(List<Integer> indices, DataPoint w) {
-		DataPoint g = new DensePoint(getDimension());
-		for(int i=0;i<dimension;i++){ 
-			g.set(i, 0);
-		}
+		System.out.println();
+		DataPoint g = DensePoint_efficient.zero(dimension);
 		for(int i=0;i<indices.size();i++){ 
 			DataPoint gi = getStochasticGradient(indices.get(i),w);
 			g = (DataPoint) g.add(gi);
@@ -51,7 +49,7 @@ public abstract class FirstOrderEfficient implements Loss{
 		return g;
 	}
 	public DataPoint getAverageGradient(DataPoint w){
-		DataPoint g = new DensePoint(getDimension());
+		DataPoint g =  DensePoint_efficient.zero(dimension);
 		for(int i=0;i<dimension;i++){ 
 			g.set(i, 0);
 		}

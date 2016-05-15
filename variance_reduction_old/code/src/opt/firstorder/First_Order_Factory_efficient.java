@@ -7,6 +7,7 @@ import opt.Adapt_Strategy_Double_Full;
 import opt.SampleSizeStrategy;
 import opt.loss.Dyna_regularizer_loss_e;
 import opt.loss.Loss;
+import opt.loss.SecondOrderLoss;
 import data.DataPoint;
 import data.Result;
 
@@ -27,9 +28,7 @@ public class First_Order_Factory_efficient {
 		double eta_n = 0.3/(L+lambda_n*n); 
 		double loss_opt = -1; 
 //		if(method_for_opt == null){ 
-		SampleSizeStrategy strategy = new Adapt_Strategy_Double_Full(loss.getDataSize(), 3*loss.getDimension(), 1, 1);
-		Dyna_regularizer_loss_e adapt_reg_loss = new Dyna_regularizer_loss_e(loss.clone_loss(), strategy.clone_strategy());
-		method_for_opt = new Newton(adapt_reg_loss); 
+		method_for_opt = new Newton((SecondOrderLoss) loss.clone_loss()); 
 //		}
 		System.out.println("######## Computing Pivot Optimal #########");
 		System.out.println("localnorm:"+method_for_opt.getLastLocalNorm());
@@ -242,7 +241,7 @@ public class First_Order_Factory_efficient {
 						arr_test.get(j*3+1).add(method.getNum_computed_gradients()/(1.0*n));
 						arr_test.get(j*3+2).add(method.getTime()); 
 					}
-					if(error<Math.pow(10, -14)){
+					if(error<=Math.pow(10, -14)){
 						break;
 					}
 				}

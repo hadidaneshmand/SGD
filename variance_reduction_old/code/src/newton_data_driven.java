@@ -11,15 +11,13 @@ import opt.loss.SecondOrderLoss;
 import data.DataPoint;
 import data.DensePoint_efficient;
 
-public class newton_test_time {
+public class newton_data_driven {
 	public static void main(String[] args) {
 		Input.initialize(args);
-		Input.loss_train.set_lambda(0.0001);
 		Loss loss = Input.loss_train.clone_loss(); 
 //		Logistic_Loss_efficient.buildHessians(Input.data, Input.d);
 		int n = loss.getDataSize();
 		int d = loss.getDimension(); 
-		int m = 100; 
 		loss.set_lambda(1.0/n);
 		DataPoint initParam = (DataPoint) DensePoint_efficient.one(Input.loss_train.getDimension()).multiply(3.0); 
 		FirstOrderOpt[] methods_in = new FirstOrderOpt[3]; 

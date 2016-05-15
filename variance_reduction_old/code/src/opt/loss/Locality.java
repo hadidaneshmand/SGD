@@ -24,8 +24,9 @@ public class Locality extends Dyna_samplesize_loss_e{
 
 	@Override
 	public void tack(DataPoint w) {
+		System.out.println("tack");
 		int newss = as.getSubsamplesi(); 
-		if(newss == getDataSize()){ 
+		if(newss == loss.getDataSize()){ 
 			return;
 		}
 		System.out.println("sub_size:"+as.getSubInd().size());
@@ -33,8 +34,8 @@ public class Locality extends Dyna_samplesize_loss_e{
 		sum_grad = (DataPoint) sum_grad.add(w);
 		System.out.println("gradient has been computed");
 		DataPoint grad = sum_grad.clone_data();
-		grad = (DataPoint) grad.add(w);
 		grad = (DataPoint) grad.multiply(1.0/as.getSubsamplesi()); 
+		System.out.println("norm of grad:"+grad.squaredNorm());
 		if(grad.squaredNorm() > 1.0/as.getSubsamplesi()){ 
 			return; 
 		}
@@ -45,23 +46,29 @@ public class Locality extends Dyna_samplesize_loss_e{
 		System.out.println("norm of gradient:"+norm+",samplesize:"+1.0/newss);
 		long t1 = System.currentTimeMillis();
 		double cc = c; 
-		for(int j=0;j<10;j++){ 
-//			System.err.println("++++++++++++++++++++++++++++++");
+		while(true){ 
+			DataPoint init_sum = sum_grad.clone_data();
+			System.err.println("++++++++++++++++++++++++++++++");
 			incrementFactor = (int) (newss*cc);
-//			System.out.println("increment factor:"+incrementFactor+",newss:"+newss);
+			if(incrementFactor == 0){
+				System.out.println("!!!!!!!!!!!!!FAIL!!!!!!!!!!!!!");
+				break;
+			}
+			System.out.println("increment factor:"+incrementFactor+",newss:"+newss);
 			int increasess = newss+incrementFactor; 
 			if(increasess >= loss.getDataSize()){
-				increasess = loss.getDataSize()-1; 
+				increasess = loss.getDataSize(); 
 			}
-			DataPoint new_grad = loss_without_lambda.getSumOfGradient(inds.subList(newss, increasess), w);
+			DataPoint new_grad = loss_without_lambda.getSumOfGradient(inds.subList(newss-1, increasess-1), w);
 			sum_grad = (DataPoint) sum_grad.add(new_grad);
-//			System.out.println("norm of sum:"+sum_grad.getNorm());
-			grad = (DataPoint) ((DataPoint) sum_grad.multiply(1.0/increasess)); 
-			norm = grad.squaredNorm();
-//			System.out.println("norm:"+norm+",sample size:"+(1.0/increasess));
+			norm = sum_grad.squaredNorm(); 
+			System.out.println("norm of sum:"+norm);
+			norm = norm/(Math.pow(increasess,2)); 
+			System.out.println("norm:"+norm+",sample size:"+(1.0/increasess));
 			if(norm > 1.0/increasess){ 
-				if(j==0){
+				if(newss == as.getSubsamplesi()){
 					cc = cc*0.5; 
+					sum_grad = init_sum;
 					continue; 
 				}
 				else{ 
