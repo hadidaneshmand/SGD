@@ -21,7 +21,7 @@ public class newton_change_of_strategy {
 		int d = loss.getDimension(); 
 		loss.set_lambda(1.0/n);
 		DataPoint initParam = (DataPoint) DensePoint_efficient.one(Input.loss_train.getDimension()).multiply(3.0); 
-		int num_strategy = 7; 
+		int num_strategy = 4; 
 		Dyna_regularizer_loss_e[] dyna_losses = new Dyna_regularizer_loss_e[num_strategy];
 		for(int i=0;i<num_strategy;i++){ 
 			double incrementFactor = 1+Math.pow(2, i-2); 
