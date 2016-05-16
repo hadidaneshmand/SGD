@@ -21,6 +21,10 @@ public class run_exp {
 				System.out.println("############ strategy ###############");
 				newton_change_of_strategy.main(args);
 				System.out.println("########### end of strategy ############");
+			case "lbfgs":
+				System.out.println("############ strategy ###############");
+				lbfgs_test.main(args);
+				System.out.println("########### end of strategy ############");
 			default:
 				break;
 			}
