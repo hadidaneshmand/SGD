@@ -7,6 +7,7 @@ import opt.loss.Dyna_regularizer_loss_e;
 import opt.loss.Locality;
 import opt.loss.Logistic_Loss_efficient;
 import opt.loss.Loss;
+import opt.loss.SecondOrderLoss;
 import data.DataPoint;
 import data.DensePoint_efficient;
 
@@ -42,7 +43,7 @@ public class newton_change_of_strategy {
 		methods_in = new FirstOrderOpt[num_strategy];
 		for(int i = 0 ;i < num_strategy ; i++){ 
 			Adapt_Strategy_Double_Full strategy = new Adapt_Strategy_Double_Full(loss.getDataSize(), 2*d, 1, 1); 
-			methods_in[i] = new NewtonDataDriven(dyna_losses[i],strategy,(1+Math.pow(2, i-2))); 
+			methods_in[i] = new NewtonDataDriven((SecondOrderLoss) loss.clone_loss(),strategy,(1+Math.pow(2, i-2))); 
 			methods_in[i].setName("c:"+(1+Math.pow(2, i-2)));
 		}
 		First_Order_Factory_efficient.methods_in = methods_in;
