@@ -43,7 +43,7 @@ public class newton_change_of_strategy {
 		methods_in = new FirstOrderOpt[num_strategy];
 		for(int i = 0 ;i < num_strategy ; i++){ 
 			Adapt_Strategy_Double_Full strategy = new Adapt_Strategy_Double_Full(loss.getDataSize(), 3*d, 1, 1); 
-			methods_in[i] = new NewtonDataDriven((SecondOrderLoss) loss.clone_loss(),strategy,(1+Math.pow(2, i-2))); 
+			methods_in[i] = new NewtonDataDriven((SecondOrderLoss) loss.clone_loss(),strategy,(Math.pow(2, i-2))); 
 			methods_in[i].setName("c:"+(1+Math.pow(2, i-2)));
 		}
 		First_Order_Factory_efficient.methods_in = methods_in;
