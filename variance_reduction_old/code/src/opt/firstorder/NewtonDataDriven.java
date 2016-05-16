@@ -6,7 +6,6 @@ import Jama.Matrix;
 import data.DataPoint;
 import opt.SampleSizeStrategy;
 import opt.loss.SecondOrderLoss;
-import opt.loss.adaptive_loss;
 
 public class NewtonDataDriven extends Newton {
 	double c; 
@@ -52,7 +51,7 @@ public class NewtonDataDriven extends Newton {
 		DataPoint delta = grad.times(H_inv); 
 		delta = (DataPoint) delta.multiply(-1.0);
 		double step_size = 1.0;
-		if(localnorm>1 && initialSample == loss.getDataSize()){
+		if(localnorm>0.03 && initialSample == loss.getDataSize()){
 			step_size = backtracking_line_search(delta); 
 		}
 			
@@ -61,13 +60,15 @@ public class NewtonDataDriven extends Newton {
 		lastLocalNorm = localnorm; 
 		System.out.println("local norm:"+lastLocalNorm);
 			if(firststep){
-				if(localnorm<0.25){ 
+				if(localnorm<0.03){ 
 					 changeSampleSize();
 				}
 				
 			}
 			else{
-				changeSampleSize(); 
+				if(localnorm < 0.03){ 
+					 changeSampleSize();
+				}
 			}
 	}
 	
@@ -84,7 +85,10 @@ public class NewtonDataDriven extends Newton {
 		int newss = 0; 
 		while(true){
 			System.out.println("++++++++++++++++++++");
-			newss = (int) (cc*ss);
+			newss = (int) (cc*ss +ss);
+			if(newss == ss){
+				break; 
+			}
 			newss = Math.min(loss.getDataSize(), newss); 
 			DataPoint sum_grad_n = (DataPoint) sum_grad.add(loss_without_lambda.getSumOfGradient(as.getAllInds().subList(ss, newss), w));
 			DataPoint grad = (DataPoint) sum_grad_n.multiply(1.0/newss); 
@@ -93,13 +97,13 @@ public class NewtonDataDriven extends Newton {
 			double second_taylor_term = (1.0/ss-1.0/newss)*H_inv_grad.squaredNorm();  
 			double approximate_lambda_nu = first_taylor_term+second_taylor_term; 
 			System.out.println("approximate lambda:"+approximate_lambda_nu);
-			if(approximate_lambda_nu < 0.25){
+			if(approximate_lambda_nu < 0.03){
 				storedgrad = grad; 
 				use_storage = true; 
 				break;
 			}
 			else{
-				cc = c*0.7; 
+				cc = cc*0.7; 
 				System.out.println("new increment factor cc:"+cc);
 			}
 		}

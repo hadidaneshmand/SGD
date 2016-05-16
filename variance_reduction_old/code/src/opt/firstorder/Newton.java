@@ -45,7 +45,7 @@ public class Newton extends FirstOrderOpt{
 		DataPoint delta = grad.times(H_inv); 
 		delta = (DataPoint) delta.multiply(-1.0);
 		double step_size = 1.0;
-		if(localnorm>1 && initialSample == loss.getDataSize()){
+		if(localnorm>0.03 && initialSample == loss.getDataSize()){
 			step_size = backtracking_line_search(delta); 
 		}
 			
@@ -58,7 +58,7 @@ public class Newton extends FirstOrderOpt{
 		System.out.println("local norm:"+lastLocalNorm);
 		if(loss instanceof adaptive_loss){ 
 			if(firststep){
-				if(localnorm<0.25){ 
+				if(localnorm<0.04){ 
 					((adaptive_loss)loss).tack(w); 
 					firststep = false;
 				}

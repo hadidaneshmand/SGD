@@ -34,7 +34,6 @@ public class First_Order_Factory_efficient {
 		else{
 			method_for_opt = new Newton((SecondOrderLoss) loss.clone_loss()); 
 			System.out.println("######## Computing Pivot Optimal #########");
-			System.out.println("localnorm:"+((Newton) method_for_opt).getLastLocalNorm());
 			while(((Newton) method_for_opt).getLastLocalNorm() > Math.pow(10, -20)){
 				method_for_opt.Iterate(1);
 				System.out.println("localnorm:"+((Newton) method_for_opt).getLastLocalNorm());
