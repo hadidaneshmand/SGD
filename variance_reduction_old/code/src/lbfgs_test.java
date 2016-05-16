@@ -4,12 +4,8 @@ import opt.firstorder.FirstOrderOpt;
 import opt.firstorder.First_Order_Factory_efficient;
 import opt.firstorder.LBFGS_external;
 import opt.firstorder.LBFGS_my;
-import opt.firstorder.Newton;
-import opt.firstorder.NewtonDataDriven;
-import opt.firstorder.SAGA;
 import opt.loss.Dyna_regularizer_loss_e;
 import opt.loss.Loss;
-import opt.loss.SecondOrderLoss;
 import data.DataPoint;
 import data.DensePoint_efficient;
 

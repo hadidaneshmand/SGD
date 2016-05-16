@@ -18,23 +18,27 @@ public class First_Order_Factory_efficient {
 	public static Result out_tes; 
 	public static double[] opt_values; 
 	public static DataPoint[] opt_params; 
-	public static Newton method_for_opt;
+	public static FirstOrderOpt method_for_opt;
 	public static int frequency_opt = -1; 
-
+	public static boolean saga_for_opt = false; 
 	public static double compute_opt_once(Loss loss,double L){
 		int n = loss.getDataSize(); 
 		double lambda_n = loss.getLambda(); 
 		System.out.println("lambda:"+loss.getLambda());
 		double eta_n = 0.3/(L+lambda_n*n); 
 		double loss_opt = -1; 
-//		if(method_for_opt == null){ 
-		method_for_opt = new Newton((SecondOrderLoss) loss.clone_loss()); 
-//		}
-		System.out.println("######## Computing Pivot Optimal #########");
-		System.out.println("localnorm:"+method_for_opt.getLastLocalNorm());
-		while(method_for_opt.getLastLocalNorm() > Math.pow(10, -20)){
-			method_for_opt.Iterate(1);
-			System.out.println("localnorm:"+method_for_opt.getLastLocalNorm());
+		if(saga_for_opt){ 
+		    method_for_opt = new SAGA(loss.clone_loss(),eta_n);
+		    method_for_opt.Iterate(loss.getDataSize()*100);
+		}
+		else{
+			method_for_opt = new Newton((SecondOrderLoss) loss.clone_loss()); 
+			System.out.println("######## Computing Pivot Optimal #########");
+			System.out.println("localnorm:"+((Newton) method_for_opt).getLastLocalNorm());
+			while(((Newton) method_for_opt).getLastLocalNorm() > Math.pow(10, -20)){
+				method_for_opt.Iterate(1);
+				System.out.println("localnorm:"+((Newton) method_for_opt).getLastLocalNorm());
+			}
 		}
 		loss_opt = loss.computeLoss(method_for_opt.getParam()); 
 		return loss_opt; 
