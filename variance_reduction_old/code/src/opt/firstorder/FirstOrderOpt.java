@@ -24,6 +24,9 @@ public abstract class FirstOrderOpt {
 	}
 	public abstract void iterate_once();
 	
+	public int getDataSize(){
+		return loss.getDataSize(); 
+	}
 	public void one_pass(){
 	   Iterate(1);
 	}

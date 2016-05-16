@@ -3,6 +3,7 @@ import opt.SampleSizeStrategy;
 import opt.firstorder.FirstOrderOpt;
 import opt.firstorder.First_Order_Factory_efficient;
 import opt.firstorder.Newton;
+import opt.firstorder.NewtonDataDriven;
 import opt.loss.Dyna_regularizer_loss_e;
 import opt.loss.Dyna_samplesize_loss_e;
 import opt.loss.Locality;
@@ -28,7 +29,7 @@ public class newton_data_driven {
 //		Dyna_regularizer_loss_e ssreg_loss_for_lbfg = new Dyna_regularizer_loss_e(loss.clone_loss(),non_doubling.clone_strategy());
 		Dyna_samplesize_loss_e adapt_ss_loss = new Dyna_samplesize_loss_e(loss.clone_loss(), strategy.clone_strategy());
 		Locality local = new Locality(loss.clone_loss(), strategy.clone_strategy(), 0.5); 
-		methods_in[0] = new Newton((SecondOrderLoss) local); 
+		methods_in[0] = new NewtonDataDriven((SecondOrderLoss) loss.clone_loss(),strategy,2); 
 		methods_in[2] = new Newton((SecondOrderLoss) adapt_ss_loss); 
 		Newton newton = new Newton((SecondOrderLoss) loss.clone_loss()); 
 //		newton.setDamped_step(true);

@@ -9,8 +9,9 @@ import opt.loss.adaptive_loss;
 
 public class Newton extends FirstOrderOpt{
     boolean first_itr = true;
-    private double lastLocalNorm;
+    protected double lastLocalNorm;
     
+   
 	public Newton(SecondOrderLoss loss) {
 		super(loss);
 		setStepSize(0.5);

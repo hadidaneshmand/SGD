@@ -218,7 +218,7 @@ public class First_Order_Factory_efficient {
 				
 				while(method.getNum_computed_gradients()/(1.0*n)<= maxItr){  
 					System.out.println("======= "+names.get(3*j)+" =======");
-					System.out.println("datasetsize:"+method.getLoss().getDataSize());
+					System.out.println("datasetsize:"+method.getDataSize());
 					System.out.println("lambda:"+method.getLoss().getLambda());
 					method.one_pass();
 					

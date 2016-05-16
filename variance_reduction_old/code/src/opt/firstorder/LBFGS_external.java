@@ -29,7 +29,7 @@ public class LBFGS_external extends FirstOrderOpt{
 
 	@Override
 	public void setName() {
-		this.name = "lbfgs-"+loss.getType(); 
+		this.name = "external-lbfgs-"+loss.getType(); 
 	}
 
 	
