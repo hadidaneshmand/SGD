@@ -20,7 +20,7 @@ public class First_Order_Factory_efficient {
 	public static DataPoint[] opt_params; 
 	public static Newton method_for_opt;
 	public static int frequency_opt = -1; 
-	
+
 	public static double compute_opt_once(Loss loss,double L){
 		int n = loss.getDataSize(); 
 		double lambda_n = loss.getLambda(); 

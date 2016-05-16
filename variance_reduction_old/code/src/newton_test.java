@@ -35,9 +35,9 @@ public class newton_test{
 		methods_in[5] = new NewtonDataDriven((SecondOrderLoss) loss.clone_loss(),strategy,2.0);
 		methods_in[6] = new LBFGS_external(ssreg_loss_for_lbfg, m);
 		methods_in[7] = new LBFGS_external(loss.clone_loss(), m); 
-		for(int i=0;i<methods_in.length;i++){
-			methods_in[i].setParam(initParam);
-		}
+//		for(int i=0;i<methods_in.length;i++){
+//			methods_in[i].setParam(initParam);
+//		}
 		First_Order_Factory_efficient.methods_in = methods_in; 
 		First_Order_Factory_efficient.experiment_with_iterations_complexity(3, loss.clone_loss(), 100, 0, Input.loss_test, Input.config.logDir+"_newton_datadriven", Input.L, false,n);
 	}
