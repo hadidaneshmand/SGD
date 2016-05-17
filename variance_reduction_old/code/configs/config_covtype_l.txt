@@ -1,0 +1,10 @@
+datapath=data/covtype
+c0=500000
+featuredim=54
+nclasses=2
+logdir=results_arxiv/covtype
+npasses=50
+nsamplesperpass=50000
+ntrials=10
+train_ratio=0.9
+

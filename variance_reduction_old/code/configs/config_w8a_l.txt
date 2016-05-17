@@ -1,0 +1,10 @@
+datapath=data/w8a
+c0=49749
+featuredim=300
+nclasses=2
+logdir=results_arxiv/w8a
+npasses=50
+nsamplesperpass=5000
+ntrials=10
+train_ratio=0.9
+

@@ -1,0 +1,10 @@
+datapath=data/ijcnn1
+c0=49990
+featuredim=22
+nclasses=2
+logdir=results_arxiv/ijcnn
+npasses=100
+nsamplesperpass=5000
+ntrials=10
+ntest=91701
+train_ratio=0.9

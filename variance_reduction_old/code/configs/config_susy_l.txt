@@ -1,0 +1,9 @@
+datapath=data/SUSY
+c0=5000000
+featuredim=18
+nclasses=2
+logdir=results_arxiv/SUSY
+npasses=50
+nsamplesperpass=500000
+ntrials=10
+train_ratio=0.9
