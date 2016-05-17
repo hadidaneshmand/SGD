@@ -18,12 +18,12 @@ public class lbfgs_test {
 		int m = 100; 
 		loss.set_lambda(1.0/n);
 		FirstOrderOpt[] methods_in = new FirstOrderOpt[2]; 
-		SampleSizeStrategy strategy = new Adapt_Strategy_Double_Full(loss.getDataSize(), 3*d, 3, 10);
+		SampleSizeStrategy strategy = new Adapt_Strategy_Double_Full(loss.getDataSize(), 400, 3, 10);
 		Dyna_regularizer_loss_e ssreg_loss_for_lbfg = new Dyna_regularizer_loss_e(loss.clone_loss(),strategy); 
-		methods_in[0] = new LBFGS_my(loss.clone_loss(), m); 
-		methods_in[1] = new LBFGS_my(ssreg_loss_for_lbfg, m); 
+		methods_in[1] = new LBFGS_my(loss.clone_loss(), m); 
+		methods_in[0] = new LBFGS_my(ssreg_loss_for_lbfg, m); 
 		First_Order_Factory_efficient.methods_in = methods_in; 
 		First_Order_Factory_efficient.saga_for_opt = true; 
-		First_Order_Factory_efficient.experiment_with_iterations_complexity(3, loss.clone_loss(), 20, -1.0, Input.loss_test, Input.config.logDir+"_lbfgs", Input.L, false,n);
+		First_Order_Factory_efficient.experiment_with_iterations_complexity(3, loss.clone_loss(), 15, -1.0, Input.loss_test, Input.config.logDir+"_lbfgs", Input.L, false,n);
 	}
 }

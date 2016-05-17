@@ -30,11 +30,10 @@ public class First_Order_Factory_efficient {
 		if(saga_for_opt){ 
 //		    method_for_opt = new SAGA(loss.clone_loss(),eta_n);
 //		    method_for_opt.Iterate(loss.getDataSize()*100);
-			method_for_opt = new LBFGS_external(loss.clone_loss(), 100); 
+			method_for_opt = new LBFGS_my(loss.clone_loss(), 100); 
 		    for(int i=0;i<4;i++){ 
 		    	method_for_opt.Iterate(10);
-		    	
-		    	System.out.println("+external:"+loss.computeLoss(method_for_opt.getParam()));
+		    	System.out.println("+external["+i+"]:"+loss.computeLoss(method_for_opt.getParam()));
 		    }
 		}
 		else{
