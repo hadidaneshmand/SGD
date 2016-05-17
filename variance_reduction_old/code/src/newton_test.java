@@ -31,6 +31,6 @@ public class newton_test{
 //			methods_in[i].setParam(initParam);
 //		}
 		First_Order_Factory_efficient.methods_in = methods_in; 
-		First_Order_Factory_efficient.experiment_with_iterations_complexity(1, loss.clone_loss(), 100, -1.0, Input.loss_test, Input.config.logDir+"_newton_datadriven", Input.L, false,n);
+		First_Order_Factory_efficient.experiment_with_iterations_complexity(1, loss.clone_loss(), 100, 0, Input.loss_test, Input.config.logDir+"_newton_datadriven", Input.L, false,n);
 	}
 }
