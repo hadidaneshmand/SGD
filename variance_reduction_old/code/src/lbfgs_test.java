@@ -24,6 +24,6 @@ public class lbfgs_test {
 		methods_in[1] = new LBFGS_my(ssreg_loss_for_lbfg, m); 
 		First_Order_Factory_efficient.methods_in = methods_in; 
 		First_Order_Factory_efficient.saga_for_opt = true; 
-		First_Order_Factory_efficient.experiment_with_iterations_complexity(3, loss.clone_loss(), 40, -1, Input.loss_test, Input.config.logDir+"_lbfgs", Input.L, false,n);
+		First_Order_Factory_efficient.experiment_with_iterations_complexity(3, loss.clone_loss(), 20, -1.0, Input.loss_test, Input.config.logDir+"_lbfgs", Input.L, false,n);
 	}
 }
