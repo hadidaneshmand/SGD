@@ -13,7 +13,7 @@ public class NewtonDataDriven extends Newton {
 	SecondOrderLoss loss_without_lambda; 
 	
 	public double backtracking_line_search(DataPoint direction){ 
-		System.out.println("Doing Line Search !");
+		System.out.println("Doing Line Search!");
 		double out = 1.0; 
 		loss.set_lambda(1.0/as.getSubsamplesi());
 		double f = loss.computeLoss(as.getSubInd(),w); 
@@ -77,13 +77,13 @@ public class NewtonDataDriven extends Newton {
 		lastLocalNorm = localnorm; 
 		System.out.println("local norm:"+lastLocalNorm);
 			if(firststep){
-				if(localnorm<0.03){ 
+				if(localnorm<0.08){ 
 					 changeSampleSize();
 				}
 				
 			}
 			else{
-				if(localnorm < 0.03){ 
+				if(localnorm < 0.08){ 
 					 changeSampleSize();
 				}
 			}
@@ -114,7 +114,7 @@ public class NewtonDataDriven extends Newton {
 			double second_taylor_term = (1.0/ss-1.0/newss)*H_inv_grad.squaredNorm();  
 			double approximate_lambda_nu = first_taylor_term+second_taylor_term; 
 			System.out.println("approximate lambda:"+approximate_lambda_nu);
-			if(approximate_lambda_nu < 0.03){
+			if(approximate_lambda_nu < 0.08){
 				storedgrad = grad; 
 				use_storage = true; 
 				break;

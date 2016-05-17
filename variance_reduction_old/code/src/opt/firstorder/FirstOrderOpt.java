@@ -95,6 +95,7 @@ public abstract class FirstOrderOpt {
 	public double backtracking_line_search(DataPoint direction){ 
 		System.out.println("Doing Line Search!");
 		double out = 1.0; 
+		System.out.println("data size:"+loss.getDataSize());
 		double f = loss.computeLoss(w); 
 		DataPoint w_new = (DataPoint) w.add(direction.multiply(out)); 
 		double f_new = loss.computeLoss(w_new); 
