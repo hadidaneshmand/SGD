@@ -20,7 +20,7 @@ public class newton_test{
 		loss.set_lambda(1.0/n);
 //		DataPoint initParam = (DataPoint) DensePoint_efficient.one(Input.loss_train.getDimension()).multiply(3.0); 
 		FirstOrderOpt[] methods_in = new FirstOrderOpt[3]; 
-		SampleSizeStrategy strategy = new Adapt_Strategy_Double_Full(loss.getDataSize(), 4*d, 1, 1);
+		SampleSizeStrategy strategy = new Adapt_Strategy_Double_Full(loss.getDataSize(), 5*d, 1, 1);
 //		Dyna_regularizer_loss_e ssreg_loss_for_lbfg = new Dyna_regularizer_loss_e(loss.clone_loss(),new Adapt_Strategy_Double_Full(loss.getDataSize(), 3*d, 3, 12)); 
 		methods_in[1] = new Newton((SecondOrderLoss) loss.clone_loss()); 
 //		methods_in[1] = new LBFGS_my(loss.clone_loss(), m); 
@@ -31,6 +31,6 @@ public class newton_test{
 //			methods_in[i].setParam(initParam);
 //		}
 		First_Order_Factory_efficient.methods_in = methods_in; 
-		First_Order_Factory_efficient.experiment_with_iterations_complexity(1, loss.clone_loss(), 100, -1.0, Input.loss_test, Input.config.logDir+"_newton_datadriven", Input.L, false,n);
+		First_Order_Factory_efficient.experiment_with_iterations_complexity(1, loss.clone_loss(), 100, 0, Input.loss_test, Input.config.logDir+"_newton_datadriven", Input.L, false,n);
 	}
 }

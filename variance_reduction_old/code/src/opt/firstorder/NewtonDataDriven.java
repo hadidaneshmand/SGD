@@ -103,7 +103,7 @@ public class NewtonDataDriven extends Newton {
 		double cc = c; 
 		int ss = as.getSubsamplesi();
 		int newss = 0; 
-		for(int i=0;i<10;i++){
+		while(true){
 			System.out.println("++++++++++++++++++++");
 			newss = (int) (cc*ss +ss);
 			
