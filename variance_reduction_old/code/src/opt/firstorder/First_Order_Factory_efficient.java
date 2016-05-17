@@ -28,8 +28,13 @@ public class First_Order_Factory_efficient {
 		double eta_n = 0.3/(L+lambda_n*n); 
 		double loss_opt = -1; 
 		if(saga_for_opt){ 
-		    method_for_opt = new SAGA(loss.clone_loss(),eta_n);
-		    method_for_opt.Iterate(loss.getDataSize()*100);
+//		    method_for_opt = new SAGA(loss.clone_loss(),eta_n);
+//		    method_for_opt.Iterate(loss.getDataSize()*100);
+			method_for_opt = new LBFGS_my(loss.clone_loss(), 100); 
+		    for(int i=0;i<8;i++){ 
+		    	method_for_opt.Iterate(10);
+		    	System.out.println("lbfgs after 10 iterations!!!");
+		    }
 		}
 		else{
 			method_for_opt = new Newton((SecondOrderLoss) loss.clone_loss()); 
