@@ -11,6 +11,23 @@ public class NewtonDataDriven extends Newton {
 	double c; 
 	SampleSizeStrategy as; 
 	SecondOrderLoss loss_without_lambda; 
+	
+	public double backtracking_line_search(DataPoint direction){ 
+		System.out.println("Doing Line Search !");
+		double out = 1.0; 
+		loss.set_lambda(1.0/as.getSubsamplesi());
+		double f = loss.computeLoss(as.getSubInd(),w); 
+		DataPoint w_new = (DataPoint) w.add(direction.multiply(out)); 
+		double f_new = loss.computeLoss(as.getSubInd(),w_new); 
+		DataPoint gradient = loss.getStochasticGradient(as.getSubInd(), w); 
+		while(f_new > (f + alpha_line_search*out*gradient.scalarProduct(direction))){ 
+			out = out*beta; 
+			w_new = (DataPoint) w.add(direction.multiply(out)); 
+			f_new = loss.computeLoss(as.getSubInd(),w_new);
+		}
+		return out; 
+	}
+	
 	public NewtonDataDriven(SecondOrderLoss loss, SampleSizeStrategy as, double c) {
 		super(loss);
 		this.c = c; 
