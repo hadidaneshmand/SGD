@@ -69,7 +69,7 @@ public class NewtonDataDriven extends Newton {
 		DataPoint delta = grad.times(H_inv); 
 		delta = (DataPoint) delta.multiply(-1.0);
 		double step_size = 1.0;
-		if(localnorm>0.06 && initialSample == as.getSubsamplesi()){
+		if(localnorm>0.06){
 //			step_size = backtracking_line_search(delta); 
 			step_size = 1.0/(1.0+Math.sqrt(localnorm));
 		}
