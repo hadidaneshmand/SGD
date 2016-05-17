@@ -39,7 +39,7 @@ public class newton_change_of_strategy {
 //		methods_in[num_strategy].setName("data-driven");
 //		methods_in[num_strategy].setParam(initParam);
 		First_Order_Factory_efficient.methods_in = methods_in; 
-		First_Order_Factory_efficient.experiment_with_iterations_complexity(4, loss.clone_loss(), 8, -1.0, Input.loss_test, Input.config.logDir+"_newton_strategy", Input.L, false,n);
+		First_Order_Factory_efficient.experiment_with_iterations_complexity(1, loss.clone_loss(), 12, -1.0, Input.loss_test, Input.config.logDir+"_newton_strategy", Input.L, false,n);
 		methods_in = new FirstOrderOpt[num_strategy];
 		for(int i = 0 ;i < num_strategy ; i++){ 
 			Adapt_Strategy_Double_Full strategy = new Adapt_Strategy_Double_Full(loss.getDataSize(), 3*d, 1, 1); 
@@ -47,6 +47,6 @@ public class newton_change_of_strategy {
 			methods_in[i].setName("c:"+(1+Math.pow(2, i-2)));
 		}
 		First_Order_Factory_efficient.methods_in = methods_in;
-		First_Order_Factory_efficient.experiment_with_iterations_complexity(4, loss.clone_loss(), 8, -1.0, Input.loss_test, Input.config.logDir+"_newtondd_strategy", Input.L, false,n);
+		First_Order_Factory_efficient.experiment_with_iterations_complexity(1, loss.clone_loss(), 12, -1.0, Input.loss_test, Input.config.logDir+"_newtondd_strategy", Input.L, false,n);
 	}
 }
