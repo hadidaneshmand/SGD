@@ -24,6 +24,7 @@ public class NewtonDataDriven extends Newton {
 			out = out*beta; 
 			w_new = (DataPoint) w.add(direction.multiply(out)); 
 			f_new = loss.computeLoss(as.getSubInd(),w_new);
+//			System.out.println("f_new:"+f_new+",f:"+f+",delta:"+ alpha_line_search*out*gradient.scalarProduct(direction));
 		}
 		return out; 
 	}
@@ -51,7 +52,7 @@ public class NewtonDataDriven extends Newton {
 	}
 	public void iterate_once(){ 
 		if(initialSample == -1){ 
-			initialSample = loss.getDataSize(); 
+			initialSample = as.getSubsamplesi(); 
 		}
 		loss.set_lambda(1.0/as.getSubsamplesi());
 		Matrix H_inv = ((SecondOrderLoss)loss).getHessian(w,(ArrayList<Integer>) as.getSubInd()).inverse();
@@ -68,8 +69,9 @@ public class NewtonDataDriven extends Newton {
 		DataPoint delta = grad.times(H_inv); 
 		delta = (DataPoint) delta.multiply(-1.0);
 		double step_size = 1.0;
-		if(localnorm>0.03 && initialSample == loss.getDataSize()){
-			step_size = backtracking_line_search(delta); 
+		if(localnorm>0.06 && initialSample == as.getSubsamplesi()){
+//			step_size = backtracking_line_search(delta); 
+			step_size = 1.0/(1.0+Math.sqrt(localnorm));
 		}
 			
 		System.out.println("step size:"+step_size);
@@ -77,13 +79,13 @@ public class NewtonDataDriven extends Newton {
 		lastLocalNorm = localnorm; 
 		System.out.println("local norm:"+lastLocalNorm);
 			if(firststep){
-				if(localnorm<0.08){ 
+				if(localnorm<0.06 ){ 
 					 changeSampleSize();
 				}
 				
 			}
 			else{
-				if(localnorm < 0.08){ 
+				if(localnorm < 0.06 ){ 
 					 changeSampleSize();
 				}
 			}
@@ -114,7 +116,7 @@ public class NewtonDataDriven extends Newton {
 			double second_taylor_term = (1.0/ss-1.0/newss)*H_inv_grad.squaredNorm();  
 			double approximate_lambda_nu = first_taylor_term+second_taylor_term; 
 			System.out.println("approximate lambda:"+approximate_lambda_nu);
-			if(approximate_lambda_nu < 0.08){
+			if(approximate_lambda_nu < 0.06 ){
 				storedgrad = grad; 
 				use_storage = true; 
 				break;
