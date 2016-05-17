@@ -106,13 +106,15 @@ public class NewtonDataDriven extends Newton {
 		for(int i=0;i<10;i++){
 			System.out.println("++++++++++++++++++++");
 			newss = (int) (cc*ss +ss);
-			if(as.getAllInds().subList(ss, newss).get(0) !=as.getAllInds().get(ss)){
-				throw new RuntimeException("ERRRRO");
-			}
+			
+			newss = Math.min(loss.getDataSize(), newss); 
 			if(newss == ss){
 				break; 
 			}
-			newss = Math.min(loss.getDataSize(), newss); 
+			if(as.getAllInds().subList(ss, newss).get(0) !=as.getAllInds().get(ss)){
+				throw new RuntimeException("ERRRRO");
+			}
+			
 			DataPoint sum_grad_n = (DataPoint) sum_grad.add(loss_without_lambda.getSumOfGradient(as.getAllInds().subList(ss, newss), w));
 			DataPoint grad = (DataPoint) sum_grad_n.multiply(1.0/newss); 
 			DataPoint H_inv_grad = grad.times(Last_H_inv); 
