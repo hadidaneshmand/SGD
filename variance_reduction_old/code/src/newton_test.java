@@ -20,13 +20,13 @@ public class newton_test{
 		loss.set_lambda(1.0/n);
 //		DataPoint initParam = (DataPoint) DensePoint_efficient.one(Input.loss_train.getDimension()).multiply(3.0); 
 		FirstOrderOpt[] methods_in = new FirstOrderOpt[3]; 
-		SampleSizeStrategy strategy = new Adapt_Strategy_Double_Full(loss.getDataSize(), 3*d, 1, 1);
+		SampleSizeStrategy strategy = new Adapt_Strategy_Double_Full(loss.getDataSize(), 5*d, 1, 1);
 //		Dyna_regularizer_loss_e ssreg_loss_for_lbfg = new Dyna_regularizer_loss_e(loss.clone_loss(),new Adapt_Strategy_Double_Full(loss.getDataSize(), 3*d, 3, 12)); 
 		methods_in[1] = new Newton((SecondOrderLoss) loss.clone_loss()); 
 //		methods_in[1] = new LBFGS_my(loss.clone_loss(), m); 
 //		methods_in[2] = new LBFGS_my(ssreg_loss_for_lbfg, m); 
 		methods_in[2] = new SAGA(loss.clone_loss(), 0.3/(Input.L+1));
-		methods_in[0] = new NewtonDataDriven((SecondOrderLoss) loss.clone_loss(),strategy,2.0);
+		methods_in[0] = new NewtonDataDriven((SecondOrderLoss) loss.clone_loss(),strategy,1.0);
 //		for(int i=0;i<methods_in.length;i++){
 //			methods_in[i].setParam(initParam);
 //		}
