@@ -250,7 +250,7 @@ public class First_Order_Factory_efficient {
 						arr_test.get(j*3+1).add(method.getNum_computed_gradients()/(1.0*n));
 						arr_test.get(j*3+2).add(method.getTime()); 
 					}
-					if(error<=Math.pow(10, -14)){
+					if(error<=Math.pow(10, -13)){
 						break;
 					}
 				}
