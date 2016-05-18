@@ -14,7 +14,7 @@ public class lbfgs_test {
 		Input.initialize(args);
 		Loss loss = Input.loss_train.clone_loss(); 
 		int n = loss.getDataSize();
-		int m = 100; 
+		int m = 10; 
 		loss.set_lambda(1.0/n);
 		FirstOrderOpt[] methods_in = new FirstOrderOpt[2]; 
 		SampleSizeStrategy strategy = new Adapt_Strategy_Double_Full(loss.getDataSize(), 500, 2, 10);
@@ -24,6 +24,6 @@ public class lbfgs_test {
 //		methods_in[0] = new DynaLbfgs(ssreg_loss_for_lbfg.clone_loss(), m); 
 		First_Order_Factory_efficient.methods_in = methods_in; 
 //		First_Order_Factory_efficient.saga_for_opt = true; 
-		First_Order_Factory_efficient.experiment_with_iterations_complexity(3, loss.clone_loss(), 60, -1.0, Input.loss_test, Input.config.logDir+"_lbfgs", Input.L, false,n);
+		First_Order_Factory_efficient.experiment_with_iterations_complexity(3, loss.clone_loss(), 60, -1.0, Input.loss_test, Input.config.logDir+"_lbfgs10", Input.L, false,n);
 	}
 }
